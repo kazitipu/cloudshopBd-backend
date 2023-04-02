@@ -33,6 +33,10 @@ import {
   uploadAttribute,
   updateAttribute,
   deleteAttribute,
+  getAllAttributeTerms,
+  uploadAttributeTerm,
+  updateAttributeTerm,
+  deleteAttributeTerm,
 } from "../firebase/firebase.utils";
 
 export const setAllOrders = (ordersArray) => ({
@@ -324,3 +328,35 @@ export const deleteAttributeRedux = (attrId) => async (dispatch) => {
     payload: { id: attrId },
   });
 };
+export const getAllAttributeTermsRedux = (id) => async (dispatch) => {
+  const allAttributes = await getAllAttributeTerms(id);
+  dispatch({
+    type: "GET_ALL_ATTRIBUTE_TERMS",
+    payload: allAttributes,
+  });
+};
+
+export const uploadAttributeTermRedux = (attrObj) => async (dispatch) => {
+  const uploadedAttributeObj = await uploadAttributeTerm(attrObj);
+  dispatch({
+    type: "UPLOAD_ATTRIBUTE_TERM",
+    payload: uploadedAttributeObj,
+  });
+};
+
+export const updateAttributeTermRedux = (attrObj) => async (dispatch) => {
+  const updatedAttrObj = await updateAttributeTerm(attrObj);
+  dispatch({
+    type: "UPDATE_ATTRIBUTE_TERM",
+    payload: updatedAttrObj,
+  });
+};
+
+export const deleteAttributeTermRedux =
+  (termId, parentId) => async (dispatch) => {
+    await deleteAttributeTerm(termId, parentId);
+    dispatch({
+      type: "DELETE_ATTRIBUTE_TERM",
+      payload: { id: termId, parentId },
+    });
+  };

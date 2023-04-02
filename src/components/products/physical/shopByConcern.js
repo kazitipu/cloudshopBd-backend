@@ -152,12 +152,10 @@ export class Tags extends Component {
 
       await this.props.updateTagRedux(tagObj);
     }
-
     this.setState({
       id: "",
       name: "",
       slug: "",
-
       productObj: null,
       loading: false,
       loading2: false,
@@ -165,6 +163,7 @@ export class Tags extends Component {
       imageUrl2: man,
       file: "",
       checkedValues: [],
+      selectAll: false,
     });
   };
   handleChangeCustomer = (e) => {
@@ -1124,6 +1123,10 @@ export class Tags extends Component {
                   }}
                   onClick={() => {
                     this.props.deleteTagRedux(productObj.id);
+                    this.setState({
+                      selectAll: false,
+                      checkedValues: [],
+                    });
                   }}
                 >
                   Yes

@@ -170,6 +170,7 @@ export class Brands extends Component {
       imageUrl2: man,
       file: "",
       checkedValues: [],
+      selectAll: false,
     });
   };
   handleChangeCustomer = (e) => {
@@ -1367,6 +1368,10 @@ export class Brands extends Component {
                       productObj.id,
                       productObj.parentBrand
                     );
+                    this.setState({
+                      selectAll: false,
+                      checkedValues: [],
+                    });
                   }}
                 >
                   Yes
@@ -1458,6 +1463,10 @@ export class Brands extends Component {
                     this.state.checkedValues.map(async (id) => {
                       let brand = brands.find((brand1) => brand1.id == id);
                       await this.props.deleteBrandRedux(id, brand.parentBrand);
+                    });
+                    this.setState({
+                      selectAll: false,
+                      checkedValues: [],
                     });
                   }}
                 >

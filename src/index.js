@@ -22,6 +22,7 @@ import Brands from "./components/products/physical/brands";
 import Categories from "./components/products/physical/categories";
 import ShopByConcern from "./components/products/physical/shopByConcern";
 import Attributes from "./components/products/physical/attributes";
+import AttributeTerms from "./components/products/physical/attributeTerms";
 
 //Sales
 import Orders from "./components/sales/orders";
@@ -139,6 +140,11 @@ class Root extends Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/products/physical/attributes`}
                   component={Attributes}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/attributes/:id`}
+                  component={AttributeTerms}
                 />
                 <Route
                   exact

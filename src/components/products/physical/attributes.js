@@ -23,6 +23,7 @@ export class Attributes extends Component {
       name: "",
       slug: "",
 
+      terms: [],
       productObj: null,
       loading: false,
       loading2: false,
@@ -141,6 +142,7 @@ export class Attributes extends Component {
         name: this.state.name,
         slug: this.state.slug,
         count: 0,
+        terms: [],
       };
 
       await this.props.uploadAttributeRedux(attrObj);
@@ -150,6 +152,7 @@ export class Attributes extends Component {
         name: this.state.name,
         slug: this.state.slug,
         count: this.state.count,
+        terms: this.state.terms,
       };
 
       await this.props.updateAttributeRedux(attrObj);
@@ -159,7 +162,6 @@ export class Attributes extends Component {
       id: "",
       name: "",
       slug: "",
-
       productObj: null,
       loading: false,
       loading2: false,
@@ -167,12 +169,15 @@ export class Attributes extends Component {
       imageUrl2: man,
       file: "",
       checkedValues: [],
+      selectAll: false,
     });
   };
+
   handleChangeCustomer = (e) => {
     const { name, value } = e.target;
     this.setState({ [name]: value, showSuggestion: true, cursor: -1 });
   };
+
   handleKeyDown = (e) => {
     const { cursor } = this.state;
     let result = [];
@@ -209,6 +214,7 @@ export class Attributes extends Component {
       result = [];
     }
   };
+
   renderShowSuggestion = () => {
     let suggestionArray = [];
     console.log(this.state.customer);
@@ -608,9 +614,17 @@ export class Attributes extends Component {
                             <td colSpan={2}>{attr.slug}</td>
 
                             <td colSpan={3}>
-                              {attr.terms} &nbsp;
+                              {attr.terms.map((term) => (
+                                <span> {term.name}, </span>
+                              ))}
+                              &nbsp; &nbsp;
                               <span
                                 style={{ color: "#2271b1", cursor: "pointer" }}
+                                onClick={() => {
+                                  this.props.history.push(
+                                    `/products/physical/attributes/${attr.id}`
+                                  );
+                                }}
                               >
                                 Configure terms
                               </span>
@@ -632,6 +646,7 @@ export class Attributes extends Component {
                                       count: attr.count,
                                       type: "update",
                                       productObj: attr,
+                                      terms: attr.terms,
                                     });
                                   }}
                                   style={{
@@ -1136,6 +1151,10 @@ export class Attributes extends Component {
                   }}
                   onClick={() => {
                     this.props.deleteAttributeRedux(productObj.id);
+                    this.setState({
+                      selectAll: false,
+                      checkedValues: [],
+                    });
                   }}
                 >
                   Yes

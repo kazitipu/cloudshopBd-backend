@@ -7,22 +7,26 @@ import CountUp from "react-countup";
 import { connect } from "react-redux";
 import { DollarSign } from "react-feather";
 import {
-  getAllCategoriesRedux,
-  uploadCategoryRedux,
-  updateCategoryRedux,
-  deleteCategoryRedux,
+  getAllAttributeTermsRedux,
+  uploadAttributeTermRedux,
+  updateAttributeTermRedux,
+  deleteAttributeTermRedux,
 } from "../../../actions";
-import { uploadImageRechargeRequest } from "../../../firebase/firebase.utils";
+import {
+  uploadImageRechargeRequest,
+  getSingleAttribute,
+} from "../../../firebase/firebase.utils";
 import man from "./plus image.jpeg";
 import { Search } from "react-feather";
-export class Categories extends Component {
+export class AttributeTerms extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      attribute: "",
       id: "",
+      parentId: "",
       name: "",
       slug: "",
-      parentCategory: "",
       productObj: null,
       loading: false,
       loading2: false,
@@ -36,8 +40,14 @@ export class Categories extends Component {
   }
 
   componentDidMount = async () => {
-    this.props.getAllCategoriesRedux();
+    const id = this.props.match.params.id;
+    this.props.getAllAttributeTermsRedux(id);
+    const attribute = await getSingleAttribute(id);
+    this.setState({
+      attribute,
+    });
   };
+
   handleChange = (e) => {
     const { name, value } = e.target;
     this.setState({
@@ -78,6 +88,7 @@ export class Categories extends Component {
       this.setState({ loading: false });
     }
   };
+
   _handleImgChange2 = async (e, i) => {
     e.preventDefault();
     const { currentAdmin } = this.props;
@@ -134,35 +145,31 @@ export class Categories extends Component {
       return;
     }
     if (this.state.type === "upload") {
-      let categoryObj = {
+      let attrObj = {
         id: date.getTime().toString(),
+        parentId: this.props.match.params.id,
         name: this.state.name,
         slug: this.state.slug,
         count: 0,
-        parentCategory: this.state.parentCategory,
-        logo: this.state.imageUrl,
-        banner: this.state.imageUrl2,
       };
 
-      await this.props.uploadCategoryRedux(categoryObj);
+      await this.props.uploadAttributeTermRedux(attrObj);
     } else if (this.state.type === "update") {
-      let categoryObj = {
+      let attrObj = {
         id: this.state.id,
+        parentId: this.state.parentId,
         name: this.state.name,
         slug: this.state.slug,
         count: this.state.count,
-        parentCategory: this.state.parentCategory,
-        logo: this.state.imageUrl,
-        banner: this.state.imageUrl2,
       };
-      await this.props.updateCategoryRedux(categoryObj);
+
+      await this.props.updateAttributeTermRedux(attrObj);
     }
 
     this.setState({
       id: "",
       name: "",
       slug: "",
-      parentCategory: "",
       productObj: null,
       loading: false,
       loading2: false,
@@ -173,10 +180,12 @@ export class Categories extends Component {
       selectAll: false,
     });
   };
+
   handleChangeCustomer = (e) => {
     const { name, value } = e.target;
     this.setState({ [name]: value, showSuggestion: true, cursor: -1 });
   };
+
   handleKeyDown = (e) => {
     const { cursor } = this.state;
     let result = [];
@@ -213,6 +222,7 @@ export class Categories extends Component {
       result = [];
     }
   };
+
   renderShowSuggestion = () => {
     let suggestionArray = [];
     console.log(this.state.customer);
@@ -272,57 +282,24 @@ export class Categories extends Component {
     }
   };
 
-  getParentCategory = (category, count) => {
-    const { productObj } = this.state;
-    if (productObj && productObj.id == category.id) {
-      return null;
-    }
-    return (
-      <>
-        <option value={category.id}>{count + category.name}</option>
-
-        {category.children &&
-          category.children.length > 0 &&
-          category.children.map((cat2) =>
-            this.getParentCategory(cat2, count + "\u00A0 \u00A0")
-          )}
-      </>
-    );
-  };
-
-  getCategories = (categories) => {
-    const tree = categories.reduce((t, o) => {
-      Object.assign((t[o.id] = t[o.id] || {}), o);
-      ((t[o.parentCategory] ??= {}).children ??= []).push(t[o.id]);
-      return t;
-    }, {})[""].children;
-    return tree;
-  };
-
   render() {
     const { open, productObj } = this.state;
-    const { categories, currentAdmin } = this.props;
+    const { attrs, currentAdmin } = this.props;
 
-    let allCategories = [];
-    if (categories.length > 0) {
-      allCategories = this.getCategories(categories);
-      console.log(allCategories);
-    }
-
-    let renderableCategories = categories;
+    let renderableAttrs = attrs;
     if (this.state.searchFor) {
-      renderableCategories = categories.filter((category) =>
-        category.name.toLowerCase().includes(this.state.searchFor.toLowerCase())
+      renderableAttrs = attrs.filter((attr) =>
+        attr.name.toLowerCase().includes(this.state.searchFor.toLowerCase())
       );
     }
-    renderableCategories = renderableCategories.sort(
+    renderableAttrs = renderableAttrs.sort(
       (a, b) => a.name.charCodeAt(0) - b.name.charCodeAt(0)
     );
-
     console.log(this.props);
+
     return (
       <Fragment>
-        <Breadcrumb title={"Categories"} parent="Products" />
+        <Breadcrumb title={"Terms"} parent="Products/Attributes" />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
           <div className="row" style={{ justifyContent: "center" }}>
@@ -346,7 +323,7 @@ export class Categories extends Component {
                         color: "#00254c",
                       }}
                     ></i>
-                    Categories
+                    {this.state.attribute && this.state.attribute.name}
                   </h5>
                   <div
                     style={{
@@ -385,7 +362,7 @@ export class Categories extends Component {
                             name="searchFor"
                             value={this.state.searchFor}
                             type="search"
-                            placeholder="Search Category"
+                            placeholder="Search Terms"
                             style={{ paddingLeft: 10 }}
                             onChange={this.handleSearchBarChange}
                           />
@@ -403,7 +380,6 @@ export class Categories extends Component {
                       </form>
                     </li>
                     <li>
-                      {" "}
                       <button
                         className="btn"
                         data-toggle="modal"
@@ -419,7 +395,6 @@ export class Categories extends Component {
                             id: "",
                             name: "",
                             slug: "",
-                            parentCategory: "",
                             productObj: null,
                             loading: false,
                             loading2: false,
@@ -432,7 +407,7 @@ export class Categories extends Component {
                           });
                         }}
                       >
-                        Add New Category
+                        Add New Term
                       </button>
                     </li>
                   </div>
@@ -540,9 +515,9 @@ export class Categories extends Component {
                                         if (this.state.selectAll) {
                                           this.setState(
                                             {
-                                              checkedValues: categories.map(
-                                                (category) => {
-                                                  return category.id;
+                                              checkedValues: attrs.map(
+                                                (attr) => {
+                                                  return attr.id;
                                                 }
                                               ),
                                             },
@@ -570,16 +545,7 @@ export class Categories extends Component {
                               </span>
                             </div>
                           </th>
-                          <th
-                            scope="col"
-                            style={{
-                              padding: "30px 15px",
-                              color: "white",
-                              backgroundColor: "#00254c",
-                            }}
-                          >
-                            Logo
-                          </th>
+
                           <th
                             scope="col"
                             style={{
@@ -601,26 +567,7 @@ export class Categories extends Component {
                           >
                             Slug
                           </th>
-                          <th
-                            scope="col"
-                            style={{
-                              padding: "30px 15px",
-                              color: "white",
-                              backgroundColor: "#00254c",
-                            }}
-                          >
-                            Parent Category
-                          </th>
-                          <th
-                            scope="col"
-                            style={{
-                              padding: "30px 15px",
-                              color: "white",
-                              backgroundColor: "#00254c",
-                            }}
-                          >
-                            Count
-                          </th>
+
                           <th
                             scope="col"
                             style={{
@@ -634,10 +581,9 @@ export class Categories extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {renderableCategories.map((category, index) => (
+                        {renderableAttrs.map((attr, index) => (
                           <tr key={index}>
                             <th scope="row">
-                              {" "}
                               <div>
                                 <span
                                   style={{
@@ -647,43 +593,23 @@ export class Categories extends Component {
                                 >
                                   <input
                                     type="checkbox"
-                                    name={category.id}
+                                    name={attr.id}
                                     checked={this.state.checkedValues.includes(
-                                      category.id
+                                      attr.id
                                     )}
                                     style={{
                                       height: 20,
                                       width: 20,
                                     }}
-                                    onChange={(e) =>
-                                      this.selectRow(e, category.id)
-                                    }
+                                    onChange={(e) => this.selectRow(e, attr.id)}
                                   />
                                 </span>
                               </div>
                             </th>
-                            <td>
-                              <a href={category.logo} target="_blank">
-                                <img
-                                  style={{ height: 40, width: 40 }}
-                                  src={category.logo || this.state.imageUrl}
-                                />
-                              </a>
-                            </td>
-                            <td>{category.name}</td>
-                            <td colSpan={2}>{category.slug}</td>
 
-                            <td>
-                              {categories.length > 0 &&
-                              categories.find(
-                                (cat1) => cat1.id == category.parentCategory
-                              )
-                                ? categories.find(
-                                    (cat1) => cat1.id == category.parentCategory
-                                  ).name
-                                : ""}
-                            </td>
-                            <td>{category.count}</td>
+                            <td>{attr.name}</td>
+                            <td colSpan={2}>{attr.slug}</td>
+
                             <td>
                               <div
                                 className="row"
@@ -695,15 +621,13 @@ export class Categories extends Component {
                                   data-target="#personalInfoModal"
                                   onClick={() => {
                                     this.setState({
-                                      id: category.id,
-                                      name: category.name,
-                                      slug: category.slug,
-                                      count: category.count,
-                                      parentCategory: category.parentCategory,
-                                      imageUrl: category.logo,
-                                      imageUrl2: category.banner,
+                                      id: attr.id,
+                                      name: attr.name,
+                                      slug: attr.slug,
+                                      count: attr.count,
+                                      parentId: attr.parentId,
                                       type: "update",
-                                      productObj: category,
+                                      productObj: attr,
                                     });
                                   }}
                                   style={{
@@ -711,14 +635,14 @@ export class Categories extends Component {
                                     marginRight: 8,
                                     cursor: "pointer",
                                   }}
-                                />{" "}
+                                />
                                 <i
                                   className="icofont-trash"
                                   data-toggle="modal"
                                   data-target="#deleteExpenseModal"
                                   onClick={() => {
                                     this.setState({
-                                      productObj: category,
+                                      productObj: attr,
                                     });
                                   }}
                                   style={{
@@ -775,7 +699,7 @@ export class Categories extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  {productObj ? "Update" : "Add New"} Category
+                  {productObj ? "Update" : "Add New"} Term
                 </div>
                 <button
                   type="button"
@@ -808,7 +732,7 @@ export class Categories extends Component {
                       value={this.state.name}
                       onChange={this.handleChange}
                       id="exampleFormControlInput1"
-                      placeholder="Enter category name"
+                      placeholder="Enter term name"
                       style={{
                         borderColor: "gainsboro",
                         borderRadius: 5,
@@ -839,155 +763,6 @@ export class Categories extends Component {
                       }}
                     />
                   </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Parent Category
-                    </label>
-                    <select
-                      title="Please choose a package"
-                      required
-                      name="parentCategory"
-                      className="custom-select"
-                      aria-required="true"
-                      aria-invalid="false"
-                      onChange={this.handleChange}
-                      value={this.state.parentCategory}
-                    >
-                      <option value="">None</option>
-                      {allCategories.map((category) =>
-                        this.getParentCategory(category, "")
-                      )}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Category Logo
-                    </label>
-                    <div
-                      className="box-input-file"
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-start",
-                      }}
-                    >
-                      {this.state.loading ? (
-                        <div
-                          className="spinner-border text-light mt-3 ml-2"
-                          role="status"
-                        >
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <img
-                            className="img-50 lazyloaded blur-up"
-                            src={this.state.imageUrl}
-                            alt="#"
-                            style={{
-                              zIndex: 10,
-                              cursor: "pointer",
-                              border: "1px solid gainsboro",
-                              borderRadius: 5,
-                              minHeight: 50,
-                              maxHeight: 50,
-                            }}
-                            onClick={() => {
-                              document
-                                .getElementById("upload-image-input")
-                                .click();
-                            }}
-                          />
-
-                          <input
-                            id="upload-image-input"
-                            className="upload"
-                            type="file"
-                            style={{
-                              position: "absolute",
-                              zIndex: 5,
-                              maxWidth: "50px",
-                              marginTop: "10px",
-                            }}
-                            onChange={(e) => this._handleImgChange(e, 0)}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Category Banner
-                    </label>
-                    <div
-                      className="box-input-file"
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-start",
-                      }}
-                    >
-                      {this.state.loading2 ? (
-                        <div
-                          className="spinner-border text-light mt-3 ml-2"
-                          role="status"
-                        >
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <img
-                            className="img-50 lazyloaded blur-up"
-                            src={this.state.imageUrl2}
-                            alt="#"
-                            style={{
-                              zIndex: 10,
-                              cursor: "pointer",
-                              border: "1px solid gainsboro",
-                              borderRadius: 5,
-                              minHeight: 50,
-                              maxHeight: 50,
-                            }}
-                            onClick={() => {
-                              document
-                                .getElementById("upload-image-input2")
-                                .click();
-                            }}
-                          />
-
-                          <input
-                            id="upload-image-input2"
-                            className="upload"
-                            type="file"
-                            style={{
-                              position: "absolute",
-                              zIndex: 5,
-                              maxWidth: "50px",
-                              marginTop: "10px",
-                            }}
-                            onChange={(e) => this._handleImgChange2(e, 0)}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
               <div className="modal-footer">
@@ -1006,7 +781,7 @@ export class Categories extends Component {
                     this.handleSubmit();
                   }}
                 >
-                  {productObj ? "UPDATE" : "ADD"} Category
+                  {productObj ? "UPDATE" : "ADD"} Term
                 </button>
               </div>
             </div>
@@ -1307,7 +1082,7 @@ export class Categories extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  Delete Category
+                  Delete Term
                 </div>
                 <button
                   type="button"
@@ -1323,7 +1098,7 @@ export class Categories extends Component {
               </div>
               <div className="modal-body">
                 <div style={{ padding: "10px 15px" }}>
-                  <div>Are you sure you want to delete this Category?</div>
+                  <div>Are you sure you want to delete this term?</div>
                 </div>
                 <table className="table table-bordered table-striped table-hover">
                   <thead>
@@ -1331,17 +1106,8 @@ export class Categories extends Component {
                   </thead>
                   <tbody>
                     <tr>
-                      <td>
-                        {productObj && (
-                          <img
-                            style={{ height: 70, width: 70 }}
-                            src={productObj.logo}
-                          />
-                        )}
-                      </td>
                       <td>{productObj && productObj.name}</td>
                       <td>{productObj && productObj.slug}</td>
-                      <td>{productObj && productObj.count}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1365,9 +1131,9 @@ export class Categories extends Component {
                     borderRadius: 5,
                   }}
                   onClick={() => {
-                    this.props.deleteCategoryRedux(
+                    this.props.deleteAttributeTermRedux(
                       productObj.id,
-                      productObj.parentCategory
+                      productObj.parentId
                     );
                     this.setState({
                       selectAll: false,
@@ -1415,7 +1181,7 @@ export class Categories extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  Delete All Selected Categories
+                  Delete All Selected terms
                 </div>
                 <button
                   type="button"
@@ -1433,7 +1199,7 @@ export class Categories extends Component {
                 <div style={{ padding: "10px 15px" }}>
                   <div>
                     Are you sure you want to delete{" "}
-                    {this.state.checkedValues.length} Categories?
+                    {this.state.checkedValues.length} term?
                   </div>
                 </div>
                 <table className="table table-bordered table-striped table-hover">
@@ -1460,12 +1226,12 @@ export class Categories extends Component {
                     padding: 8,
                     borderRadius: 5,
                   }}
-                  onClick={async () => {
-                    await this.state.checkedValues.map(async (id) => {
-                      let category = categories.find((cat1) => cat1.id == id);
-                      await this.props.deleteCategoryRedux(
+                  onClick={() => {
+                    this.state.checkedValues.map(async (id) => {
+                      const term = attrs.find((term) => term.id == id);
+                      await this.props.deleteAttributeTermRedux(
                         id,
-                        category.parentCategory
+                        term.parentId
                       );
                     });
                     this.setState({
@@ -1489,13 +1255,13 @@ const mapStateToProps = (state) => {
   return {
     allUsers: state.users.users,
     currentAdmin: state.admins.currentAdmin,
-    categories: state.categories.categories,
+    attrs: state.attributes.terms,
   };
 };
 
 export default connect(mapStateToProps, {
-  getAllCategoriesRedux,
-  uploadCategoryRedux,
-  updateCategoryRedux,
-  deleteCategoryRedux,
-})(Categories);
+  getAllAttributeTermsRedux,
+  uploadAttributeTermRedux,
+  updateAttributeTermRedux,
+  deleteAttributeTermRedux,
+})(AttributeTerms);

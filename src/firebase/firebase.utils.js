@@ -369,6 +369,16 @@ export const getSingleOrder = async (id) => {
   }
 };
 
+export const getSingleAttribute = async (id) => {
+  const orderRef = firestore.doc(`attributes/${id}`);
+  try {
+    const order = await orderRef.get();
+    return order.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
 export const updateOrder = async (orderObj) => {
   const orderRef = firestore.doc(`orders/${orderObj.orderId}`);
   const order = await orderRef.get();
@@ -1330,9 +1340,96 @@ export const updateAttribute = async (productObj) => {
 };
 
 export const deleteAttribute = async (id) => {
-  const productRef = firestore.doc(`attributes/${id}`);
+  const attrRef = firestore.doc(`attributes/${id}`);
+  const termsRef = firestore
+    .collection(`attributeTerms`)
+    .where("parentId", "==", id);
+  const terms = await termsRef.get();
   try {
-    await productRef.delete();
+    await attrRef.delete();
+    terms.forEach(async (doc) => {
+      const termRef = firestore.doc(`attributes/${doc.data().id}`);
+      await termRef.delete();
+    });
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllAttributeTerms = async (id) => {
+  const productsCollectionRef = firestore
+    .collection("attributeTerms")
+    .where("parentId", "==", id);
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadAttributeTerm = async (productObj) => {
+  const termRef = firestore.doc(`attributeTerms/${productObj.id}`);
+  const attrRef = firestore.doc(`attributes/${productObj.parentId}`);
+  const snapShot = await termRef.get();
+  const attr = await attrRef.get();
+  const newProductObj = { ...productObj, file: "" };
+  if (!snapShot.exists) {
+    try {
+      await termRef.set({
+        ...newProductObj,
+      });
+      await attrRef.update({
+        terms: [...attr.data().terms, newProductObj],
+      });
+      const updatedSnapShot = await termRef.get();
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a terms with similar id");
+  }
+};
+
+export const updateAttributeTerm = async (productObj) => {
+  const termRef = firestore.doc(`attributeTerms/${productObj.id}`);
+  const attrRef = firestore.doc(`attributes/${productObj.parentId}`);
+  const attr = await attrRef.get();
+  const newTerms = attr.data().terms.map((term) => {
+    if (term.id == productObj.id) {
+      return productObj;
+    } else {
+      return term;
+    }
+  });
+  try {
+    delete productObj.file;
+    await termRef.update({ ...productObj });
+    await attrRef.update({
+      terms: newTerms,
+    });
+    const updatedSnapShot = await termRef.get();
+    return updatedSnapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteAttributeTerm = async (id, parentId) => {
+  const termRef = firestore.doc(`attributeTerms/${id}`);
+  const attrRef = firestore.doc(`attributes/${parentId}`);
+  const attr = await attrRef.get();
+  const newTerms = attr.data().terms.filter((term) => term.id !== id);
+  try {
+    await termRef.delete();
+    await attrRef.update({
+      terms: newTerms,
+    });
   } catch (error) {
     alert(error);
   }
