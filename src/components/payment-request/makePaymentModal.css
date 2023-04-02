@@ -1,0 +1,158 @@
+.visible-modal {
+  display: block;
+  background-color: rgba(22, 22, 22, 0.3);
+  transition: top 1s, opacity 1s !important;
+}
+
+.visible-modal-content-make-payment {
+  background-size: cover;
+  box-shadow: rgb(29, 0, 37) 1px 5px 24px 0px;
+  min-width: 200%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  max-height: 800px;
+}
+
+.stripe-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.successpage-table {
+  margin: 1rem;
+}
+
+.payment-header .logo-div {
+  margin-left: 30rem;
+}
+.payment-header h5 {
+  margin-left: 2rem;
+  color: gray;
+}
+
+.payment-fullbox {
+  margin-left: 20rem;
+  margin-top: 1rem;
+}
+.payment-options {
+  display: flex;
+  flex-direction: row;
+}
+
+.choose-options {
+  display: flex;
+  flex-direction: row;
+}
+
+.payment-option {
+  padding: 1rem;
+  background: #f9f9f9;
+  text-align: center;
+  cursor: pointer;
+  color: darkgray;
+}
+.payment-option.not-selected {
+  background: white !important;
+}
+.payment-box {
+  border: none !important;
+}
+.payment-description {
+  padding-top: 0% !important;
+}
+
+.payment-image {
+  max-width: 20% !important;
+}
+.payment-logo {
+  max-width: 40px !important;
+  padding: 4px;
+}
+
+.cityBank {
+  max-width: 50% !important;
+}
+
+.grand-total-tr td {
+  border-top: none !important;
+}
+.grand-total-tr th {
+  border-top: none !important;
+}
+
+.order-details-header {
+  color: black;
+  text-transform: none;
+  font-size: 250% !important;
+  text-align: center;
+}
+
+.table thead th {
+  font-size: 120%;
+  font-weight: bold;
+}
+.order-details-container {
+  margin: 20px !important;
+}
+
+.result-td {
+  font-weight: bold;
+  font-size: 150%;
+}
+.agree-terms-condition {
+  margin-left: 7px;
+}
+
+.order-details-modal-container {
+  background-color: rgb(68 0 97);
+  max-height: 800px;
+  overflow-x: hidden;
+  overflow-y: scroll !important;
+  min-width: 200%;
+  margin-left: -250px;
+}
+
+@media (max-width: 600px) {
+  .order-details-header {
+    font-size: 140% !important;
+  }
+  .order-details-main-container {
+    padding: 20px 0px !important;
+  }
+
+  .order-details-container {
+    margin: 0px !important;
+  }
+
+  .table thead th {
+    font-size: 70%;
+    padding: 6px !important;
+  }
+  .table tbody th,
+  .table tbody td {
+    font-size: 70%;
+    padding: 4px !important;
+  }
+
+  .result-td {
+    font-size: 70%;
+  }
+
+  .agree-terms-condition {
+    font-size: 65%;
+  }
+  .terms-condition-checkbox {
+    margin-top: -2px;
+  }
+
+  .procced-to-checkout {
+    padding-right: 10px;
+  }
+
+  .order-details-modal-container {
+    max-height: 600px;
+    min-width: 100% !important;
+    margin-left: 0px !important;
+  }
+}
