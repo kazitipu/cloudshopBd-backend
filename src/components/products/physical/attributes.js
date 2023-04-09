@@ -485,6 +485,8 @@ export class Attributes extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              minWidth: "150px",
+                              maxWidth: "150px",
                             }}
                           >
                             <div>
@@ -544,6 +546,8 @@ export class Attributes extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              minWidth: "150px",
+                              maxWidth: "150px",
                             }}
                           >
                             Name
@@ -555,6 +559,8 @@ export class Attributes extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              minWidth: "150px",
+                              maxWidth: "150px",
                             }}
                           >
                             Slug
@@ -562,7 +568,6 @@ export class Attributes extends Component {
 
                           <th
                             scope="col"
-                            colSpan={3}
                             style={{
                               padding: "30px 15px",
                               color: "white",
@@ -577,6 +582,8 @@ export class Attributes extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              minWidth: "150px",
+                              maxWidth: "150px",
                             }}
                           >
                             Action
@@ -613,7 +620,7 @@ export class Attributes extends Component {
                             <td>{attr.name}</td>
                             <td colSpan={2}>{attr.slug}</td>
 
-                            <td colSpan={3}>
+                            <td>
                               {attr.terms.map((term) => (
                                 <span> {term.name}, </span>
                               ))}

@@ -519,6 +519,8 @@ export class Brands extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              minWidth: "150px",
+                              maxWidth: "150px",
                             }}
                           >
                             <div>
@@ -577,6 +579,8 @@ export class Brands extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "150px",
+                              minWidth: "150px",
                             }}
                           >
                             Logo
@@ -587,6 +591,8 @@ export class Brands extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "150px",
+                              minWidth: "150px",
                             }}
                           >
                             Name
@@ -598,6 +604,8 @@ export class Brands extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "150px",
+                              minWidth: "150px",
                             }}
                           >
                             Slug

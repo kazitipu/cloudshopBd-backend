@@ -475,6 +475,8 @@ export class Tags extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              minWidth: "150px",
+                              maxWidth: "150px",
                             }}
                           >
                             <div>
@@ -532,6 +534,8 @@ export class Tags extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "200px",
+                              minWidth: "200px",
                             }}
                           >
                             Name
@@ -543,6 +547,8 @@ export class Tags extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "200px",
+                              minWidth: "200px",
                             }}
                           >
                             Slug
@@ -554,6 +560,8 @@ export class Tags extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "200px",
+                              minWidth: "200px",
                             }}
                           >
                             Count
