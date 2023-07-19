@@ -174,3 +174,42 @@
   border-radius: 5px;
   padding: 5px 10px;
 }
+
+.ck.ck-editor__editable_inline p {
+  color: #262626;
+}
+.ck.ck-editor__editable_inline {
+  padding: 0 30px !important;
+  list-style-type: disc !important;
+}
+.below-searchbar-recommendation {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  z-index: 5;
+}
+.below-searchbar-recommendation li {
+  padding: 8px;
+  cursor: pointer;
+  background-color: white;
+  min-width: 100%;
+}
+
+.ck.ck-content ul,
+.ck.ck-content ul li {
+  list-style-type: inherit !important;
+}
+.ck.ck-content ul {
+  padding-left: 40px !important;
+}
+
+.ck.ck-content ol,
+.ck.ck-content ol li {
+  list-style-type: decimal !important;
+}
+.ck.ck-content ol {
+  padding-left: 40px !important;
+}
+.ck-editor__editable_inline {
+  padding: 0 30px !important;
+}

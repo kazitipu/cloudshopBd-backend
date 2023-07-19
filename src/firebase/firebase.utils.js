@@ -83,20 +83,17 @@ export const uploadImage = async (file) => {
 
   return imgUrl[0];
 };
-export const uploadProduct = async (productObj, discount) => {
+export const uploadProduct = async (productObj) => {
   const productRef = firestore.doc(`products/${productObj.id}`);
   const snapShot = await productRef.get();
   delete productObj.file;
   const newProductObj = {
     ...productObj,
-    new: productObj.new === "true" ? true : false,
-    sale: productObj.sale === "true" ? true : false,
   };
   if (!snapShot.exists) {
     try {
       productRef.set({
         ...newProductObj,
-        discount: discount,
       });
     } catch (error) {
       alert(error);
@@ -106,6 +103,8 @@ export const uploadProduct = async (productObj, discount) => {
       "there is already a product with this given prodcut Id, please change the product Id and upload again"
     );
   }
+  const updatedSnapShot = await productRef.get();
+  return updatedSnapShot.data();
 };
 export const uploadProductTax = async (productObj) => {
   const productRef = firestore.doc(`taxes/${productObj.id}`);

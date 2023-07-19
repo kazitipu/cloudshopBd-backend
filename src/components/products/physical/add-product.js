@@ -3,6 +3,8 @@ import Breadcrumb from "../../common/breadcrumb";
 import addProduct from "../../../assets/images/addProduct.png";
 import { uploadImage, uploadProduct } from "../../../firebase/firebase.utils";
 import { Tabs, TabList, TabPanel, Tab } from "react-tabs";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { connect } from "react-redux";
@@ -10,6 +12,7 @@ import {
   getAllAttributesRedux,
   getAllCategoriesRedux,
   getAllBrandsRedux,
+  getAllTagsRedux,
 } from "../../../actions";
 export class Add_product extends Component {
   constructor(props) {
@@ -59,11 +62,20 @@ export class Add_product extends Component {
       selectedVariations: [],
       videoUrl: "",
       checkedValues: [],
+      checkedValues2: [],
       addCategory: false,
       addBrand: false,
       categoryName: "",
       parentCategory: "",
       mostUsedTags: false,
+      editPublished: false,
+      editVisibility: false,
+      published: "Published",
+      visibility: "Public",
+      tag: "",
+      showSuggestion: false,
+      cursor: -1,
+      selectedTags: [],
     };
   }
 
@@ -71,6 +83,7 @@ export class Add_product extends Component {
     this.props.getAllAttributesRedux();
     this.props.getAllCategoriesRedux();
     this.props.getAllBrandsRedux();
+    this.props.getAllTagsRedux();
   };
 
   IncrementItem = () => {
@@ -99,15 +112,29 @@ export class Add_product extends Component {
     const { name, value } = event.target;
     this.setState({ [name]: value });
   };
+  handleProductTypeChange = (event) => {
+    const { name, value } = event.target;
+    this.setState({ [name]: value }, () => {
+      if (this.state.productType === "simpleProduct") {
+        this.setState({
+          productOption: "General",
+        });
+      } else {
+        this.setState({
+          productOption: "Inventory",
+        });
+      }
+    });
+  };
 
-  handleFormSubmit = async (event) => {
-    event.preventDefault();
-    const discount = Math.round(
-      100 - (this.state.salePrice * 100) / this.state.price
-    );
-    console.log(discount);
-
-    await uploadProduct(this.state, discount);
+  handleFormSubmit = async () => {
+    const id = new Date().getTime().toString();
+    const product = await uploadProduct({ ...this.state, id });
+    if (product) {
+      toast.success("New Product is uploaded");
+    } else {
+      toast.error("An error occurred. Try again later.");
+    }
     this.setState({
       id: "",
       skuId: "",
@@ -115,19 +142,57 @@ export class Add_product extends Component {
       price: "",
       salePrice: "",
       pictures: [addProduct, addProduct, addProduct, addProduct],
+      availability: "In-Stock",
       shortDetails: "",
       description: "",
       stock: "",
-      availability: "In-Stock",
       new: true,
       sale: true,
       category: "Bags",
-      quantity: "",
       colors: [],
       size: [],
       rating: 5,
       file: "",
+      quantity: "",
       brand: "",
+      productType: "simpleProduct",
+      schedule: false,
+      startDate: "",
+      endDate: "",
+      productOption: "General",
+      backOrders: "Do not allow",
+      lowStockAlert: "",
+      soldIndividually: false,
+      stockStatus: "In stock",
+      manageStock: false,
+      weight: "",
+      length: "",
+      width: "",
+      height: "",
+      shippingClass: "",
+      enableReveiws: false,
+      menuOrder: "",
+      upSells: "",
+      crossSells: "",
+      attribute: "",
+      selectedAttributes: [],
+      variations: "",
+      selectedVariations: [],
+      videoUrl: "",
+      checkedValues: [],
+      addCategory: false,
+      addBrand: false,
+      categoryName: "",
+      parentCategory: "",
+      mostUsedTags: false,
+      editPublished: false,
+      editVisibility: false,
+      published: "",
+      visibility: "",
+      tag: "",
+      showSuggestion: false,
+      cursor: -1,
+      selectedTags: [],
     });
   };
 
@@ -153,10 +218,6 @@ export class Add_product extends Component {
     }
   };
 
-  // _handleSubmit(e) {
-  //     e.preventDefault();
-  // }
-
   handleCkChange = (e, editor) => {
     let data = editor.getData();
     this.setState({
@@ -168,6 +229,11 @@ export class Add_product extends Component {
     this.setState({
       shortDetails: data,
     });
+  };
+
+  handleChangeTag = (e) => {
+    const { name, value } = e.target;
+    this.setState({ [name]: value, showSuggestion: true, cursor: -1 });
   };
 
   _handleImgChange = async (e, i) => {
@@ -196,28 +262,35 @@ export class Add_product extends Component {
     }
   };
 
-  handleDiscard = () => {
-    this.setState({
-      id: "",
-      name: "",
-      price: "",
-      salePrice: "",
-      discount: "",
-      pictures: [addProduct, addProduct, addProduct, addProduct],
-      shortDetails: "",
-      description: "",
-      stock: "",
-      availability: "In-Stock",
-      new: true,
-      sale: true,
-      category: "Bags",
-      quantity: "",
-      colors: [],
-      size: [],
-      rating: 5,
-      file: "",
-      brand: "",
-    });
+  handleKeyDown = (e) => {
+    const { cursor } = this.state;
+    let result = [];
+    if (this.state.tag) {
+      const suggestionByName = this.props.tags.filter((tagName) =>
+        tagName.name.toLowerCase().includes(this.state.tag.toLowerCase())
+      );
+
+      result = [...suggestionByName].slice(0, 10);
+
+      // arrow up/down button should select next/previous list element
+      if (e.keyCode === 38 && cursor > -1) {
+        this.setState((prevState) => ({
+          cursor: prevState.cursor - 1,
+        }));
+      } else if (e.keyCode === 40 && cursor < result.length - 1) {
+        this.setState((prevState) => ({
+          cursor: prevState.cursor + 1,
+        }));
+      } else if (e.keyCode === 13 && cursor > -1) {
+        this.setState({
+          tag: "",
+          selectedTags: [result[cursor].name, ...this.state.selectedTags],
+          showSuggestion: false,
+        });
+      }
+    } else {
+      result = [];
+    }
   };
 
   clickActive = (event) => {
@@ -240,6 +313,54 @@ export class Add_product extends Component {
       this.setState({
         checkedValues: this.state.checkedValues,
       });
+    }
+  };
+
+  selectRow2 = (e, i) => {
+    if (!e.target.checked) {
+      this.setState({
+        checkedValues2: this.state.checkedValues2.filter(
+          (item, j) => i !== item
+        ),
+      });
+    } else {
+      this.state.checkedValues2.push(i);
+      this.setState({
+        checkedValues2: this.state.checkedValues2,
+      });
+    }
+  };
+
+  renderShowSuggestion = () => {
+    let suggestionArray = [];
+    console.log(this.state.tag);
+    if (this.state.tag) {
+      console.log(this.state.tag);
+      const suggestionByName = this.props.tags.filter((tagName) =>
+        tagName.name.toLowerCase().includes(this.state.tag.toLowerCase())
+      );
+
+      suggestionArray = [...suggestionByName];
+      const uniqueTags = [...new Set(suggestionArray)];
+      console.log(suggestionArray);
+      return uniqueTags.slice(0, 10).map((tagName, index) => (
+        <li
+          key={tagName.id}
+          style={{
+            minWidth: "195px",
+            backgroundColor: this.state.cursor == index ? "gainsboro" : "white",
+          }}
+          onClick={() =>
+            this.setState({
+              tag: "",
+              selectedTags: [tagName.name, ...this.state.selectedTags],
+              showSuggestion: false,
+            })
+          }
+        >
+          {tagName.name}
+        </li>
+      ));
     }
   };
 
@@ -317,8 +438,8 @@ export class Add_product extends Component {
           <input
             type="checkbox"
             name={brand.id}
-            checked={this.state.checkedValues.includes(brand.id)}
-            onChange={(e) => this.selectRow(e, brand.id)}
+            checked={this.state.checkedValues2.includes(brand.id)}
+            onChange={(e) => this.selectRow2(e, brand.id)}
           />
           <span style={{ color: "#3C434A" }}>&nbsp; {brand.name}</span>
         </div>
@@ -351,7 +472,7 @@ export class Add_product extends Component {
   };
 
   render() {
-    const { attributes, categories, brands } = this.props;
+    const { attributes, categories, brands, tags } = this.props;
 
     let allCategories = [];
     if (categories.length > 0) {
@@ -364,14 +485,6 @@ export class Add_product extends Component {
       allBrands = this.getBrands(brands);
     }
 
-    let selectedTags = [
-      "Aichun Beauty",
-      "Beauty Creation",
-      "Beauty Glazed",
-      "Hudabeauty",
-      "fo",
-      "Lafz Onion Seed oil shampoo 200ml",
-    ];
     return (
       <Fragment>
         <Breadcrumb title="Add Product" parent="Physical" />
@@ -420,7 +533,7 @@ export class Add_product extends Component {
                                 type="text"
                                 onChange={this.handleChange}
                                 required
-                                placeholder="Product Name"
+                                placeholder="Enter Product Name"
                               />
                             </div>
                           </div>
@@ -551,13 +664,7 @@ export class Add_product extends Component {
                           class="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
-                          <button
-                            class="btn accordion-header-text"
-                            data-toggle="collapse"
-                            data-target="#collapseFour"
-                            aria-expanded="true"
-                            aria-controls="collapseFour"
-                          >
+                          <button class="btn accordion-header-text">
                             <div>
                               Product data —{" "}
                               <span>
@@ -566,7 +673,7 @@ export class Add_product extends Component {
                                   id="exampleFormControlSelect1"
                                   name="productType"
                                   value={this.state.productType}
-                                  onChange={this.handleChange}
+                                  onChange={this.handleProductTypeChange}
                                   style={{ fontWeight: "bold" }}
                                 >
                                   <option value={""} disabled>
@@ -745,6 +852,7 @@ export class Add_product extends Component {
                                               textDecoration: "underline",
                                               textDecorationColor: "#2271b1",
                                               fontSize: 13,
+                                              cursor: "pointer",
                                             }}
                                             onClick={() => {
                                               this.setState({
@@ -765,27 +873,38 @@ export class Add_product extends Component {
                                               Sale Price Dates
                                             </label>
                                             <div className="col-xl-6 col-sm-7">
-                                              <input
-                                                className="form-control mb-0"
-                                                name="startDate"
-                                                value={this.state.startDate}
-                                                type="date"
-                                                onChange={this.handleChange}
-                                                required
-                                              />
+                                              <div className="row">
+                                                <div>Form</div>
+                                                <input
+                                                  className="form-control mb-0"
+                                                  name="startDate"
+                                                  value={this.state.startDate}
+                                                  type="date"
+                                                  onChange={this.handleChange}
+                                                  required
+                                                  placeholder="form Date"
+                                                />
+                                              </div>
                                             </div>
                                           </div>
                                           <div className="form-group mb-3 row">
                                             <label className="col-xl-3 col-sm-4 mb-0 label-font"></label>
                                             <div className="col-xl-6 col-sm-7">
-                                              <input
-                                                className="form-control mb-0"
-                                                name="endDate"
-                                                value={this.state.endDate}
-                                                type="date"
-                                                onChange={this.handleChange}
-                                                required
-                                              />
+                                              <div
+                                                className="row"
+                                                style={{ marginTop: "-10px" }}
+                                              >
+                                                <div>To</div>
+                                                <input
+                                                  className="form-control mb-0"
+                                                  name="endDate"
+                                                  value={this.state.endDate}
+                                                  type="date"
+                                                  onChange={this.handleChange}
+                                                  required
+                                                  placeholder="to Date"
+                                                />
+                                              </div>
                                             </div>
                                           </div>
                                         </>
@@ -2089,6 +2208,254 @@ export class Add_product extends Component {
                           <button
                             class="btn accordion-header-text"
                             data-toggle="collapse"
+                            data-target="#collapseSixteen"
+                            aria-expanded="true"
+                            aria-controls="collapseSixteen"
+                          >
+                            <span>Publish </span>
+
+                            <span>
+                              <i className="icofont-rounded-up"></i>
+                              <i className="icofont-rounded-down"></i>
+                            </span>
+                          </button>
+
+                          <div
+                            id="collapseSixteen"
+                            class="collapse show"
+                            aria-labelledby="headingOne"
+                            data-parent="#accordion"
+                          >
+                            <div style={{ padding: "5px 10px" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "flex-start",
+                                }}
+                              >
+                                <span>
+                                  <i
+                                    className="icofont-pencil"
+                                    style={{ fontWeight: "bold" }}
+                                  ></i>
+                                </span>
+                                &nbsp;Status:{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  &nbsp; {this.state.published}
+                                </span>{" "}
+                                {!this.state.editPublished && (
+                                  <span
+                                    style={{
+                                      textDecoration: "underline",
+                                      color: "#ff8084",
+                                      marginLeft: 5,
+                                    }}
+                                    onClick={() => {
+                                      this.setState({
+                                        editPublished:
+                                          !this.state.editPublished,
+                                      });
+                                    }}
+                                  >
+                                    Edit
+                                  </span>
+                                )}
+                              </div>
+                              {this.state.editPublished && (
+                                <div>
+                                  <div style={{ margin: "10px 0px" }}>
+                                    <select
+                                      title="Please choose a package"
+                                      required
+                                      name="published"
+                                      className="custom-select"
+                                      aria-required="true"
+                                      aria-invalid="false"
+                                      onChange={this.handleChange}
+                                      value={this.state.published}
+                                      style={{
+                                        color: "#495057",
+                                        fontWeight: "lighter",
+                                      }}
+                                    >
+                                      <option value="Published">
+                                        Published
+                                      </option>
+                                      <option value="Pending Review">
+                                        Pending Review
+                                      </option>
+                                      <option value="Draft">Draft</option>
+                                    </select>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "flex-start",
+                                    }}
+                                  >
+                                    <button
+                                      className="white-bg-red"
+                                      onClick={() => {
+                                        this.setState({
+                                          editPublished: false,
+                                        });
+                                      }}
+                                    >
+                                      OK
+                                    </button>
+                                    <button
+                                      className="blue-bg-white"
+                                      style={{ marginLeft: 5 }}
+                                      onClick={() => {
+                                        this.setState({
+                                          editPublished: false,
+                                        });
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ padding: "5px 10px" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "flex-start",
+                                }}
+                              >
+                                <span>
+                                  <i className="icofont-eye-open"></i>
+                                </span>
+                                &nbsp;Visibility:{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  &nbsp; {this.state.visibility}
+                                </span>{" "}
+                                {!this.state.editVisibility && (
+                                  <span
+                                    style={{
+                                      textDecoration: "underline",
+                                      color: "#ff8084",
+                                      marginLeft: 5,
+                                    }}
+                                    onClick={() => {
+                                      this.setState({
+                                        editVisibility:
+                                          !this.state.editVisibility,
+                                      });
+                                    }}
+                                  >
+                                    Edit
+                                  </span>
+                                )}
+                              </div>
+                              {this.state.editVisibility && (
+                                <div>
+                                  <div style={{ margin: "10px 0px" }}>
+                                    <select
+                                      title="Please choose a package"
+                                      required
+                                      name="visibility"
+                                      className="custom-select"
+                                      aria-required="true"
+                                      aria-invalid="false"
+                                      onChange={this.handleChange}
+                                      value={this.state.visibility}
+                                      style={{
+                                        color: "#495057",
+                                        fontWeight: "lighter",
+                                      }}
+                                    >
+                                      <option value="Public">Public</option>
+                                      <option value="Password protected">
+                                        Password protected
+                                      </option>
+                                      <option value="Private">Private</option>
+                                    </select>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "flex-start",
+                                    }}
+                                  >
+                                    <button
+                                      className="white-bg-red"
+                                      onClick={() => {
+                                        this.setState({
+                                          editVisibility: false,
+                                        });
+                                      }}
+                                    >
+                                      OK
+                                    </button>
+                                    <button
+                                      className="blue-bg-white"
+                                      style={{ marginLeft: 5 }}
+                                      onClick={() => {
+                                        this.setState({
+                                          editVisibility: false,
+                                        });
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ padding: "5px 10px" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "flex-start",
+                                }}
+                              >
+                                <span>
+                                  <i className="icofont-calendar"></i>
+                                </span>
+                                &nbsp;Published on:{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  &nbsp; immediately
+                                </span>{" "}
+                              </div>
+                            </div>
+                            <div style={{ borderTop: "1px solid gainsboro" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "flex-end",
+                                  padding: "7px 10px",
+                                  backgroundColor: "#f7f7f7",
+                                }}
+                              >
+                                <button
+                                  className="blue-bg-white"
+                                  style={{ marginLeft: 5, padding: "7px" }}
+                                  onClick={() => this.handleFormSubmit()}
+                                >
+                                  Publish
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="accordion" className="accordion theme-accordion">
+                        <div
+                          class="card accordion-container"
+                          style={{ marginTop: "20px" }}
+                        >
+                          <button
+                            class="btn accordion-header-text"
+                            data-toggle="collapse"
                             data-target="#collapseTen"
                             aria-expanded="true"
                             aria-controls="collapseTen"
@@ -2319,6 +2686,7 @@ export class Add_product extends Component {
                                       paddingBottom: 10,
                                       color: "#ff8084",
                                       textDecoration: "underline",
+                                      cursor: "pointer",
                                     }}
                                     onClick={() => {
                                       this.setState({
@@ -2494,9 +2862,10 @@ export class Add_product extends Component {
                                 name="tag"
                                 value={this.state.tag}
                                 type="text"
-                                onChange={this.handleChange}
+                                onChange={this.handleChangeTag}
                                 required
                                 placeholder="Product tags"
+                                onKeyDown={this.handleKeyDown}
                               />
                               <button
                                 className="white-bg-red"
@@ -2505,8 +2874,20 @@ export class Add_product extends Component {
                                 Add
                               </button>
                             </div>
+                            {this.state.tag && (
+                              <ul
+                                className="below-searchbar-recommendation"
+                                style={{
+                                  display: this.state.showSuggestion
+                                    ? "flex"
+                                    : "none",
+                                }}
+                              >
+                                {this.renderShowSuggestion()}
+                              </ul>
+                            )}
                             <div style={{ marginTop: 10, marginBottom: 10 }}>
-                              {selectedTags.map((tag) => {
+                              {this.state.selectedTags.map((tag) => {
                                 return (
                                   <div style={{ padding: "3px 0px" }}>
                                     <i
@@ -2516,7 +2897,14 @@ export class Add_product extends Component {
                                         fontWeight: "bold",
                                         cursor: "pointer",
                                       }}
-                                      onClick={() => {}}
+                                      onClick={() => {
+                                        this.setState({
+                                          selectedTags:
+                                            this.state.selectedTags.filter(
+                                              (tagName) => tagName != tag
+                                            ),
+                                        });
+                                      }}
                                     ></i>
                                     &nbsp;
                                     {tag}
@@ -2528,6 +2916,7 @@ export class Add_product extends Component {
                               style={{
                                 color: "#ff8084",
                                 textDecoration: "underline",
+                                cursor: "pointer",
                               }}
                               onClick={() => {
                                 this.setState({
@@ -2545,17 +2934,25 @@ export class Add_product extends Component {
                                   marginTop: 5,
                                 }}
                               >
-                                {selectedTags.map((tag) => {
+                                {this.props.tags.map((tag) => {
                                   return (
                                     <span
                                       style={{
                                         color: "#ff8084",
                                         textDecoration: "underline",
                                         marginLeft: 10,
+                                        cursor: "pointer",
                                       }}
-                                      onClick={() => {}}
+                                      onClick={() => {
+                                        this.setState({
+                                          selectedTags: [
+                                            tag.name,
+                                            ...this.state.selectedTags,
+                                          ],
+                                        });
+                                      }}
                                     >
-                                      {tag}
+                                      {tag.name}
                                     </span>
                                   );
                                 })}
@@ -2770,6 +3167,7 @@ export class Add_product extends Component {
             </div>
           </div>
         </div>
+        <ToastContainer />
       </Fragment>
     );
   }
@@ -2780,10 +3178,12 @@ const mapStateToProps = (state) => {
     attributes: state.attributes.attributes,
     categories: state.categories.categories,
     brands: state.brands.brands,
+    tags: state.tags.tags,
   };
 };
 export default connect(mapStateToProps, {
   getAllAttributesRedux,
   getAllCategoriesRedux,
   getAllBrandsRedux,
+  getAllTagsRedux,
 })(Add_product);

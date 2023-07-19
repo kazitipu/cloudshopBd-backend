@@ -102,7 +102,7 @@ export const MENUITEMSFORADMIN = [
   //   ],
   // },
   {
-    title: "1688/taobao Orders",
+    title: "Orders",
     icon: Clipboard,
     type: "sub",
     active: false,
@@ -221,8 +221,8 @@ export const MENUITEMSFORADMIN = [
   },
 
   {
-    title: "Invoice",
-    path: "/invoice",
+    title: "Invoices",
+    path: "/invoices",
     icon: Archive,
     type: "link",
     active: false,
