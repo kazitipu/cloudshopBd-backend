@@ -498,7 +498,7 @@ export class Attributes extends Component {
                               >
                                 <input
                                   type="checkbox"
-                                  name={this.state.selectAll}
+                                  name={"selectAll"}
                                   checked={this.state.selectAll}
                                   onChange={(e) =>
                                     this.setState(
@@ -621,8 +621,8 @@ export class Attributes extends Component {
                             <td colSpan={2}>{attr.slug}</td>
 
                             <td>
-                              {attr.terms.map((term) => (
-                                <span> {term.name}, </span>
+                              {attr.terms.map((term, index) => (
+                                <span key={index}> {term.name}, </span>
                               ))}
                               &nbsp; &nbsp;
                               <span

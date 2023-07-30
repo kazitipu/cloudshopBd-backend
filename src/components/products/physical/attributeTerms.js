@@ -506,7 +506,7 @@ export class AttributeTerms extends Component {
                               >
                                 <input
                                   type="checkbox"
-                                  name={this.state.selectAll}
+                                  name={"selectAll"}
                                   checked={this.state.selectAll}
                                   onChange={(e) =>
                                     this.setState(

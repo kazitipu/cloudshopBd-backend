@@ -216,6 +216,7 @@ export const deleteProductTax = async (id) => {
     alert(error);
   }
 };
+
 export const updateProductTax = async (productObj) => {
   const productRef = firestore.doc(`taxes/${productObj.id}`);
   try {
@@ -1315,6 +1316,8 @@ export const uploadAttribute = async (productObj) => {
     try {
       await productRef.set({
         ...newProductObj,
+        enableVisibility: true,
+        enableVariations: true,
       });
       const updatedSnapShot = await productRef.get();
       return updatedSnapShot.data();
