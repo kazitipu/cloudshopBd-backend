@@ -39,6 +39,16 @@ const attributesReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         terms: [action.payload, ...state.terms],
+        attributes: state.attributes.map((attribute) => {
+          if (attribute.id == action.payload.parentId) {
+            return {
+              ...attribute,
+              terms: [...attribute.terms, action.payload],
+            };
+          } else {
+            return attribute;
+          }
+        }),
       };
     case "UPDATE_ATTRIBUTE_TERM":
       const filteredTermsArray = state.terms.filter(

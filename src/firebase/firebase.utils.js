@@ -106,6 +106,29 @@ export const uploadProduct = async (productObj) => {
   const updatedSnapShot = await productRef.get();
   return updatedSnapShot.data();
 };
+export const uploadDisplayedVariation = async (variationObj) => {
+  const productRef = firestore.doc(`variations/${variationObj.id}`);
+  const snapShot = await productRef.get();
+
+  const newVariationObj = {
+    ...variationObj,
+  };
+  if (!snapShot.exists) {
+    try {
+      await productRef.set({
+        ...newVariationObj,
+      });
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    await productRef.update({
+      ...newVariationObj,
+    });
+  }
+  const updatedSnapShot = await productRef.get();
+  return updatedSnapShot.data();
+};
 export const uploadProductTax = async (productObj) => {
   const productRef = firestore.doc(`taxes/${productObj.id}`);
   const snapShot = await productRef.get();
@@ -228,6 +251,15 @@ export const updateProductTax = async (productObj) => {
 
 export const getSingleProductTax = async (id) => {
   const productRef = firestore.doc(`taxes/${id}`);
+  try {
+    const product = await productRef.get();
+    return product.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+export const getDisplayedVariation = async (id) => {
+  const productRef = firestore.doc(`variations/${id}`);
   try {
     const product = await productRef.get();
     return product.data();

@@ -1,7 +1,12 @@
 import React, { Component, Fragment } from "react";
 import Breadcrumb from "../../common/breadcrumb";
 import addProduct from "../../../assets/images/addProduct.png";
-import { uploadImage, uploadProduct } from "../../../firebase/firebase.utils";
+import {
+  uploadImage,
+  uploadProduct,
+  uploadDisplayedVariation,
+  getDisplayedVariation,
+} from "../../../firebase/firebase.utils";
 import { Tabs, TabList, TabPanel, Tab } from "react-tabs";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -14,6 +19,9 @@ import {
   getAllCategoriesRedux,
   getAllBrandsRedux,
   getAllTagsRedux,
+  updateAttributeRedux,
+  deleteAttributeRedux,
+  uploadAttributeTermRedux,
 } from "../../../actions";
 export class Add_product extends Component {
   constructor(props) {
@@ -83,14 +91,39 @@ export class Add_product extends Component {
       attributes: [],
       savedAttributes: [],
       displayedVariations: [],
+      termName: "",
+      termSlug: "",
+      termModalAttribute: null,
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     this.props.getAllAttributesRedux();
     this.props.getAllCategoriesRedux();
     this.props.getAllBrandsRedux();
     this.props.getAllTagsRedux();
+    let data = await getDisplayedVariation(1234);
+    if (data) {
+      this.setState(
+        {
+          displayedVariations: data.combination.map((comb) => {
+            return comb.combination;
+          }),
+        },
+        () => {
+          console.log(this.state.displayedVariations);
+        }
+      );
+    }
+    const toDeleteAttributs = this.state.attributes.filter(
+      (attr) => attr.terms.length == 0
+    );
+    for (let i = 0; i < toDeleteAttributs.length; i++) {
+      let attribute = {
+        id: toDeleteAttributs[i].id,
+      };
+      await this.props.deleteAttributeRedux(attribute.id);
+    }
   };
 
   componentWillReceiveProps = (nextProps) => {
@@ -98,7 +131,7 @@ export class Add_product extends Component {
       this.setState({
         attributes: nextProps.attributes,
       });
-      console.log("component will receive is getting called!");
+      console.log("component will receive props is getting called!");
     }
   };
 
@@ -619,6 +652,38 @@ export class Add_product extends Component {
     return tree;
   };
 
+  handleSubmit = async () => {
+    let date = new Date();
+    let termObj = {
+      id: date.getTime().toString(),
+      parentId: this.state.termModalAttribute.id,
+      name: this.state.termName,
+      slug: this.state.termSlug,
+      count: 0,
+    };
+    await this.props.uploadAttributeTermRedux(termObj);
+    this.setState({
+      attributes: this.state.attributes.map((attr) => {
+        if (attr.id == this.state.termModalAttribute.id) {
+          return {
+            ...attr,
+            newTerms: "",
+            selectedTerms: attr.selectedTerms
+              ? [...attr.selectedTerms, termObj]
+              : [termObj],
+            terms: [...attr.terms, termObj],
+          };
+        } else {
+          return attr;
+        }
+      }),
+    });
+    this.setState({
+      termName: "",
+      termSlug: "",
+    });
+  };
+
   cartesian = (args) => {
     var r = [],
       max = args.length - 1;
@@ -652,7 +717,8 @@ export class Add_product extends Component {
     const displayedAttributes = attributes2.filter((attr) =>
       this.state.selectedAttributes.includes(attr.id)
     );
-    console.log(this.state.selectedAttributes);
+    console.log(this.state.displayedVariations);
+
     return (
       <Fragment>
         <Breadcrumb title="Add Product" parent="Physical" />
@@ -769,11 +835,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseThree"
                             aria-expanded="true"
@@ -788,7 +854,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseThree"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -829,10 +895,10 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
-                          <button class="btn accordion-header-text">
+                          <button className="btn accordion-header-text">
                             <div>
                               Product data —{" "}
                               <span>
@@ -864,7 +930,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseFour"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -885,7 +951,7 @@ export class Add_product extends Component {
                                         });
                                       }}
                                     >
-                                      <i class="icofont-ui-settings"></i>{" "}
+                                      <i className="icofont-ui-settings"></i>{" "}
                                       General
                                     </div>
                                   )}
@@ -901,7 +967,7 @@ export class Add_product extends Component {
                                       });
                                     }}
                                   >
-                                    <i class="icofont-list"></i> Inventory
+                                    <i className="icofont-list"></i> Inventory
                                   </div>
                                   <div
                                     className={`product-data-option ${
@@ -915,7 +981,7 @@ export class Add_product extends Component {
                                       });
                                     }}
                                   >
-                                    <i class="icofont-vehicle-delivery-van"></i>{" "}
+                                    <i className="icofont-vehicle-delivery-van"></i>{" "}
                                     Shipping
                                   </div>
                                   <div
@@ -930,7 +996,8 @@ export class Add_product extends Component {
                                       });
                                     }}
                                   >
-                                    <i class="icofont-library"></i> Attributes
+                                    <i className="icofont-library"></i>{" "}
+                                    Attributes
                                   </div>
                                   {this.state.productType ===
                                     "variableProduct" && (
@@ -946,7 +1013,8 @@ export class Add_product extends Component {
                                         });
                                       }}
                                     >
-                                      <i class="icofont-layout"></i> Variations
+                                      <i className="icofont-layout"></i>{" "}
+                                      Variations
                                     </div>
                                   )}
                                   <div
@@ -961,7 +1029,8 @@ export class Add_product extends Component {
                                       });
                                     }}
                                   >
-                                    <i class="icofont-settings"></i> Advanced
+                                    <i className="icofont-settings"></i>{" "}
+                                    Advanced
                                   </div>
                                   <div
                                     className={`product-data-option ${
@@ -976,7 +1045,8 @@ export class Add_product extends Component {
                                       });
                                     }}
                                   >
-                                    <i class="icofont-link"></i> Linked Products
+                                    <i className="icofont-link"></i> Linked
+                                    Products
                                   </div>
                                 </div>
                                 {this.state.productOption == "General" && (
@@ -1526,7 +1596,7 @@ export class Add_product extends Component {
                                         className="accordion theme-accordion"
                                       >
                                         <div
-                                          class="card accordion-container"
+                                          className="card accordion-container"
                                           style={{
                                             marginTop: "20px",
                                             marginRight: 10,
@@ -1534,7 +1604,7 @@ export class Add_product extends Component {
                                           }}
                                         >
                                           <button
-                                            class="btn accordion-header-text"
+                                            className="btn accordion-header-text"
                                             data-toggle="collapse"
                                             data-target="#collapseSix"
                                             aria-expanded="true"
@@ -1570,7 +1640,7 @@ export class Add_product extends Component {
                                           </button>
                                           <div
                                             id="collapseSix"
-                                            class="collapse show"
+                                            className="collapse show"
                                             aria-labelledby="headingOne"
                                             data-parent="#accordion"
                                           >
@@ -1752,7 +1822,7 @@ export class Add_product extends Component {
                                                   <>
                                                     <input
                                                       className="form-control mb-0"
-                                                      name="menuOrder"
+                                                      name="attributesName"
                                                       value={
                                                         this.state.attributes.find(
                                                           (attr) =>
@@ -1939,13 +2009,63 @@ export class Add_product extends Component {
                                                     <div>
                                                       <button
                                                         className="white-bg-blue"
-                                                        onClick={() => {}}
+                                                        onClick={() =>
+                                                          this.setState({
+                                                            attributes:
+                                                              this.state.attributes.map(
+                                                                (attr) => {
+                                                                  if (
+                                                                    attr.id ==
+                                                                    attr1.id
+                                                                  ) {
+                                                                    return {
+                                                                      ...attr,
+                                                                      newTerms:
+                                                                        "",
+                                                                      selectedTerms:
+                                                                        attr.selectedTerms
+                                                                          ? [
+                                                                              ...attr.terms,
+                                                                            ]
+                                                                          : attr.terms,
+                                                                    };
+                                                                  } else {
+                                                                    return attr;
+                                                                  }
+                                                                }
+                                                              ),
+                                                          })
+                                                        }
                                                       >
                                                         Select all
                                                       </button>
                                                       <button
                                                         className="white-bg-blue"
-                                                        onClick={() => {}}
+                                                        onClick={() =>
+                                                          this.setState({
+                                                            attributes:
+                                                              this.state.attributes.map(
+                                                                (attr) => {
+                                                                  if (
+                                                                    attr.id ==
+                                                                    attr1.id
+                                                                  ) {
+                                                                    return {
+                                                                      ...attr,
+                                                                      newTerms:
+                                                                        "",
+                                                                      selectedTerms:
+                                                                        attr.selectedTerms
+                                                                          ? []
+                                                                          : [],
+                                                                    };
+                                                                  } else {
+                                                                    return attr;
+                                                                  }
+                                                                }
+                                                              ),
+                                                          })
+                                                        }
                                                         style={{
                                                           marginLeft: 5,
                                                         }}
@@ -1956,7 +2076,14 @@ export class Add_product extends Component {
                                                     <div>
                                                       <button
                                                         className="white-bg-blue"
-                                                        onClick={() => {}}
+                                                        onClick={() => {
+                                                          this.setState({
+                                                            termModalAttribute:
+                                                              attr1,
+                                                          });
+                                                        }}
+                                                        data-toggle="modal"
+                                                        data-target="#personalInfoModal"
                                                       >
                                                         Add new
                                                       </button>
@@ -1977,14 +2104,73 @@ export class Add_product extends Component {
                                           marginBottom: 15,
                                           marginTop: 10,
                                         }}
-                                        onClick={() => {
+                                        onClick={async () => {
                                           console.log(displayedAttributes);
+                                          console.log(this.state.attributes);
                                           const savedAttributes =
                                             this.state.attributes.filter(
                                               (attr) =>
                                                 attr.selectedTerms &&
                                                 attr.selectedTerms.length > 0
                                             );
+                                          const newAttributes =
+                                            this.state.attributes.filter(
+                                              (attr) => attr.newTerms
+                                            );
+                                          for (
+                                            let i = 0;
+                                            i < newAttributes.length;
+                                            i++
+                                          ) {
+                                            let terms = [];
+                                            newAttributes[i].newTerms
+                                              .split("|")
+                                              .map((term, index) => {
+                                                terms.push({
+                                                  count: 0,
+                                                  file: "",
+                                                  id:
+                                                    new Date()
+                                                      .getTime()
+                                                      .toString() + index,
+                                                  name: term,
+                                                  slug: term,
+                                                  parentId: newAttributes[i].id,
+                                                });
+                                              });
+                                            let attribute = {
+                                              id: newAttributes[i].id,
+                                              enableVariations: true,
+                                              enableVisibility: true,
+                                              count: 0,
+                                              name: newAttributes[i].name,
+                                              slug: newAttributes[i].name,
+                                              terms: terms,
+                                            };
+                                            await this.props.updateAttributeRedux(
+                                              attribute
+                                            );
+                                            this.setState({
+                                              attributes:
+                                                this.state.attributes.map(
+                                                  (attr) => {
+                                                    if (
+                                                      attr.id == attribute.id
+                                                    ) {
+                                                      return {
+                                                        ...attr,
+                                                        newTerms: "",
+                                                        selectedTerms: terms,
+                                                      };
+                                                    } else {
+                                                      return attr;
+                                                    }
+                                                  }
+                                                ),
+                                            });
+                                          }
+
+                                          console.log(newAttributes);
                                           if (
                                             displayedAttributes.length ==
                                             savedAttributes.length
@@ -2008,7 +2194,7 @@ export class Add_product extends Component {
                                 )}
                                 {this.state.productOption == "Variations" && (
                                   <>
-                                    {this.state.savedAttributes.length > 0 ? (
+                                    {this.state.savedAttributes.length == 0 ? (
                                       <>
                                         {this.state.displayedVariations.length >
                                         0 ? (
@@ -2070,469 +2256,480 @@ export class Add_product extends Component {
                                                   Go
                                                 </button>
                                               </div>
-
-                                              <div
-                                                id="accordion"
-                                                className="accordion theme-accordion"
-                                              >
-                                                <div
-                                                  class="card accordion-container"
-                                                  style={{
-                                                    marginTop: "20px",
-                                                    marginRight: 10,
-                                                    marginBottom: "15px",
-                                                  }}
-                                                >
-                                                  <button
-                                                    class="btn accordion-header-text"
-                                                    data-toggle="collapse"
-                                                    data-target="#collapseEight"
-                                                    aria-expanded="true"
-                                                    aria-controls="collapseEight"
-                                                  >
-                                                    <span>
-                                                      #45256{" "}
-                                                      <select
-                                                        className="custom-select form-control"
-                                                        id="exampleFormControlSelect1"
-                                                        name="variations"
-                                                        value={
-                                                          this.state.variations
-                                                        }
-                                                        onChange={
-                                                          this.handleChange
-                                                        }
-                                                        style={{
-                                                          maxHeight: 35,
-                                                          margin: "auto 0px",
-                                                        }}
-                                                      >
-                                                        <option
-                                                          value={
-                                                            " @02 Vintage Cherry"
-                                                          }
-                                                        >
-                                                          @02 Vintage Cherry
-                                                        </option>
-                                                        <option
-                                                          value={
-                                                            "#01 Berry & Cream"
-                                                          }
-                                                        >
-                                                          #01 Berry & Cream
-                                                        </option>
-                                                        <option
-                                                          value={"delete"}
-                                                        >
-                                                          #02 (Natural skin)
-                                                        </option>
-                                                      </select>
-                                                    </span>
-
-                                                    <span>
-                                                      <i className="icofont-rounded-up"></i>
-                                                      <i className="icofont-rounded-down"></i>
-                                                      <span
-                                                        style={{
-                                                          color: "red",
-                                                          fontSize: 12,
-                                                          fontWeight: "lighter",
-                                                          marginLeft: 5,
-                                                        }}
-                                                      >
-                                                        Remove
-                                                      </span>
-                                                      <span
-                                                        style={{
-                                                          color: "#2271B1",
-                                                          fontSize: 12,
-                                                          fontWeight: "lighter",
-                                                          marginLeft: 10,
-                                                        }}
-                                                      >
-                                                        Edit
-                                                      </span>
-                                                    </span>
-                                                  </button>
-
+                                              {this.state.displayedVariations.map(
+                                                (variation, index) => (
                                                   <div
-                                                    id="collapseEight"
-                                                    class="collapse show"
-                                                    aria-labelledby="headingOne"
-                                                    data-parent="#accordion"
+                                                    id="accordion"
+                                                    className="accordion theme-accordion"
                                                   >
                                                     <div
-                                                      className="row"
-                                                      style={{ margin: 10 }}
+                                                      className="card accordion-container"
+                                                      style={{
+                                                        marginTop: "20px",
+                                                        marginRight: 10,
+                                                        marginBottom: "15px",
+                                                      }}
                                                     >
-                                                      <div className="col">
-                                                        <ul className="file-upload-product">
-                                                          <li>
-                                                            <div className="box-input-file">
-                                                              <input
-                                                                id="img-upload2"
-                                                                className="upload"
-                                                                type="file"
-                                                                style={{
-                                                                  position:
-                                                                    "absolute",
-                                                                  display:
-                                                                    "none",
-                                                                }}
-                                                                onChange={(e) =>
-                                                                  this._handleImgChange(
-                                                                    e,
-                                                                    1
-                                                                  )
-                                                                }
-                                                              />
-                                                              <img
-                                                                src={
+                                                      <button
+                                                        className="btn accordion-header-text"
+                                                        data-toggle="collapse"
+                                                        data-target={`#collapseEight${index}`}
+                                                        aria-expanded="true"
+                                                        aria-controls={`collapseEight${index}`}
+                                                      >
+                                                        <span>
+                                                          #{index}
+                                                          {variation.map(
+                                                            (vari) => (
+                                                              <select
+                                                                className="custom-select form-control"
+                                                                id="exampleFormControlSelect1"
+                                                                name="variations"
+                                                                value={
                                                                   this.state
-                                                                    .pictures[1]
+                                                                    .variations
+                                                                }
+                                                                onChange={
+                                                                  this
+                                                                    .handleChange
                                                                 }
                                                                 style={{
-                                                                  width: 50,
-                                                                  height: 50,
-                                                                  border:
-                                                                    "1px solid gainsboro",
-                                                                  borderRadius: 5,
-                                                                  cursor:
-                                                                    "pointer",
+                                                                  maxHeight: 35,
+                                                                  margin:
+                                                                    "auto 0px",
+                                                                  marginLeft: 10,
+                                                                  maxWidth: 150,
                                                                 }}
-                                                                onClick={() => {
-                                                                  document
-                                                                    .getElementById(
-                                                                      "img-upload2"
-                                                                    )
-                                                                    .click();
+                                                              >
+                                                                <option
+                                                                  value={
+                                                                    vari.name
+                                                                  }
+                                                                >
+                                                                  {vari.name}
+                                                                </option>
+                                                              </select>
+                                                            )
+                                                          )}
+                                                        </span>
+
+                                                        <span>
+                                                          <i className="icofont-rounded-up"></i>
+                                                          <i className="icofont-rounded-down"></i>
+                                                          <span
+                                                            style={{
+                                                              color: "red",
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                "lighter",
+                                                              marginLeft: 5,
+                                                            }}
+                                                          >
+                                                            Remove
+                                                          </span>
+                                                          <span
+                                                            style={{
+                                                              color: "#2271B1",
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                "lighter",
+                                                              marginLeft: 10,
+                                                            }}
+                                                          >
+                                                            Edit
+                                                          </span>
+                                                        </span>
+                                                      </button>
+
+                                                      <div
+                                                        id={`collapseEight${index}`}
+                                                        className="collapse show"
+                                                        aria-labelledby="headingOne"
+                                                        data-parent="#accordion"
+                                                      >
+                                                        <div
+                                                          className="row"
+                                                          style={{ margin: 10 }}
+                                                        >
+                                                          <div className="col">
+                                                            <ul className="file-upload-product">
+                                                              <li>
+                                                                <div className="box-input-file">
+                                                                  <input
+                                                                    id={`img-upload2${index}`}
+                                                                    className="upload"
+                                                                    type="file"
+                                                                    style={{
+                                                                      position:
+                                                                        "absolute",
+                                                                      display:
+                                                                        "none",
+                                                                    }}
+                                                                    onChange={(
+                                                                      e
+                                                                    ) =>
+                                                                      this._handleImgChange(
+                                                                        e,
+                                                                        index
+                                                                      )
+                                                                    }
+                                                                  />
+                                                                  <img
+                                                                    src={
+                                                                      this.state
+                                                                        .pictures[
+                                                                        index
+                                                                      ]
+                                                                    }
+                                                                    style={{
+                                                                      width: 50,
+                                                                      height: 50,
+                                                                      border:
+                                                                        "1px solid gainsboro",
+                                                                      borderRadius: 5,
+                                                                      cursor:
+                                                                        "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                      document
+                                                                        .getElementById(
+                                                                          `img-upload2${index}`
+                                                                        )
+                                                                        .click();
+                                                                    }}
+                                                                  />
+                                                                </div>
+                                                              </li>
+                                                            </ul>
+                                                          </div>
+
+                                                          <div className="col">
+                                                            <label
+                                                              style={{
+                                                                marginBottom: 0,
+                                                              }}
+                                                            >
+                                                              SKU
+                                                            </label>
+
+                                                            <input
+                                                              className="form-control mb-0"
+                                                              name="skuId"
+                                                              value={
+                                                                this.state.skuId
+                                                              }
+                                                              type="text"
+                                                              onChange={
+                                                                this
+                                                                  .handleChange
+                                                              }
+                                                              required
+                                                            />
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          className="row"
+                                                          style={{
+                                                            margin: 20,
+                                                            padding: "5px",
+                                                            borderTop:
+                                                              "1px solid gainsboro",
+                                                            borderBottom:
+                                                              "1px solid gainsboro",
+                                                          }}
+                                                        >
+                                                          <div>
+                                                            <input
+                                                              type="checkbox"
+                                                              name="enabled"
+                                                              checked={
+                                                                this.state
+                                                                  .enabled
+                                                              }
+                                                              onChange={(e) => {
+                                                                if (
+                                                                  e.target
+                                                                    .checked
+                                                                ) {
+                                                                  this.setState(
+                                                                    {
+                                                                      enabled: true,
+                                                                    }
+                                                                  );
+                                                                } else {
+                                                                  this.setState(
+                                                                    {
+                                                                      enabled: false,
+                                                                    }
+                                                                  );
+                                                                }
+                                                              }}
+                                                            />{" "}
+                                                            <span
+                                                              style={{
+                                                                color: "gray",
+                                                              }}
+                                                            >
+                                                              Enabled
+                                                            </span>
+                                                          </div>
+                                                          <div
+                                                            style={{
+                                                              marginLeft: 10,
+                                                            }}
+                                                          >
+                                                            <input
+                                                              type="checkbox"
+                                                              name="downloadable"
+                                                              checked={
+                                                                this.state
+                                                                  .downloadable
+                                                              }
+                                                              onChange={(e) => {
+                                                                if (
+                                                                  e.target
+                                                                    .checked
+                                                                ) {
+                                                                  this.setState(
+                                                                    {
+                                                                      downloadable: true,
+                                                                    }
+                                                                  );
+                                                                } else {
+                                                                  this.setState(
+                                                                    {
+                                                                      downloadable: false,
+                                                                    }
+                                                                  );
+                                                                }
+                                                              }}
+                                                            />{" "}
+                                                            <span
+                                                              style={{
+                                                                color: "gray",
+                                                              }}
+                                                            >
+                                                              Downloadable
+                                                            </span>
+                                                          </div>
+                                                          <div
+                                                            style={{
+                                                              marginLeft: 10,
+                                                            }}
+                                                          >
+                                                            <input
+                                                              type="checkbox"
+                                                              name="virtual"
+                                                              checked={
+                                                                this.state
+                                                                  .virtual
+                                                              }
+                                                              onChange={(e) => {
+                                                                if (
+                                                                  e.target
+                                                                    .checked
+                                                                ) {
+                                                                  this.setState(
+                                                                    {
+                                                                      virtual: true,
+                                                                    }
+                                                                  );
+                                                                } else {
+                                                                  this.setState(
+                                                                    {
+                                                                      virtual: false,
+                                                                    }
+                                                                  );
+                                                                }
+                                                              }}
+                                                            />{" "}
+                                                            <span
+                                                              style={{
+                                                                color: "gray",
+                                                              }}
+                                                            >
+                                                              Virtual
+                                                            </span>
+                                                          </div>
+                                                          <div
+                                                            style={{
+                                                              marginLeft: 10,
+                                                            }}
+                                                          >
+                                                            <input
+                                                              type="checkbox"
+                                                              name="manageStock"
+                                                              checked={
+                                                                this.state
+                                                                  .manageStock
+                                                              }
+                                                              onChange={(e) => {
+                                                                if (
+                                                                  e.target
+                                                                    .checked
+                                                                ) {
+                                                                  this.setState(
+                                                                    {
+                                                                      manageStock: true,
+                                                                    }
+                                                                  );
+                                                                } else {
+                                                                  this.setState(
+                                                                    {
+                                                                      manageStock: false,
+                                                                    }
+                                                                  );
+                                                                }
+                                                              }}
+                                                            />{" "}
+                                                            <span
+                                                              style={{
+                                                                color: "gray",
+                                                              }}
+                                                            >
+                                                              Manage stock?
+                                                            </span>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          className="row"
+                                                          style={{
+                                                            margin: 10,
+                                                            marginTop: 20,
+                                                          }}
+                                                        >
+                                                          <div className="col">
+                                                            <div>
+                                                              <label
+                                                                style={{
+                                                                  marginBottom:
+                                                                    "0px",
                                                                 }}
+                                                              >
+                                                                Regular Price (৳
+                                                                )
+                                                              </label>
+                                                              <input
+                                                                className="form-control mb-0"
+                                                                name="price"
+                                                                value={
+                                                                  this.state
+                                                                    .price
+                                                                }
+                                                                type="number"
+                                                                onChange={
+                                                                  this
+                                                                    .handleChange
+                                                                }
+                                                                required
                                                               />
                                                             </div>
-                                                          </li>
-                                                        </ul>
-                                                      </div>
-
-                                                      <div className="col">
-                                                        <label
-                                                          style={{
-                                                            marginBottom: 0,
-                                                          }}
-                                                        >
-                                                          SKU
-                                                        </label>
-
-                                                        <input
-                                                          className="form-control mb-0"
-                                                          name="skuId"
-                                                          value={
-                                                            this.state.skuId
-                                                          }
-                                                          type="text"
-                                                          onChange={
-                                                            this.handleChange
-                                                          }
-                                                          required
-                                                        />
-                                                      </div>
-                                                    </div>
-                                                    <div
-                                                      className="row"
-                                                      style={{
-                                                        margin: 20,
-                                                        padding: "5px",
-                                                        borderTop:
-                                                          "1px solid gainsboro",
-                                                        borderBottom:
-                                                          "1px solid gainsboro",
-                                                      }}
-                                                    >
-                                                      <div>
-                                                        <input
-                                                          type="checkbox"
-                                                          name="enabled"
-                                                          checked={
-                                                            this.state.enabled
-                                                          }
-                                                          onChange={(e) => {
-                                                            if (
-                                                              e.target.checked
-                                                            ) {
-                                                              this.setState({
-                                                                enabled: true,
-                                                              });
-                                                            } else {
-                                                              this.setState({
-                                                                enabled: false,
-                                                              });
-                                                            }
-                                                          }}
-                                                        />{" "}
-                                                        <span
-                                                          style={{
-                                                            color: "gray",
-                                                          }}
-                                                        >
-                                                          Enabled
-                                                        </span>
-                                                      </div>
-                                                      <div
-                                                        style={{
-                                                          marginLeft: 10,
-                                                        }}
-                                                      >
-                                                        <input
-                                                          type="checkbox"
-                                                          name="downloadable"
-                                                          checked={
-                                                            this.state
-                                                              .downloadable
-                                                          }
-                                                          onChange={(e) => {
-                                                            if (
-                                                              e.target.checked
-                                                            ) {
-                                                              this.setState({
-                                                                downloadable: true,
-                                                              });
-                                                            } else {
-                                                              this.setState({
-                                                                downloadable: false,
-                                                              });
-                                                            }
-                                                          }}
-                                                        />{" "}
-                                                        <span
-                                                          style={{
-                                                            color: "gray",
-                                                          }}
-                                                        >
-                                                          Downloadable
-                                                        </span>
-                                                      </div>
-                                                      <div
-                                                        style={{
-                                                          marginLeft: 10,
-                                                        }}
-                                                      >
-                                                        <input
-                                                          type="checkbox"
-                                                          name="virtual"
-                                                          checked={
-                                                            this.state.virtual
-                                                          }
-                                                          onChange={(e) => {
-                                                            if (
-                                                              e.target.checked
-                                                            ) {
-                                                              this.setState({
-                                                                virtual: true,
-                                                              });
-                                                            } else {
-                                                              this.setState({
-                                                                virtual: false,
-                                                              });
-                                                            }
-                                                          }}
-                                                        />{" "}
-                                                        <span
-                                                          style={{
-                                                            color: "gray",
-                                                          }}
-                                                        >
-                                                          Virtual
-                                                        </span>
-                                                      </div>
-                                                      <div
-                                                        style={{
-                                                          marginLeft: 10,
-                                                        }}
-                                                      >
-                                                        <input
-                                                          type="checkbox"
-                                                          name="manageStock"
-                                                          checked={
-                                                            this.state
-                                                              .manageStock
-                                                          }
-                                                          onChange={(e) => {
-                                                            if (
-                                                              e.target.checked
-                                                            ) {
-                                                              this.setState({
-                                                                manageStock: true,
-                                                              });
-                                                            } else {
-                                                              this.setState({
-                                                                manageStock: false,
-                                                              });
-                                                            }
-                                                          }}
-                                                        />{" "}
-                                                        <span
-                                                          style={{
-                                                            color: "gray",
-                                                          }}
-                                                        >
-                                                          Manage stock?
-                                                        </span>
-                                                      </div>
-                                                    </div>
-                                                    <div
-                                                      className="row"
-                                                      style={{
-                                                        margin: 10,
-                                                        marginTop: 20,
-                                                      }}
-                                                    >
-                                                      <div className="col">
-                                                        <div>
-                                                          <label
-                                                            style={{
-                                                              marginBottom:
-                                                                "0px",
-                                                            }}
-                                                          >
-                                                            Regular Price (৳ )
-                                                          </label>
-                                                          <input
-                                                            className="form-control mb-0"
-                                                            name="price"
-                                                            value={
-                                                              this.state.price
-                                                            }
-                                                            type="number"
-                                                            onChange={
-                                                              this.handleChange
-                                                            }
-                                                            required
-                                                          />
-                                                        </div>
-                                                      </div>
-                                                      <div className="col">
-                                                        <div>
-                                                          <label
-                                                            style={{
-                                                              marginBottom:
-                                                                "0px",
-                                                            }}
-                                                          >
-                                                            Sale Price (৳ )
-                                                          </label>
-                                                          <input
-                                                            className="form-control mb-0"
-                                                            name="salePrice"
-                                                            value={
-                                                              this.state
-                                                                .salePrice
-                                                            }
-                                                            type="number"
-                                                            onChange={
-                                                              this.handleChange
-                                                            }
-                                                            required
-                                                          />
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div
-                                                      className="row"
-                                                      style={{
-                                                        margin: 10,
-                                                        marginTop: 20,
-                                                      }}
-                                                    >
-                                                      <div className="col">
-                                                        <label
-                                                          style={{
-                                                            marginBottom: "0px",
-                                                          }}
-                                                        >
-                                                          Stock status
-                                                        </label>
-                                                        <div>
-                                                          <select
-                                                            className="custom-select form-control"
-                                                            id="exampleFormControlSelect1"
-                                                            name="stockStatus"
-                                                            value={
-                                                              this.state
-                                                                .stockStatus
-                                                            }
-                                                            onChange={
-                                                              this.handleChange
-                                                            }
-                                                          >
-                                                            <option
-                                                              value={"In stock"}
-                                                            >
-                                                              In stock
-                                                            </option>
-                                                            <option
-                                                              value={
-                                                                "Out of stock"
-                                                              }
-                                                            >
-                                                              Out of stock
-                                                            </option>
-                                                            <option
-                                                              value={
-                                                                "On backorder"
-                                                              }
-                                                            >
-                                                              On backorder
-                                                            </option>
-                                                          </select>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div
-                                                      className="row"
-                                                      style={{
-                                                        margin: 10,
-                                                        marginTop: 20,
-                                                      }}
-                                                    >
-                                                      <div className="col">
-                                                        <label
-                                                          style={{
-                                                            marginBottom: "0px",
-                                                          }}
-                                                        >
-                                                          Weight (kg)
-                                                        </label>
-
-                                                        <input
-                                                          className="form-control mb-0"
-                                                          name="weight"
-                                                          value={
-                                                            this.state.weight
-                                                          }
-                                                          type="text"
-                                                          onChange={
-                                                            this.handleChange
-                                                          }
-                                                          required
-                                                        />
-                                                      </div>
-                                                      <div className="col">
-                                                        <label
-                                                          style={{
-                                                            marginBottom: "0px",
-                                                          }}
-                                                        >
-                                                          Dimensions (L×W×H)
-                                                          (in)
-                                                        </label>
-
-                                                        <div className="row">
+                                                          </div>
                                                           <div className="col">
+                                                            <div>
+                                                              <label
+                                                                style={{
+                                                                  marginBottom:
+                                                                    "0px",
+                                                                }}
+                                                              >
+                                                                Sale Price (৳ )
+                                                              </label>
+                                                              <input
+                                                                className="form-control mb-0"
+                                                                name="salePrice"
+                                                                value={
+                                                                  this.state
+                                                                    .salePrice
+                                                                }
+                                                                type="number"
+                                                                onChange={
+                                                                  this
+                                                                    .handleChange
+                                                                }
+                                                                required
+                                                              />
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          className="row"
+                                                          style={{
+                                                            margin: 10,
+                                                            marginTop: 20,
+                                                          }}
+                                                        >
+                                                          <div className="col">
+                                                            <label
+                                                              style={{
+                                                                marginBottom:
+                                                                  "0px",
+                                                              }}
+                                                            >
+                                                              Stock status
+                                                            </label>
+                                                            <div>
+                                                              <select
+                                                                className="custom-select form-control"
+                                                                id="exampleFormControlSelect1"
+                                                                name="stockStatus"
+                                                                value={
+                                                                  this.state
+                                                                    .stockStatus
+                                                                }
+                                                                onChange={
+                                                                  this
+                                                                    .handleChange
+                                                                }
+                                                              >
+                                                                <option
+                                                                  value={
+                                                                    "In stock"
+                                                                  }
+                                                                >
+                                                                  In stock
+                                                                </option>
+                                                                <option
+                                                                  value={
+                                                                    "Out of stock"
+                                                                  }
+                                                                >
+                                                                  Out of stock
+                                                                </option>
+                                                                <option
+                                                                  value={
+                                                                    "On backorder"
+                                                                  }
+                                                                >
+                                                                  On backorder
+                                                                </option>
+                                                              </select>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          className="row"
+                                                          style={{
+                                                            margin: 10,
+                                                            marginTop: 20,
+                                                          }}
+                                                        >
+                                                          <div className="col">
+                                                            <label
+                                                              style={{
+                                                                marginBottom:
+                                                                  "0px",
+                                                              }}
+                                                            >
+                                                              Weight (kg)
+                                                            </label>
+
                                                             <input
                                                               className="form-control mb-0"
-                                                              name="length"
+                                                              name="weight"
                                                               value={
                                                                 this.state
-                                                                  .length
+                                                                  .weight
                                                               }
                                                               type="text"
                                                               onChange={
@@ -2540,32 +2737,134 @@ export class Add_product extends Component {
                                                                   .handleChange
                                                               }
                                                               required
-                                                              placeholder="Length"
                                                             />
                                                           </div>
                                                           <div className="col">
-                                                            <input
-                                                              className="form-control mb-0"
-                                                              name="width"
-                                                              value={
-                                                                this.state.width
-                                                              }
-                                                              type="text"
-                                                              onChange={
-                                                                this
-                                                                  .handleChange
-                                                              }
-                                                              required
-                                                              placeholder="Width"
-                                                            />
+                                                            <label
+                                                              style={{
+                                                                marginBottom:
+                                                                  "0px",
+                                                              }}
+                                                            >
+                                                              Dimensions (L×W×H)
+                                                              (in)
+                                                            </label>
+
+                                                            <div className="row">
+                                                              <div className="col">
+                                                                <input
+                                                                  className="form-control mb-0"
+                                                                  name="length"
+                                                                  value={
+                                                                    this.state
+                                                                      .length
+                                                                  }
+                                                                  type="text"
+                                                                  onChange={
+                                                                    this
+                                                                      .handleChange
+                                                                  }
+                                                                  required
+                                                                  placeholder="Length"
+                                                                />
+                                                              </div>
+                                                              <div className="col">
+                                                                <input
+                                                                  className="form-control mb-0"
+                                                                  name="width"
+                                                                  value={
+                                                                    this.state
+                                                                      .width
+                                                                  }
+                                                                  type="text"
+                                                                  onChange={
+                                                                    this
+                                                                      .handleChange
+                                                                  }
+                                                                  required
+                                                                  placeholder="Width"
+                                                                />
+                                                              </div>
+                                                              <div className="col">
+                                                                <input
+                                                                  className="form-control mb-0"
+                                                                  name="height"
+                                                                  value={
+                                                                    this.state
+                                                                      .height
+                                                                  }
+                                                                  type="text"
+                                                                  onChange={
+                                                                    this
+                                                                      .handleChange
+                                                                  }
+                                                                  required
+                                                                  placeholder="Height"
+                                                                />
+                                                              </div>
+                                                            </div>
                                                           </div>
+                                                        </div>
+                                                        <div
+                                                          className="row"
+                                                          style={{
+                                                            margin: 10,
+                                                            marginTop: 20,
+                                                          }}
+                                                        >
                                                           <div className="col">
-                                                            <input
-                                                              className="form-control mb-0"
-                                                              name="height"
+                                                            <label
+                                                              style={{
+                                                                marginBottom: 0,
+                                                              }}
+                                                            >
+                                                              Shipping class
+                                                            </label>
+
+                                                            <select
+                                                              className="custom-select form-control"
+                                                              id="exampleFormControlSelect1"
+                                                              name="shippingClass"
                                                               value={
                                                                 this.state
-                                                                  .height
+                                                                  .shippingClass
+                                                              }
+                                                              onChange={
+                                                                this
+                                                                  .handleChange
+                                                              }
+                                                            >
+                                                              <option
+                                                                value={""}
+                                                              >
+                                                                No shipping
+                                                                class
+                                                              </option>
+                                                            </select>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          className="row"
+                                                          style={{
+                                                            margin: 10,
+                                                            marginTop: 20,
+                                                            marginBottom: 20,
+                                                          }}
+                                                        >
+                                                          <div className="col">
+                                                            <label
+                                                              style={{
+                                                                marginBottom: 0,
+                                                              }}
+                                                            >
+                                                              Description
+                                                            </label>
+                                                            <textarea
+                                                              className="form-control mb-0"
+                                                              name="description"
+                                                              value={
+                                                                this.state
+                                                                  .description
                                                               }
                                                               type="text"
                                                               onChange={
@@ -2573,80 +2872,14 @@ export class Add_product extends Component {
                                                                   .handleChange
                                                               }
                                                               required
-                                                              placeholder="Height"
                                                             />
                                                           </div>
                                                         </div>
-                                                      </div>
-                                                    </div>
-                                                    <div
-                                                      className="row"
-                                                      style={{
-                                                        margin: 10,
-                                                        marginTop: 20,
-                                                      }}
-                                                    >
-                                                      <div className="col">
-                                                        <label
-                                                          style={{
-                                                            marginBottom: 0,
-                                                          }}
-                                                        >
-                                                          Shipping class
-                                                        </label>
-
-                                                        <select
-                                                          className="custom-select form-control"
-                                                          id="exampleFormControlSelect1"
-                                                          name="shippingClass"
-                                                          value={
-                                                            this.state
-                                                              .shippingClass
-                                                          }
-                                                          onChange={
-                                                            this.handleChange
-                                                          }
-                                                        >
-                                                          <option value={""}>
-                                                            No shipping class
-                                                          </option>
-                                                        </select>
-                                                      </div>
-                                                    </div>
-                                                    <div
-                                                      className="row"
-                                                      style={{
-                                                        margin: 10,
-                                                        marginTop: 20,
-                                                        marginBottom: 20,
-                                                      }}
-                                                    >
-                                                      <div className="col">
-                                                        <label
-                                                          style={{
-                                                            marginBottom: 0,
-                                                          }}
-                                                        >
-                                                          Description
-                                                        </label>
-                                                        <textarea
-                                                          className="form-control mb-0"
-                                                          name="description"
-                                                          value={
-                                                            this.state
-                                                              .description
-                                                          }
-                                                          type="text"
-                                                          onChange={
-                                                            this.handleChange
-                                                          }
-                                                          required
-                                                        />
                                                       </div>
                                                     </div>
                                                   </div>
-                                                </div>
-                                              </div>
+                                                )
+                                              )}
 
                                               <div className="row">
                                                 <button
@@ -2684,7 +2917,7 @@ export class Add_product extends Component {
                                               <button
                                                 className="white-bg-blue"
                                                 style={{ marginLeft: 10 }}
-                                                onClick={() => {
+                                                onClick={async () => {
                                                   console.log(
                                                     this.state.savedAttributes
                                                   );
@@ -2701,11 +2934,23 @@ export class Add_product extends Component {
                                                   let combination =
                                                     this.cartesian(allTerms);
                                                   console.log(combination);
-
+                                                  combination = combination.map(
+                                                    (comb) => {
+                                                      return {
+                                                        combination: comb,
+                                                      };
+                                                    }
+                                                  );
                                                   this.setState({
                                                     displayedVariations:
-                                                      variationCombination,
+                                                      combination,
                                                   });
+                                                  await uploadDisplayedVariation(
+                                                    {
+                                                      id: 1234,
+                                                      combination: combination,
+                                                    }
+                                                  );
                                                 }}
                                               >
                                                 Generate variations
@@ -2731,6 +2976,22 @@ export class Add_product extends Component {
                                               >
                                                 Add manually
                                               </button>
+                                            </div>
+                                            <div className="row">
+                                              <div
+                                                className="col"
+                                                style={{
+                                                  textAlign: "center",
+                                                  justifyContent: "center",
+                                                  alignItems: "center",
+                                                  color: "gray",
+                                                  marginTop: 50,
+                                                }}
+                                              >
+                                                No variations yet. Generate them
+                                                from all added attributes or add
+                                                a new variation manually.
+                                              </div>
                                             </div>
                                           </div>
                                         )}
@@ -2776,11 +3037,11 @@ export class Add_product extends Component {
                     >
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseNine"
                             aria-expanded="true"
@@ -2796,7 +3057,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseNine"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -2819,11 +3080,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseSixteen"
                             aria-expanded="true"
@@ -2839,7 +3100,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseSixteen"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -3067,11 +3328,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseTen"
                             aria-expanded="true"
@@ -3087,7 +3348,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseTen"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -3117,11 +3378,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseEleven"
                             aria-expanded="true"
@@ -3137,7 +3398,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseEleven"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -3177,11 +3438,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseTwelve"
                             aria-expanded="true"
@@ -3197,7 +3458,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseTwelve"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -3236,11 +3497,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseThirteen"
                             aria-expanded="true"
@@ -3256,7 +3517,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseThirteen"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -3442,11 +3703,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseFourteen"
                             aria-expanded="true"
@@ -3462,7 +3723,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseFourteen"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                             style={{ padding: 10 }}
@@ -3508,7 +3769,7 @@ export class Add_product extends Component {
                                 return (
                                   <div style={{ padding: "3px 0px" }}>
                                     <i
-                                      class="icofont-close-circled"
+                                      className="icofont-close-circled"
                                       style={{
                                         color: "#ff8084",
                                         fontWeight: "bold",
@@ -3580,11 +3841,11 @@ export class Add_product extends Component {
                       </div>
                       <div id="accordion" className="accordion theme-accordion">
                         <div
-                          class="card accordion-container"
+                          className="card accordion-container"
                           style={{ marginTop: "20px" }}
                         >
                           <button
-                            class="btn accordion-header-text"
+                            className="btn accordion-header-text"
                             data-toggle="collapse"
                             data-target="#collapseFifteen"
                             aria-expanded="true"
@@ -3600,7 +3861,7 @@ export class Add_product extends Component {
 
                           <div
                             id="collapseFifteen"
-                            class="collapse show"
+                            className="collapse show"
                             aria-labelledby="headingOne"
                             data-parent="#accordion"
                           >
@@ -3784,6 +4045,130 @@ export class Add_product extends Component {
             </div>
           </div>
         </div>
+        <div
+          className="modal fade"
+          id="personalInfoModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            role="document"
+            style={{ margin: "auto" }}
+          >
+            <div
+              className="modal-content"
+              style={{ top: 10, width: "95%", margin: "auto" }}
+            >
+              <div
+                className="modal-header"
+                style={{
+                  backgroundColor: "rgb(0, 37, 76)",
+                  paddingTop: 20,
+                  paddingBottom: 20,
+                }}
+              >
+                <div
+                  className="modal-title"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 17,
+                    color: "white",
+                  }}
+                  id="exampleModalLabel"
+                >
+                  Add New Term for{" "}
+                  {this.state.termModalAttribute &&
+                    this.state.termModalAttribute.name}
+                </div>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  id="personal-info-close"
+                >
+                  <span aria-hidden="true" style={{ color: "white" }}>
+                    &times;
+                  </span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div style={{ padding: "10px 15px" }}>
+                  <div className="form-group">
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "#505050",
+                        marginBottom: 5,
+                      }}
+                    >
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="termName"
+                      value={this.state.termName}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter term name"
+                      style={{
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "#505050",
+                        marginBottom: 5,
+                      }}
+                    >
+                      Slug
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="termSlug"
+                      value={this.state.termSlug}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter slug name"
+                      style={{
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn "
+                  data-dismiss="modal"
+                  style={{
+                    backgroundColor: "darkorange",
+                    color: "white",
+                    padding: 8,
+                    borderRadius: 5,
+                    fontWeight: "lighter",
+                  }}
+                  onClick={() => {
+                    this.handleSubmit();
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <ToastContainer />
       </Fragment>
     );
@@ -3801,7 +4186,10 @@ const mapStateToProps = (state) => {
 export default connect(mapStateToProps, {
   getAllAttributesRedux,
   uploadAttributeRedux,
+  updateAttributeRedux,
+  deleteAttributeRedux,
   getAllCategoriesRedux,
   getAllBrandsRedux,
   getAllTagsRedux,
+  uploadAttributeTermRedux,
 })(Add_product);
