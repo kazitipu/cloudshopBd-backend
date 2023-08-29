@@ -1,12 +1,7 @@
 import React, { Component, Fragment } from "react";
 import Breadcrumb from "../../common/breadcrumb";
 import addProduct from "../../../assets/images/addProduct.png";
-import {
-  uploadImage,
-  uploadProduct,
-  uploadDisplayedVariation,
-  getDisplayedVariation,
-} from "../../../firebase/firebase.utils";
+import { uploadImage, uploadProduct } from "../../../firebase/firebase.utils";
 import { Tabs, TabList, TabPanel, Tab } from "react-tabs";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -33,6 +28,7 @@ export class Add_product extends Component {
       price: "",
       salePrice: "",
       pictures: [addProduct, addProduct, addProduct, addProduct],
+      pictures2: [addProduct],
       availability: "In-Stock",
       shortDetails: "",
       description: "",
@@ -68,7 +64,7 @@ export class Add_product extends Component {
       crossSells: "",
       attribute: "",
       selectedAttributes: [],
-      variations: "",
+      variations: "create",
       selectedVariations: [],
       videoUrl: "",
       checkedValues: [],
@@ -94,6 +90,7 @@ export class Add_product extends Component {
       termName: "",
       termSlug: "",
       termModalAttribute: null,
+      variationPrice: "",
     };
   }
 
@@ -102,19 +99,7 @@ export class Add_product extends Component {
     this.props.getAllCategoriesRedux();
     this.props.getAllBrandsRedux();
     this.props.getAllTagsRedux();
-    let data = await getDisplayedVariation(1234);
-    if (data) {
-      this.setState(
-        {
-          displayedVariations: data.combination.map((comb) => {
-            return comb.combination;
-          }),
-        },
-        () => {
-          console.log(this.state.displayedVariations);
-        }
-      );
-    }
+
     const toDeleteAttributs = this.state.attributes.filter(
       (attr) => attr.terms.length == 0
     );
@@ -162,6 +147,19 @@ export class Add_product extends Component {
     const { name, value } = event.target;
     this.setState({ [name]: value });
   };
+  handleChangeVariation = (event, variation) => {
+    const { name, value } = event.target;
+
+    this.setState({
+      displayedVariations: this.state.displayedVariations.map((vari) => {
+        if (vari.id === variation.id) {
+          return { ...vari, [name]: value };
+        } else {
+          return vari;
+        }
+      }),
+    });
+  };
 
   handleAttributesChange = (event) => {
     const { name, value } = event.target;
@@ -192,6 +190,22 @@ export class Add_product extends Component {
 
   handleFormSubmit = async () => {
     const id = new Date().getTime().toString();
+    console.log(this.state.pictures[0]);
+    if (!this.state.name) {
+      alert("You must provide a product name.");
+      return;
+    }
+    if (this.state.displayedVariations.length == 0) {
+      if (!this.state.price) {
+        alert("You must provide price for a product.");
+        return;
+      }
+    }
+    if (this.state.pictures[0] === "/static/media/addProduct.3dff302b.png") {
+      alert("Please upload at least one image for the product.");
+      return;
+    }
+
     const product = await uploadProduct({ ...this.state, id });
     if (product) {
       toast.success("New Product is uploaded");
@@ -205,6 +219,7 @@ export class Add_product extends Component {
       price: "",
       salePrice: "",
       pictures: [addProduct, addProduct, addProduct, addProduct],
+      pictures2: [addProduct],
       availability: "In-Stock",
       shortDetails: "",
       description: "",
@@ -336,6 +351,79 @@ export class Add_product extends Component {
       pictures[i] = imgUrl;
       this.setState({
         pictures,
+      });
+      console.log(pictures);
+    }
+  };
+  _handleMultipleImgChange = async (e) => {
+    e.preventDefault();
+    let reader = new FileReader();
+    let files = e.target.files;
+    console.log(files);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.log(file);
+      const { pictures2 } = this.state;
+      reader.onloadend = () => {
+        pictures2[i] = reader.result;
+        this.setState({
+          file: file,
+          pictures2,
+        });
+      };
+      if (file) {
+        reader.readAsDataURL(file);
+        const imgUrl = await uploadImage(file);
+        console.log(imgUrl);
+        pictures2[i] = imgUrl;
+        this.setState({
+          pictures2,
+        });
+        console.log(pictures2);
+      }
+    }
+  };
+
+  _handleImgChangeVariation = async (e, i, variation) => {
+    e.preventDefault();
+    let reader = new FileReader();
+    let file = e.target.files[0];
+    const { pictures } = this.state.displayedVariations.find(
+      (vari) => vari.id === variation.id
+    );
+
+    reader.onloadend = () => {
+      pictures[i] = reader.result;
+      this.setState({
+        file: file,
+        displayedVariations: this.state.displayedVariations.map((vari) => {
+          if (vari.id === variation.id) {
+            return {
+              ...vari,
+              pictures,
+            };
+          } else {
+            return vari;
+          }
+        }),
+      });
+    };
+    if (file) {
+      reader.readAsDataURL(file);
+      const imgUrl = await uploadImage(file);
+      console.log(imgUrl);
+      pictures[i] = imgUrl;
+      this.setState({
+        displayedVariations: this.state.displayedVariations.map((vari) => {
+          if (vari.id === variation.id) {
+            return {
+              ...vari,
+              pictures,
+            };
+          } else {
+            return vari;
+          }
+        }),
       });
       console.log(pictures);
     }
@@ -684,6 +772,20 @@ export class Add_product extends Component {
     });
   };
 
+  handleAddVariationPrice = async () => {
+    this.setState({
+      displayedVariations: this.state.displayedVariations.map((variation) => {
+        if (variation.price > 0) {
+          return variation;
+        } else {
+          return { ...variation, price: this.state.variationPrice };
+        }
+      }),
+      variationPrice: "",
+    });
+    toast.success("Price added successfully!");
+  };
+
   cartesian = (args) => {
     var r = [],
       max = args.length - 1;
@@ -717,7 +819,6 @@ export class Add_product extends Component {
     const displayedAttributes = attributes2.filter((attr) =>
       this.state.selectedAttributes.includes(attr.id)
     );
-    console.log(this.state.displayedVariations);
 
     return (
       <Fragment>
@@ -1403,9 +1504,10 @@ export class Add_product extends Component {
                                             value={this.state.shippingClass}
                                             onChange={this.handleChange}
                                           >
-                                            <option value={""}>
-                                              No shipping class
+                                            <option value={"Same as parent"}>
+                                              Same as parent
                                             </option>
+                                            <option value={"Free"}>Free</option>
                                           </select>
                                         </div>
                                       </div>
@@ -2194,7 +2296,7 @@ export class Add_product extends Component {
                                 )}
                                 {this.state.productOption == "Variations" && (
                                   <>
-                                    {this.state.savedAttributes.length == 0 ? (
+                                    {this.state.savedAttributes.length > 0 ? (
                                       <>
                                         {this.state.displayedVariations.length >
                                         0 ? (
@@ -2223,9 +2325,6 @@ export class Add_product extends Component {
                                                       margin: "auto 0px",
                                                     }}
                                                   >
-                                                    <option value={"add"}>
-                                                      Add variations
-                                                    </option>
                                                     <option value={"create"}>
                                                       Create variations from all
                                                       attributes
@@ -2237,14 +2336,70 @@ export class Add_product extends Component {
                                                 </div>
                                                 <button
                                                   className="white-bg-blue"
-                                                  onClick={() => {
-                                                    if (this.state.variations) {
+                                                  onClick={async () => {
+                                                    if (
+                                                      this.state.variations ===
+                                                      "create"
+                                                    ) {
+                                                      const allTerms = [];
+                                                      const variationCombination =
+                                                        this.state.savedAttributes.map(
+                                                          (attr) => {
+                                                            allTerms.push(
+                                                              attr.selectedTerms
+                                                            );
+                                                          }
+                                                        );
+                                                      console.log(allTerms);
+                                                      let combination =
+                                                        this.cartesian(
+                                                          allTerms
+                                                        );
+                                                      console.log(combination);
+                                                      combination =
+                                                        combination.map(
+                                                          (comb) => {
+                                                            return {
+                                                              combination: comb,
+                                                            };
+                                                          }
+                                                        );
+                                                      const date =
+                                                        new Date().getTime();
                                                       this.setState({
-                                                        selectedVariations:
-                                                          this.state.selectedVariations.push(
-                                                            this.state
-                                                              .variations
+                                                        displayedVariations:
+                                                          combination.map(
+                                                            (comb, index) => {
+                                                              return {
+                                                                id:
+                                                                  date + index,
+                                                                price: 0,
+                                                                salePrice: 0,
+                                                                weight: 0,
+                                                                length: 0,
+                                                                width: 0,
+                                                                height: 0,
+                                                                description: "",
+                                                                stockStatus:
+                                                                  "In stock",
+                                                                shippingClass:
+                                                                  "Same as parent",
+                                                                skuId: "",
+                                                                pictures: [
+                                                                  addProduct,
+                                                                ],
+                                                                combination:
+                                                                  comb.combination,
+                                                              };
+                                                            }
                                                           ),
+                                                      });
+                                                    } else if (
+                                                      this.state.variations ===
+                                                      "delete"
+                                                    ) {
+                                                      this.setState({
+                                                        displayedVariations: [],
                                                       });
                                                     } else {
                                                       alert(
@@ -2254,6 +2409,44 @@ export class Add_product extends Component {
                                                   }}
                                                 >
                                                   Go
+                                                </button>
+                                              </div>
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  flexDirection: "row",
+                                                  justifyContent:
+                                                    "space-between",
+                                                  flexWrap: "wrap",
+                                                  padding: 2,
+                                                  border: "1px solid gainsboro",
+                                                  marginTop: 10,
+                                                  textAlign: "center",
+                                                  alignItems: "center",
+                                                }}
+                                              >
+                                                <p
+                                                  style={{
+                                                    margin: 0,
+                                                    marginLeft: 10,
+                                                  }}
+                                                >
+                                                  {
+                                                    this.state
+                                                      .displayedVariations
+                                                      .length
+                                                  }{" "}
+                                                  variations do not have prices.
+                                                  Variations that do not have
+                                                  prices wil not be shown in
+                                                  your store.
+                                                </p>
+                                                <button
+                                                  className="white-bg-blue"
+                                                  data-toggle="modal"
+                                                  data-target="#addVariationPriceModal"
+                                                >
+                                                  Add Price
                                                 </button>
                                               </div>
                                               {this.state.displayedVariations.map(
@@ -2278,8 +2471,8 @@ export class Add_product extends Component {
                                                         aria-controls={`collapseEight${index}`}
                                                       >
                                                         <span>
-                                                          #{index}
-                                                          {variation.map(
+                                                          #{variation.id}
+                                                          {variation.combination.map(
                                                             (vari) => (
                                                               <select
                                                                 className="custom-select form-control"
@@ -2323,6 +2516,16 @@ export class Add_product extends Component {
                                                               fontWeight:
                                                                 "lighter",
                                                               marginLeft: 5,
+                                                            }}
+                                                            onClick={() => {
+                                                              this.setState({
+                                                                displayedVariations:
+                                                                  this.state.displayedVariations.filter(
+                                                                    (vari) =>
+                                                                      vari.id !==
+                                                                      variation.id
+                                                                  ),
+                                                              });
                                                             }}
                                                           >
                                                             Remove
@@ -2368,18 +2571,17 @@ export class Add_product extends Component {
                                                                     onChange={(
                                                                       e
                                                                     ) =>
-                                                                      this._handleImgChange(
+                                                                      this._handleImgChangeVariation(
                                                                         e,
-                                                                        index
+                                                                        0,
+                                                                        variation
                                                                       )
                                                                     }
                                                                   />
                                                                   <img
                                                                     src={
-                                                                      this.state
-                                                                        .pictures[
-                                                                        index
-                                                                      ]
+                                                                      variation
+                                                                        .pictures[0]
                                                                     }
                                                                     style={{
                                                                       width: 50,
@@ -2416,13 +2618,15 @@ export class Add_product extends Component {
                                                               className="form-control mb-0"
                                                               name="skuId"
                                                               value={
-                                                                this.state.skuId
+                                                                variation.skuId
                                                               }
                                                               type="text"
-                                                              onChange={
-                                                                this
-                                                                  .handleChange
-                                                              }
+                                                              onChange={(e) => {
+                                                                this.handleChangeVariation(
+                                                                  e,
+                                                                  variation
+                                                                );
+                                                              }}
                                                               required
                                                             />
                                                           </div>
@@ -2613,14 +2817,17 @@ export class Add_product extends Component {
                                                                 className="form-control mb-0"
                                                                 name="price"
                                                                 value={
-                                                                  this.state
-                                                                    .price
+                                                                  variation.price
                                                                 }
                                                                 type="number"
-                                                                onChange={
-                                                                  this
-                                                                    .handleChange
-                                                                }
+                                                                onChange={(
+                                                                  e
+                                                                ) => {
+                                                                  this.handleChangeVariation(
+                                                                    e,
+                                                                    variation
+                                                                  );
+                                                                }}
                                                                 required
                                                               />
                                                             </div>
@@ -2639,14 +2846,17 @@ export class Add_product extends Component {
                                                                 className="form-control mb-0"
                                                                 name="salePrice"
                                                                 value={
-                                                                  this.state
-                                                                    .salePrice
+                                                                  variation.salePrice
                                                                 }
                                                                 type="number"
-                                                                onChange={
-                                                                  this
-                                                                    .handleChange
-                                                                }
+                                                                onChange={(
+                                                                  e
+                                                                ) => {
+                                                                  this.handleChangeVariation(
+                                                                    e,
+                                                                    variation
+                                                                  );
+                                                                }}
                                                                 required
                                                               />
                                                             </div>
@@ -2674,13 +2884,16 @@ export class Add_product extends Component {
                                                                 id="exampleFormControlSelect1"
                                                                 name="stockStatus"
                                                                 value={
-                                                                  this.state
-                                                                    .stockStatus
+                                                                  variation.stockStatus
                                                                 }
-                                                                onChange={
-                                                                  this
-                                                                    .handleChange
-                                                                }
+                                                                onChange={(
+                                                                  e
+                                                                ) => {
+                                                                  this.handleChangeVariation(
+                                                                    e,
+                                                                    variation
+                                                                  );
+                                                                }}
                                                               >
                                                                 <option
                                                                   value={
@@ -2728,14 +2941,15 @@ export class Add_product extends Component {
                                                               className="form-control mb-0"
                                                               name="weight"
                                                               value={
-                                                                this.state
-                                                                  .weight
+                                                                variation.weight
                                                               }
                                                               type="text"
-                                                              onChange={
-                                                                this
-                                                                  .handleChange
-                                                              }
+                                                              onChange={(e) => {
+                                                                this.handleChangeVariation(
+                                                                  e,
+                                                                  variation
+                                                                );
+                                                              }}
                                                               required
                                                             />
                                                           </div>
@@ -2756,14 +2970,17 @@ export class Add_product extends Component {
                                                                   className="form-control mb-0"
                                                                   name="length"
                                                                   value={
-                                                                    this.state
-                                                                      .length
+                                                                    variation.length
                                                                   }
                                                                   type="text"
-                                                                  onChange={
-                                                                    this
-                                                                      .handleChange
-                                                                  }
+                                                                  onChange={(
+                                                                    e
+                                                                  ) => {
+                                                                    this.handleChangeVariation(
+                                                                      e,
+                                                                      variation
+                                                                    );
+                                                                  }}
                                                                   required
                                                                   placeholder="Length"
                                                                 />
@@ -2773,14 +2990,17 @@ export class Add_product extends Component {
                                                                   className="form-control mb-0"
                                                                   name="width"
                                                                   value={
-                                                                    this.state
-                                                                      .width
+                                                                    variation.width
                                                                   }
                                                                   type="text"
-                                                                  onChange={
-                                                                    this
-                                                                      .handleChange
-                                                                  }
+                                                                  onChange={(
+                                                                    e
+                                                                  ) => {
+                                                                    this.handleChangeVariation(
+                                                                      e,
+                                                                      variation
+                                                                    );
+                                                                  }}
                                                                   required
                                                                   placeholder="Width"
                                                                 />
@@ -2790,14 +3010,17 @@ export class Add_product extends Component {
                                                                   className="form-control mb-0"
                                                                   name="height"
                                                                   value={
-                                                                    this.state
-                                                                      .height
+                                                                    variation.height
                                                                   }
                                                                   type="text"
-                                                                  onChange={
-                                                                    this
-                                                                      .handleChange
-                                                                  }
+                                                                  onChange={(
+                                                                    e
+                                                                  ) => {
+                                                                    this.handleChangeVariation(
+                                                                      e,
+                                                                      variation
+                                                                    );
+                                                                  }}
                                                                   required
                                                                   placeholder="Height"
                                                                 />
@@ -2826,19 +3049,26 @@ export class Add_product extends Component {
                                                               id="exampleFormControlSelect1"
                                                               name="shippingClass"
                                                               value={
-                                                                this.state
-                                                                  .shippingClass
+                                                                variation.shippingClass
                                                               }
-                                                              onChange={
-                                                                this
-                                                                  .handleChange
-                                                              }
+                                                              onChange={(e) => {
+                                                                this.handleChangeVariation(
+                                                                  e,
+                                                                  variation
+                                                                );
+                                                              }}
                                                             >
                                                               <option
-                                                                value={""}
+                                                                value={
+                                                                  "Same as parent"
+                                                                }
                                                               >
-                                                                No shipping
-                                                                class
+                                                                Same as parent
+                                                              </option>
+                                                              <option
+                                                                value={"Free"}
+                                                              >
+                                                                Free
                                                               </option>
                                                             </select>
                                                           </div>
@@ -2863,14 +3093,15 @@ export class Add_product extends Component {
                                                               className="form-control mb-0"
                                                               name="description"
                                                               value={
-                                                                this.state
-                                                                  .description
+                                                                variation.description
                                                               }
                                                               type="text"
-                                                              onChange={
-                                                                this
-                                                                  .handleChange
-                                                              }
+                                                              onChange={(e) => {
+                                                                this.handleChangeVariation(
+                                                                  e,
+                                                                  variation
+                                                                );
+                                                              }}
                                                               required
                                                             />
                                                           </div>
@@ -2941,16 +3172,35 @@ export class Add_product extends Component {
                                                       };
                                                     }
                                                   );
+                                                  const date =
+                                                    new Date().getTime();
                                                   this.setState({
                                                     displayedVariations:
-                                                      combination,
+                                                      combination.map(
+                                                        (comb, index) => {
+                                                          return {
+                                                            id: date + index,
+                                                            price: 0,
+                                                            salePrice: 0,
+                                                            weight: 0,
+                                                            length: 0,
+                                                            width: 0,
+                                                            height: 0,
+                                                            description: "",
+                                                            stockStatus:
+                                                              "In stock",
+                                                            shippingClass:
+                                                              "Same as parent",
+                                                            skuId: "",
+                                                            pictures: [
+                                                              addProduct,
+                                                            ],
+                                                            combination:
+                                                              comb.combination,
+                                                          };
+                                                        }
+                                                      ),
                                                   });
-                                                  await uploadDisplayedVariation(
-                                                    {
-                                                      id: 1234,
-                                                      combination: combination,
-                                                    }
-                                                  );
                                                 }}
                                               >
                                                 Generate variations
@@ -3464,32 +3714,75 @@ export class Add_product extends Component {
                           >
                             <div style={{ padding: 20 }}>
                               <ul className="file-upload-product">
-                                {this.state.pictures
-                                  .filter((res, i) => i !== 0)
-                                  .map((res, i) => {
-                                    return (
-                                      <li key={i}>
-                                        <div className="box-input-file">
-                                          <input
-                                            className="upload"
-                                            type="file"
-                                            onChange={(e) =>
-                                              this._handleImgChange(e, i + 1)
-                                            }
-                                          />
-                                          <img
-                                            src={res}
+                                <li>
+                                  <div className="box-input-file">
+                                    {this.state.pictures2.map((res, i) => (
+                                      <>
+                                        <input
+                                          className="upload"
+                                          id="upload3"
+                                          type="file"
+                                          multiple
+                                          onChange={(e) =>
+                                            this._handleMultipleImgChange(e)
+                                          }
+                                          style={{ display: "none" }}
+                                        />
+                                        <img
+                                          src={res}
+                                          style={{
+                                            width: 60,
+                                            height: 60,
+                                            border: "1px solid gainsboro",
+                                            borderRadius: 5,
+                                          }}
+                                        />
+                                        {this.state.pictures2[0] !==
+                                          "/static/media/addProduct.3dff302b.png" && (
+                                          <i
+                                            className="icofont-close-circled image-close"
                                             style={{
-                                              width: 50,
-                                              height: 50,
-                                              border: "1px solid gainsboro",
-                                              borderRadius: 5,
+                                              color: "#ff8084",
+                                              fontWeight: "bold",
+                                              cursor: "pointer",
+                                              position: "absolute",
+                                              marginLeft: "-15px",
                                             }}
-                                          />
-                                        </div>
-                                      </li>
-                                    );
-                                  })}
+                                            onClick={() => {
+                                              this.setState({
+                                                pictures2:
+                                                  this.state.pictures2.length >
+                                                  1
+                                                    ? this.state.pictures2.filter(
+                                                        (pic, index) =>
+                                                          index !== i
+                                                      )
+                                                    : [
+                                                        "/static/media/addProduct.3dff302b.png",
+                                                      ],
+                                              });
+                                            }}
+                                          ></i>
+                                        )}
+                                      </>
+                                    ))}
+                                  </div>
+                                  <div
+                                    style={{
+                                      color: "#ff8084",
+                                      marginTop: 10,
+                                      textDecoration: "underline",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={() => {
+                                      document
+                                        .getElementById("upload3")
+                                        .click();
+                                    }}
+                                  >
+                                    Add product gallery images
+                                  </div>
+                                </li>
                               </ul>
                             </div>
                           </div>
@@ -4161,6 +4454,104 @@ export class Add_product extends Component {
                   }}
                   onClick={() => {
                     this.handleSubmit();
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="modal fade"
+          id="addVariationPriceModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            role="document"
+            style={{ margin: "auto" }}
+          >
+            <div
+              className="modal-content"
+              style={{ top: 10, width: "95%", margin: "auto" }}
+            >
+              <div
+                className="modal-header"
+                style={{
+                  backgroundColor: "rgb(0, 37, 76)",
+                  paddingTop: 20,
+                  paddingBottom: 20,
+                }}
+              >
+                <div
+                  className="modal-title"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 17,
+                    color: "white",
+                  }}
+                  id="exampleModalLabel"
+                >
+                  Add price to all variations that don't have price
+                </div>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  id="personal-info-close"
+                >
+                  <span aria-hidden="true" style={{ color: "white" }}>
+                    &times;
+                  </span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div style={{ padding: "10px 15px" }}>
+                  <div className="form-group">
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "#505050",
+                        marginBottom: 5,
+                      }}
+                    >
+                      Price
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="variationPrice"
+                      value={this.state.variationPrice}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter Price"
+                      style={{
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn "
+                  data-dismiss="modal"
+                  style={{
+                    backgroundColor: "darkorange",
+                    color: "white",
+                    padding: 8,
+                    borderRadius: 5,
+                    fontWeight: "lighter",
+                  }}
+                  onClick={() => {
+                    this.handleAddVariationPrice();
                   }}
                 >
                   Add
