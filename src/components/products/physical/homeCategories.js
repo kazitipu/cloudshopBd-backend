@@ -7,16 +7,17 @@ import CountUp from "react-countup";
 import { connect } from "react-redux";
 import { DollarSign } from "react-feather";
 import {
-  getAllCategoriesRedux,
   uploadCategoryRedux,
   updateCategoryRedux,
   deleteCategoryRedux,
   getAllHomeScreenCategoriesRedux,
+  getAllCategoriesRedux,
 } from "../../../actions";
 import { uploadImageRechargeRequest } from "../../../firebase/firebase.utils";
 import man from "./plus image.jpeg";
 import { Search } from "react-feather";
-export class Categories extends Component {
+import categories from "./categories";
+export class HomeCategories extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -36,13 +37,12 @@ export class Categories extends Component {
       topCategory: false,
       homePage: false,
       homePosition: "",
-      homePosition2: "",
     };
   }
 
   componentDidMount = async () => {
-    this.props.getAllCategoriesRedux();
     this.props.getAllHomeScreenCategoriesRedux();
+    this.props.getAllCategoriesRedux();
   };
   handleChange = (e) => {
     const { name, value } = e.target;
@@ -319,7 +319,7 @@ export class Categories extends Component {
 
   render() {
     const { open, productObj } = this.state;
-    const { categories, currentAdmin } = this.props;
+    const { currentAdmin, homeCategories, categories } = this.props;
 
     let allCategories = [];
     if (categories.length > 0) {
@@ -327,20 +327,20 @@ export class Categories extends Component {
       console.log(allCategories);
     }
 
-    let renderableCategories = categories;
+    let renderableCategories = homeCategories;
     if (this.state.searchFor) {
-      renderableCategories = categories.filter((category) =>
+      renderableCategories = homeCategories.filter((category) =>
         category.name.toLowerCase().includes(this.state.searchFor.toLowerCase())
       );
     }
     renderableCategories = renderableCategories.sort(
-      (a, b) => a.name.charCodeAt(0) - b.name.charCodeAt(0)
+      (a, b) => Number(a.homePosition) - Number(b.homePosition)
     );
 
     console.log(this.props);
     return (
       <Fragment>
-        <Breadcrumb title={"Categories"} parent="Products" />
+        <Breadcrumb title={"Homescreen Categories"} parent="Categories" />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
           <div className="row" style={{ justifyContent: "center" }}>
@@ -365,20 +365,8 @@ export class Categories extends Component {
                           color: "#00254c",
                         }}
                       ></i>
-                      Categories
+                      Homescreen Categories
                     </h5>
-                    <div>
-                      <span
-                        style={{ color: "#2271b1", cursor: "pointer" }}
-                        onClick={() => {
-                          this.props.history.push(
-                            "/products/physical/categories/homescreen"
-                          );
-                        }}
-                      >
-                        Homescreen categories{" "}
-                      </span>
-                    </div>
                   </div>
                   <div
                     style={{
@@ -438,7 +426,7 @@ export class Categories extends Component {
                     </li>
                     <li>
                       {" "}
-                      <button
+                      {/* <button
                         className="btn"
                         data-toggle="modal"
                         data-target="#personalInfoModal"
@@ -469,7 +457,7 @@ export class Categories extends Component {
                         }}
                       >
                         Add New Category
-                      </button>
+                      </button> */}
                     </li>
                   </div>
                 </div>
@@ -578,7 +566,7 @@ export class Categories extends Component {
                                         if (this.state.selectAll) {
                                           this.setState(
                                             {
-                                              checkedValues: categories.map(
+                                              checkedValues: homeCategories.map(
                                                 (category) => {
                                                   return category.id;
                                                 }
@@ -663,7 +651,7 @@ export class Categories extends Component {
                               backgroundColor: "#00254c",
                             }}
                           >
-                            Homescreen Position
+                            Position
                           </th>
                           <th
                             scope="col"
@@ -710,7 +698,7 @@ export class Categories extends Component {
                               <a href={category.logo} target="_blank">
                                 <img
                                   style={{ height: 40, width: 40 }}
-                                  src={category.logo || man}
+                                  src={category.logo || this.state.imageUrl}
                                 />
                               </a>
                             </td>
@@ -727,11 +715,7 @@ export class Categories extends Component {
                                   ).name
                                 : ""}
                             </td>
-                            <td>
-                              {category.homePosition
-                                ? category.homePosition
-                                : ""}
-                            </td>
+                            <td>{category.homePosition}</td>
                             <td>
                               <div
                                 className="row"
@@ -755,9 +739,6 @@ export class Categories extends Component {
                                       topCategory: category.topCategory,
                                       homePage: category.homePage,
                                       homePosition: category.homePosition
-                                        ? category.homePosition
-                                        : "",
-                                      homePosition2: category.homePosition
                                         ? category.homePosition
                                         : "",
                                     });
@@ -1134,17 +1115,17 @@ export class Categories extends Component {
                         value={this.state.homePosition}
                       >
                         <option value="">None</option>
-                        {this.props.homeCategories.map((category, index) => (
+                        {homeCategories.map((category, index) => (
                           <option value={index + 1}>{index + 1}</option>
                         ))}
                         {this.state.type == "upload" ? (
-                          <option value={this.props.homeCategories.length + 1}>
-                            {this.props.homeCategories.length + 1}
+                          <option value={homeCategories.length + 1}>
+                            {homeCategories.length + 1}
                           </option>
                         ) : this.state.type == "update" &&
-                          this.state.homePosition2 == "" ? (
-                          <option value={this.props.homeCategories.length + 1}>
-                            {this.props.homeCategories.length + 1}
+                          this.state.homePosition == "" ? (
+                          <option value={homeCategories.length + 1}>
+                            {homeCategories.length + 1}
                           </option>
                         ) : (
                           ""
@@ -1626,7 +1607,9 @@ export class Categories extends Component {
                   }}
                   onClick={async () => {
                     await this.state.checkedValues.map(async (id) => {
-                      let category = categories.find((cat1) => cat1.id == id);
+                      let category = homeCategories.find(
+                        (cat1) => cat1.id == id
+                      );
                       await this.props.deleteCategoryRedux(
                         category,
                         category.parentCategory
@@ -1659,9 +1642,9 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps, {
-  getAllCategoriesRedux,
   uploadCategoryRedux,
   updateCategoryRedux,
   deleteCategoryRedux,
   getAllHomeScreenCategoriesRedux,
-})(Categories);
+  getAllCategoriesRedux,
+})(HomeCategories);

@@ -92,16 +92,22 @@ export const uploadProduct = async (productObj) => {
   };
   if (!snapShot.exists) {
     try {
-      productRef.set({
+      await productRef.set({
         ...newProductObj,
       });
     } catch (error) {
       alert(error);
     }
   } else {
-    alert(
-      "there is already a product with this given prodcut Id, please change the product Id and upload again"
-    );
+    if (productObj.edited) {
+      await productRef.update({
+        ...newProductObj,
+      });
+    } else {
+      alert(
+        "there is already a product with this given prodcut Id, please change the product Id and upload again"
+      );
+    }
   }
   const updatedSnapShot = await productRef.get();
   return updatedSnapShot.data();
@@ -223,7 +229,7 @@ export const getAllAliProducts = async () => {
 };
 
 export const deleteProduct = async (id) => {
-  const productRef = firestore.doc(`aliproducts/${id}`);
+  const productRef = firestore.doc(`products/${id}`);
   try {
     await productRef.delete();
   } catch (error) {
@@ -258,8 +264,8 @@ export const getSingleProductTax = async (id) => {
     alert(error);
   }
 };
-export const getDisplayedVariation = async (id) => {
-  const productRef = firestore.doc(`variations/${id}`);
+export const getSingleProduct = async (id) => {
+  const productRef = firestore.doc(`products/${id}`);
   try {
     const product = await productRef.get();
     return product.data();
@@ -267,64 +273,11 @@ export const getDisplayedVariation = async (id) => {
     alert(error);
   }
 };
-export const getSingleProduct = async (id) => {
-  const productRef = firestore.doc(`products/${id}`);
+export const getDisplayedVariation = async (id) => {
+  const productRef = firestore.doc(`variations/${id}`);
   try {
     const product = await productRef.get();
-    if (!product.exists) {
-      const aliProductRef = firestore.doc(`aliproducts/${id}`);
-      try {
-        const aliProduct = await aliProductRef.get();
-        var originalPrice = [];
-        if (
-          aliProduct.data().originalPrice.min ==
-          aliProduct.data().originalPrice.max
-        ) {
-          originalPrice.push(
-            Math.round(aliProduct.data().originalPrice.min * 90)
-          );
-        } else {
-          originalPrice.push(
-            `${Math.round(
-              aliProduct.data().originalPrice.min * 90
-            )}- ${Math.round(aliProduct.data().originalPrice.max * 90)}`
-          );
-        }
-        var salePrice = [];
-        if (
-          aliProduct.data().salePrice.min == aliProduct.data().salePrice.max
-        ) {
-          salePrice.push(Math.round(aliProduct.data().salePrice.min * 90));
-        } else {
-          salePrice.push(
-            `${Math.round(aliProduct.data().salePrice.min * 90)}- ${Math.round(
-              aliProduct.data().salePrice.max * 90
-            )}`
-          );
-        }
-        const aliProductObj = {
-          id: aliProduct.data().productId,
-          name: aliProduct.data().title,
-          price: originalPrice[0],
-          salePrice: salePrice[0],
-          pictures: [...aliProduct.data().images],
-          availability: aliProduct.data().availability,
-          rating: aliProduct.data().ratings.averageStar,
-          categoryId: aliProduct.data().categoryId,
-          description: aliProduct.data().description,
-          specs: aliProduct.data().specs,
-          feedback: aliProduct.data().feedback,
-          orders: aliProduct.data().orders,
-          totalAvailableQuantity: aliProduct.data().totalAvailableQuantity,
-          variants: aliProduct.data().variants,
-        };
-        return aliProductObj;
-      } catch (error) {
-        alert(error);
-      }
-    } else {
-      return product.data();
-    }
+    return product.data();
   } catch (error) {
     alert(error);
   }
@@ -1220,11 +1173,174 @@ export const getAllCategories = async () => {
     alert(error);
   }
 };
+export const getAllHomeScreenCategories = async () => {
+  const productsCollectionRef = firestore
+    .collection("categories")
+    .where("homePage", "==", true);
 
-export const uploadCategory = async (productObj) => {
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadCategory = async (productObj, homeCategoriesLength) => {
   const productRef = firestore.doc(`categories/${productObj.id}`);
   const snapShot = await productRef.get();
   const newProductObj = { ...productObj, file: "" };
+  if (!snapShot.exists) {
+    try {
+      await productRef.set({
+        ...newProductObj,
+      });
+      const updatedSnapShot = await productRef.get();
+      if (productObj.homePosition) {
+        const productsCollectionRef = firestore
+          .collection("categories")
+          .where("homePage", "==", true);
+        const products = await productsCollectionRef.get();
+
+        products.forEach(async (doc) => {
+          const productRef2 = firestore.doc(`categories/${doc.data().id}`);
+          const product2 = await productRef2.get();
+          if (
+            product2.data().homePosition >= productObj.homePosition &&
+            product2.data().id != productObj.id
+          ) {
+            await productRef2.update({
+              homePosition: Number(product2.data().homePosition) + 1,
+            });
+          }
+        });
+      }
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a category with similar id");
+  }
+};
+
+export const updateCategory = async (productObj, homeCategoriesLength) => {
+  const productRef = firestore.doc(`categories/${productObj.id}`);
+  const product = await productRef.get();
+  try {
+    delete productObj.file;
+    await productRef.update({ ...productObj });
+    const updatedSnapShot = await productRef.get();
+    if (productObj.homePosition) {
+      const productsCollectionRef = firestore
+        .collection("categories")
+        .where("homePage", "==", true);
+      const products = await productsCollectionRef.get();
+
+      products.forEach(async (doc) => {
+        const productRef2 = firestore.doc(`categories/${doc.data().id}`);
+        const product2 = await productRef2.get();
+        if (product.data().homePosition) {
+          // homePostion age thakle shekhetre only swap hobe oi duitar moddhe or
+
+          if (
+            product2.data().homePosition == productObj.homePosition &&
+            product2.data().id != productObj.id
+          ) {
+            await productRef2.update({
+              homePosition: product.data().homePosition,
+            });
+          }
+        } else {
+          if (
+            product2.data().homePosition >= productObj.homePosition &&
+            product2.data().id != productObj.id
+          ) {
+            await productRef2.update({
+              homePosition: Number(product2.data().homePosition) + 1,
+            });
+          }
+        }
+      });
+    }
+    return updatedSnapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteCategory = async (productObj, parentId) => {
+  const productRef = firestore.doc(`categories/${productObj.id}`);
+  const childCategoriesRef = firestore
+    .collection(`categories`)
+    .where("parentCategory", "==", productObj.id);
+  const childCategories = await childCategoriesRef.get();
+  try {
+    childCategories.forEach(async (doc) => {
+      const productRef = firestore.doc(`categories/${doc.data().id}`);
+      await productRef.update({
+        parentCategory: parentId,
+      });
+    });
+    await productRef.delete();
+    if (productObj.homePosition) {
+      const productsCollectionRef = firestore
+        .collection("categories")
+        .where("homePage", "==", true);
+      const products = await productsCollectionRef.get();
+
+      products.forEach(async (doc) => {
+        const productRef2 = firestore.doc(`categories/${doc.data().id}`);
+        const product2 = await productRef2.get();
+        if (
+          product2.data().homePosition >= productObj.homePosition &&
+          product2.data().id != productObj.id
+        ) {
+          await productRef2.update({
+            homePosition: Number(product2.data().homePosition) - 1,
+          });
+        }
+      });
+    }
+  } catch (error) {
+    alert(error);
+  }
+};
+export const getAllBanners = async () => {
+  const productsCollectionRef = firestore.collection("banners");
+
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadBanner = async (productObj) => {
+  const productRef = firestore.doc(`banners/${productObj.id}`);
+  const snapShot = await productRef.get();
+  const newProductObj = { ...productObj, file: "" };
+  if (productObj.secondBanner) {
+    const collectionRef = firestore
+      .collection(`banners`)
+      .where("secondBanner", "==", true);
+    const collection = await collectionRef.get();
+    collection.forEach(async (doc) => {
+      const bannerRef = firestore.doc(`banners/${doc.data().id}`);
+      await bannerRef.update({
+        secondBanner: false,
+      });
+    });
+  }
   if (!snapShot.exists) {
     try {
       await productRef.set({
@@ -1240,9 +1356,21 @@ export const uploadCategory = async (productObj) => {
   }
 };
 
-export const updateCategory = async (productObj) => {
-  const productRef = firestore.doc(`categories/${productObj.id}`);
+export const updateBanner = async (productObj) => {
+  const productRef = firestore.doc(`banners/${productObj.id}`);
   const product = await productRef.get();
+  if (productObj.secondBanner) {
+    const collectionRef = firestore
+      .collection(`banners`)
+      .where("secondBanner", "==", true);
+    const collection = await collectionRef.get();
+    collection.forEach(async (doc) => {
+      const bannerRef = firestore.doc(`banners/${doc.data().id}`);
+      await bannerRef.update({
+        secondBanner: false,
+      });
+    });
+  }
   try {
     delete productObj.file;
     await productRef.update({ ...productObj });
@@ -1253,24 +1381,15 @@ export const updateCategory = async (productObj) => {
   }
 };
 
-export const deleteCategory = async (id, parentId) => {
-  const productRef = firestore.doc(`categories/${id}`);
-  const childCategoriesRef = firestore
-    .collection(`categories`)
-    .where("parentCategory", "==", id);
-  const childCategories = await childCategoriesRef.get();
+export const deleteBanner = async (id) => {
+  const productRef = firestore.doc(`banners/${id}`);
   try {
-    childCategories.forEach(async (doc) => {
-      const productRef = firestore.doc(`categories/${doc.data().id}`);
-      await productRef.update({
-        parentCategory: parentId,
-      });
-    });
     await productRef.delete();
   } catch (error) {
     alert(error);
   }
 };
+
 export const getAllTags = async () => {
   const productsCollectionRef = firestore.collection("tags");
 

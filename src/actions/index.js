@@ -14,6 +14,7 @@ import {
   getAllRooms,
   updateOrderApi,
   updateProduct,
+  getAllProducts,
   deleteOrder,
   deleteProduct,
   readAllMessage,
@@ -22,9 +23,14 @@ import {
   updateBrand,
   deleteBrand,
   getAllCategories,
+  getAllHomeScreenCategories,
   uploadCategory,
   updateCategory,
   deleteCategory,
+  getAllBanners,
+  uploadBanner,
+  updateBanner,
+  deleteBanner,
   getAllTags,
   uploadTag,
   updateTag,
@@ -37,6 +43,7 @@ import {
   uploadAttributeTerm,
   updateAttributeTerm,
   deleteAttributeTerm,
+  getSingleProduct,
 } from "../firebase/firebase.utils";
 
 export const setAllOrders = (ordersArray) => ({
@@ -118,7 +125,14 @@ export const deleteProductRedux = (id) => async (dispatch) => {
   await deleteProduct(id);
   dispatch({ type: "DELETE_PRODUCT", payload: id });
 };
-
+export const getAllProductsRedux = () => async (dispatch) => {
+  const allProducts = await getAllProducts();
+  dispatch({ type: "GET_ALL_PRODUCTS", payload: allProducts });
+};
+export const getSingleProductRedux = (id) => async (dispatch) => {
+  const product = await getSingleProduct(id);
+  dispatch({ type: "GET_SINGLE_PRODUCT", payload: product });
+};
 export const updateShipmentRequestRedux = (requestObj) => async (dispatch) => {
   const updatedRequest = await updateShipmentRequest(requestObj);
   dispatch({ type: "UPDATE_SHIPMENT_REQUEST", payload: updatedRequest });
@@ -240,31 +254,77 @@ export const getAllCategoriesRedux = () => async (dispatch) => {
     payload: allCats,
   });
 };
-
-export const uploadCategoryRedux = (categoryObj) => async (dispatch) => {
-  const uploadedCategoryObj = await uploadCategory(categoryObj);
+export const getAllHomeScreenCategoriesRedux = () => async (dispatch) => {
+  const allCats = await getAllHomeScreenCategories();
   dispatch({
-    type: "UPLOAD_CATEGORY",
-    payload: uploadedCategoryObj,
+    type: "GET_ALL_HOMESCREEN_CATEGORIES",
+    payload: allCats,
   });
 };
 
-export const updateCategoryRedux = (categoryObj) => async (dispatch) => {
-  const updatedCategoryObj = await updateCategory(categoryObj);
-  dispatch({
-    type: "UPDATE_CATEGORY",
-    payload: updatedCategoryObj,
-  });
-};
-
-export const deleteCategoryRedux =
-  (categoryId, parentId) => async (dispatch) => {
-    await deleteCategory(categoryId, parentId);
+export const uploadCategoryRedux =
+  (categoryObj, homeCategoriesLength) => async (dispatch) => {
+    const uploadedCategoryObj = await uploadCategory(
+      categoryObj,
+      homeCategoriesLength
+    );
     dispatch({
-      type: "DELETE_CATEGORY",
-      payload: { id: categoryId, parentId: parentId },
+      type: "UPLOAD_CATEGORY",
+      payload: uploadedCategoryObj,
     });
   };
+
+export const updateCategoryRedux =
+  (categoryObj, homeCategoriesLength) => async (dispatch) => {
+    const updatedCategoryObj = await updateCategory(
+      categoryObj,
+      homeCategoriesLength
+    );
+    dispatch({
+      type: "UPDATE_CATEGORY",
+      payload: updatedCategoryObj,
+    });
+  };
+
+export const deleteCategoryRedux =
+  (categoryObj, parentId) => async (dispatch) => {
+    await deleteCategory(categoryObj, parentId);
+    dispatch({
+      type: "DELETE_CATEGORY",
+      payload: { id: categoryObj.id, parentId: parentId },
+    });
+  };
+export const getAllBannersRedux = () => async (dispatch) => {
+  const allCats = await getAllBanners();
+  dispatch({
+    type: "GET_ALL_BANNERS",
+    payload: allCats,
+  });
+};
+
+export const uploadBannerRedux = (bannerObj) => async (dispatch) => {
+  const uploadedBannerObj = await uploadBanner(bannerObj);
+  dispatch({
+    type: "UPLOAD_BANNER",
+    payload: uploadedBannerObj,
+  });
+};
+
+export const updateBannerRedux = (bannerObj) => async (dispatch) => {
+  const updatedBannerObj = await updateBanner(bannerObj);
+  dispatch({
+    type: "UPDATE_BANNER",
+    payload: updatedBannerObj,
+  });
+};
+
+export const deleteBannerRedux = (bannerId) => async (dispatch) => {
+  await deleteBanner(bannerId);
+  dispatch({
+    type: "DELETE_BANNER",
+    payload: { id: bannerId },
+  });
+};
 
 export const getAllTagsRedux = () => async (dispatch) => {
   const allTags = await getAllTags();

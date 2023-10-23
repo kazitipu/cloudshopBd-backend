@@ -61,6 +61,11 @@ export const MENUITEMSFORADMIN = [
         type: "link",
       },
       {
+        path: "/products/physical/banners",
+        title: "Banners",
+        type: "link",
+      },
+      {
         path: "/products/physical/shop-by-concern",
         title: "Shob By Concern",
         type: "link",
@@ -219,7 +224,6 @@ export const MENUITEMSFORADMIN = [
       // { path: '/users/create-user', title: 'Create User', type: 'link' },
     ],
   },
-
   {
     title: "Invoices",
     path: "/invoices",
@@ -270,6 +274,11 @@ export const MENUITEMSFORAGENT = [
       {
         path: "/products/physical/categories",
         title: "Categories",
+        type: "link",
+      },
+      {
+        path: "/products/physical/banners",
+        title: "Banners",
         type: "link",
       },
       {

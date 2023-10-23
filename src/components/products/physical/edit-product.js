@@ -19,8 +19,9 @@ import {
   uploadAttributeTermRedux,
   uploadCategoryRedux,
   uploadBrandRedux,
+  getSingleProductRedux,
 } from "../../../actions";
-export class Add_product extends Component {
+export class Edit_product extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -103,6 +104,8 @@ export class Add_product extends Component {
     this.props.getAllCategoriesRedux();
     this.props.getAllBrandsRedux();
     this.props.getAllTagsRedux();
+    console.log(this.props);
+    await this.props.getSingleProductRedux(this.props.match.params.id);
 
     const toDeleteAttributs = this.state.attributes.filter(
       (attr) => attr.terms.length == 0
@@ -113,6 +116,16 @@ export class Add_product extends Component {
       };
       await this.props.deleteAttributeRedux(attribute.id);
     }
+    if (this.props.product) {
+      this.setState(
+        {
+          ...this.props.product,
+        },
+        () => {
+          console.log(this.state);
+        }
+      );
+    }
   };
 
   componentWillReceiveProps = (nextProps) => {
@@ -120,7 +133,17 @@ export class Add_product extends Component {
       this.setState({
         attributes: nextProps.attributes,
       });
-      console.log("component will receive props is getting called!");
+    }
+    if (nextProps.product) {
+      this.setState(
+        {
+          ...nextProps.product,
+        },
+        () => {
+          console.log(this.state);
+          console.log("component will receive props is getting called!");
+        }
+      );
     }
   };
 
@@ -193,7 +216,6 @@ export class Add_product extends Component {
   };
 
   handleFormSubmit = async () => {
-    const id = new Date().getTime().toString();
     console.log(this.state.pictures[0]);
     if (!this.state.name) {
       alert("You must provide a product name.");
@@ -230,7 +252,7 @@ export class Add_product extends Component {
       currentDate.getSeconds();
     const product = await uploadProduct({
       ...this.state,
-      id,
+
       publishedOn: datetime,
       selectedCategories: this.props.categories.filter((category) =>
         this.state.checkedValues.includes(category.id)
@@ -238,9 +260,10 @@ export class Add_product extends Component {
       selectedBrands: this.props.brands.filter((brand) =>
         this.state.checkedValues2.includes(brand.id)
       ),
+      edited: true,
     });
     if (product) {
-      toast.success("New Product is uploaded");
+      toast.success("Product is updated");
     } else {
       toast.error("An error occurred. Try again later.");
     }
@@ -286,12 +309,10 @@ export class Add_product extends Component {
       crossSells: "",
       attribute: "",
       selectedAttributes: [],
-      attributes: [],
       variations: "",
       selectedVariations: [],
       videoUrl: "",
       checkedValues: [],
-      checkedValues2: [],
       addCategory: false,
       addBrand: false,
       categoryName: "",
@@ -307,8 +328,6 @@ export class Add_product extends Component {
       cursor: -1,
       cursor2: -1,
       selectedTags: [],
-      displayedVariations: [],
-      savedAttributes: [],
     });
   };
 
@@ -858,7 +877,7 @@ export class Add_product extends Component {
 
     return (
       <Fragment>
-        <Breadcrumb title="Add Product" parent="Physical" />
+        <Breadcrumb title="Edit Product" parent="Physical" />
 
         <div className="container-fluid">
           <div className="row">
@@ -2247,6 +2266,7 @@ export class Add_product extends Component {
                                           marginTop: 10,
                                         }}
                                         onClick={async () => {
+                                          console.log(displayedAttributes);
                                           console.log(this.state.attributes);
                                           const savedAttributes =
                                             this.state.attributes.filter(
@@ -3951,7 +3971,7 @@ export class Add_product extends Component {
                                       <div>
                                         <button
                                           className="white-bg-red"
-                                          onClick={async () => {
+                                          onClick={() => {
                                             let date = new Date();
                                             let categoryObj = {
                                               id: date.getTime().toString(),
@@ -3964,7 +3984,7 @@ export class Add_product extends Component {
                                               banner: "",
                                               topCategory: false,
                                             };
-                                            await this.props.uploadCategoryRedux(
+                                            this.props.uploadCategoryRedux(
                                               categoryObj
                                             );
                                             this.setState({
@@ -4719,6 +4739,7 @@ const mapStateToProps = (state) => {
     categories: state.categories.categories,
     brands: state.brands.brands,
     tags: state.tags.tags,
+    product: state.products.productObj,
   };
 };
 export default connect(mapStateToProps, {
@@ -4732,4 +4753,5 @@ export default connect(mapStateToProps, {
   uploadAttributeTermRedux,
   uploadCategoryRedux,
   uploadBrandRedux,
-})(Add_product);
+  getSingleProductRedux,
+})(Edit_product);

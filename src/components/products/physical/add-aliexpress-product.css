@@ -225,3 +225,8 @@
 .ck-editor__editable_inline {
   padding: 0 30px !important;
 }
+
+.table th,
+.table td {
+  vertical-align: top !important;
+}

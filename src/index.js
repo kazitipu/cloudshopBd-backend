@@ -15,11 +15,14 @@ import AllProducts from "./components/products/physical/allProducts";
 import Sub_category from "./components/products/physical/sub-category";
 import Product_list from "./components/products/physical/product-list";
 import Add_product from "./components/products/physical/add-product";
+import Edit_product from "./components/products/physical/edit-product";
 import Add_Aliexpress_product from "./components/products/physical/add-aliexpress-product";
 import Update_product from "./components/products/physical/update-product";
 import Product_detail from "./components/products/physical/product-detail";
 import Brands from "./components/products/physical/brands";
 import Categories from "./components/products/physical/categories";
+import HomeCategories from "./components/products/physical/homeCategories";
+import Banners from "./components/products/physical/banner";
 import ShopByConcern from "./components/products/physical/shopByConcern";
 import Attributes from "./components/products/physical/attributes";
 import AttributeTerms from "./components/products/physical/attributeTerms";
@@ -133,6 +136,16 @@ class Root extends Component {
                 />
                 <Route
                   exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/categories/homescreen`}
+                  component={HomeCategories}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/banners`}
+                  component={Banners}
+                />
+                <Route
+                  exact
                   path={`${process.env.PUBLIC_URL}/products/physical/shop-by-concern`}
                   component={ShopByConcern}
                 />
@@ -174,14 +187,19 @@ class Root extends Component {
                 />
                 <Route
                   exact
-                  path={`${process.env.PUBLIC_URL}/products/physical/add-aliexpress-product`}
-                  component={() => <Add_Aliexpress_product />}
+                  path={`${process.env.PUBLIC_URL}/products/physical/add-product/:id`}
+                  component={Edit_product}
                 />
                 <Route
                   exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/add-aliexpress-product`}
+                  component={() => <Add_Aliexpress_product />}
+                />
+                {/* <Route
+                  exact
                   path={`${process.env.PUBLIC_URL}/products/physical/add-product/:id`}
                   component={(props) => <Update_product {...props} />}
-                />
+                /> */}
 
                 <Route
                   exact
