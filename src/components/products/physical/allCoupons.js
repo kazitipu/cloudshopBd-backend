@@ -7,10 +7,10 @@ import CountUp from "react-countup";
 import { connect } from "react-redux";
 import { DollarSign } from "react-feather";
 import {
-  getAllBrandsRedux,
-  uploadBrandRedux,
-  updateBrandRedux,
-  deleteBrandRedux,
+  getAllCouponsRedux,
+  uploadCouponRedux,
+  updateCouponRedux,
+  deleteCouponRedux,
 } from "../../../actions";
 import {
   uploadImageRechargeRequest,
@@ -19,33 +19,27 @@ import {
 } from "../../../firebase/firebase.utils";
 import man from "./plus image.jpeg";
 import { Search } from "react-feather";
-export class Brands extends Component {
+export class Coupons extends Component {
   constructor(props) {
     super(props);
     this.state = {
       id: "",
       name: "",
-      slug: "",
-      parentBrand: "",
-      productObj: null,
-      loading: false,
-      loading2: false,
-      imageUrl: man,
-      imageUrl2: man,
-      file: "",
+      discountType: "percentage",
+      discountAmount: "",
+      expirationDate: "",
+      usageLimit: "",
+      minimumOrder: "",
+      maximumDiscount: "",
       checkedValues: [],
       selectAll: false,
       searchFor: "",
-      freeShipping: 0,
+      type: "upload",
     };
   }
 
   componentDidMount = async () => {
-    this.props.getAllBrandsRedux();
-    const shippingObj = await getFreeShipping();
-    this.setState({
-      freeShipping: shippingObj.value,
-    });
+    this.props.getAllCouponsRedux();
   };
   handleChange = (e) => {
     const { name, value } = e.target;
@@ -138,128 +132,33 @@ export class Brands extends Component {
   handleSubmit = async () => {
     let date = new Date();
 
-    if (this.state.loading || this.state.loading2) {
-      alert("Please wait.. your image is uploading");
-      return;
-    }
     if (this.state.type === "upload") {
-      let brandObj = {
+      let couponObj = {
+        ...this.state,
         id: date.getTime().toString(),
-        name: this.state.name,
-        slug: this.state.slug,
-        count: 0,
-        parentBrand: this.state.parentBrand,
-        logo: this.state.imageUrl,
-        banner: this.state.imageUrl2,
       };
-
-      await this.props.uploadBrandRedux(brandObj);
+      await this.props.uploadCouponRedux(couponObj);
     } else if (this.state.type === "update") {
-      let brandObj = {
+      let couponObj = {
+        ...this.state,
         id: this.state.id,
-        name: this.state.name,
-        slug: this.state.slug,
-        count: this.state.count,
-        parentBrand: this.state.parentBrand,
-        logo: this.state.imageUrl,
-        banner: this.state.imageUrl2,
       };
-      await this.props.updateBrandRedux(brandObj);
+      await this.props.updateCouponRedux(couponObj);
     }
 
     this.setState({
       id: "",
       name: "",
-      slug: "",
-      parentBrand: "",
-      productObj: null,
-      loading: false,
-      loading2: false,
-      imageUrl: man,
-      imageUrl2: man,
-      file: "",
+      discountType: "percentage",
+      discountAmount: "",
+      expirationDate: "",
+      usageLimit: "",
+      minimumOrder: "",
+      maximumDiscount: "",
       checkedValues: [],
       selectAll: false,
+      searchFor: "",
     });
-  };
-  handleChangeCustomer = (e) => {
-    const { name, value } = e.target;
-    this.setState({ [name]: value, showSuggestion: true, cursor: -1 });
-  };
-  handleKeyDown = (e) => {
-    const { cursor } = this.state;
-    let result = [];
-    if (this.state.customer) {
-      const suggestionById = this.props.allUsers.filter((user) =>
-        user.userId.includes(this.state.customer)
-      );
-      const suggestionByName = this.props.allUsers.filter(
-        (user) =>
-          user.displayName &&
-          user.displayName
-            .toLowerCase()
-            .includes(this.state.customer.toLowerCase())
-      );
-      result = [...suggestionById, ...suggestionByName].slice(0, 10);
-
-      // arrow up/down button should select next/previous list element
-      if (e.keyCode === 38 && cursor > -1) {
-        this.setState((prevState) => ({
-          cursor: prevState.cursor - 1,
-        }));
-      } else if (e.keyCode === 40 && cursor < result.length - 1) {
-        this.setState((prevState) => ({
-          cursor: prevState.cursor + 1,
-        }));
-      } else if (e.keyCode === 13 && cursor > -1) {
-        this.setState({
-          customer: result[cursor].userId,
-          customerUid: result[cursor].uid,
-          showSuggestion: false,
-        });
-      }
-    } else {
-      result = [];
-    }
-  };
-  renderShowSuggestion = () => {
-    let suggestionArray = [];
-    console.log(this.state.customer);
-    if (this.state.customer) {
-      console.log(this.state.customer);
-      const suggestionById = this.props.allUsers.filter((user) =>
-        user.userId.includes(this.state.customer)
-      );
-      const suggestionByName = this.props.allUsers.filter(
-        (user) =>
-          user.displayName &&
-          user.displayName
-            .toLowerCase()
-            .includes(this.state.customer.toLowerCase())
-      );
-      suggestionArray = [...suggestionById, ...suggestionByName];
-      const uniqueUser = [...new Set(suggestionArray)];
-      console.log(suggestionArray);
-      return uniqueUser.slice(0, 10).map((user, index) => (
-        <li
-          key={user.userId}
-          style={{
-            minWidth: "195px",
-            backgroundColor: this.state.cursor == index ? "gainsboro" : "white",
-          }}
-          onClick={() =>
-            this.setState({
-              customer: `${user.userId}-${user.displayName}`,
-              customerUid: user.uid,
-              showSuggestion: false,
-              subCategory: `${user.userId}-${user.displayName}`,
-            })
-          }
-        >
-          {user.userId}-{user.displayName ? user.displayName.slice(0, 13) : ""}
-        </li>
-      ));
-    }
   };
 
   selectRow = (e, i) => {
@@ -281,58 +180,19 @@ export class Brands extends Component {
     }
   };
 
-  getParentBrand = (brand, count) => {
-    const { productObj } = this.state;
-    if (productObj && productObj.id == brand.id) {
-      return null;
-    }
-    return (
-      <>
-        <option value={brand.id}>{count + brand.name}</option>
-
-        {brand.children &&
-          brand.children.length > 0 &&
-          brand.children.map((brand2) =>
-            this.getParentBrand(brand2, count + "\u00A0 \u00A0")
-          )}
-      </>
-    );
-  };
-
-  getBrands = (categories) => {
-    const tree = categories.reduce((t, o) => {
-      Object.assign((t[o.id] = t[o.id] || {}), o);
-      ((t[o.parentBrand] ??= {}).children ??= []).push(t[o.id]);
-      return t;
-    }, {})[""].children;
-    return tree;
-  };
-
   render() {
     const { open, productObj } = this.state;
-    const { brands, currentAdmin } = this.props;
-
-    let allBrands = [];
-    if (brands.length > 0) {
-      console.log(brands);
-      allBrands = this.getBrands(brands);
-      console.log(allBrands);
-    }
-
-    let renderableBrands = brands;
+    const { coupons, currentAdmin } = this.props;
+    let renderableCoupons = coupons;
     if (this.state.searchFor) {
-      renderableBrands = brands.filter((brand) =>
-        brand.name.toLowerCase().includes(this.state.searchFor.toLowerCase())
+      renderableCoupons = coupons.filter((coupon) =>
+        coupon.name.toLowerCase().includes(this.state.searchFor.toLowerCase())
       );
     }
-    renderableBrands = renderableBrands.sort(
-      (a, b) => a.name.charCodeAt(0) - b.name.charCodeAt(0)
-    );
-
-    console.log(this.props);
+    renderableCoupons = renderableCoupons.sort((a, b) => b.id - a.id);
     return (
       <Fragment>
-        <Breadcrumb title={"Brands"} parent="Products" />
+        <Breadcrumb title={"All Coupons"} parent="Coupons" />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
           <div className="row" style={{ justifyContent: "center" }}>
@@ -360,7 +220,7 @@ export class Brands extends Component {
                           color: "#00254c",
                         }}
                       ></i>
-                      Brands <br />
+                      Coupons <br />
                     </h5>
                     <div
                       style={{
@@ -399,7 +259,7 @@ export class Brands extends Component {
                               name="searchFor"
                               value={this.state.searchFor}
                               type="search"
-                              placeholder="Search Brand"
+                              placeholder="Search Coupon"
                               style={{ paddingLeft: 10 }}
                               onChange={this.handleSearchBarChange}
                             />
@@ -432,49 +292,24 @@ export class Brands extends Component {
                             this.setState({
                               id: "",
                               name: "",
-                              slug: "",
-                              parentBrand: "",
-                              productObj: null,
-                              loading: false,
-                              loading2: false,
-                              imageUrl: man,
-                              imageUrl2: man,
-                              file: "",
+                              discountType: "percentage",
+                              discountAmount: "",
+                              expirationDate: "",
+                              usageLimit: "",
+                              minimumOrder: "",
+                              maximumDiscount: "",
                               checkedValues: [],
                               selectAll: false,
+                              searchFor: "",
                               type: "upload",
                             });
                           }}
                         >
-                          Add New Brand
+                          Add New Coupon
                         </button>
                       </li>
                     </div>
                   </div>
-                  <span style={{ fontSize: 15, color: "gray" }}>
-                    Minimum purchase for free shipping:
-                    <span style={{ fontWeight: "bold", color: "black" }}>
-                      {this.state.freeShipping}Tk
-                    </span>{" "}
-                    {"  "}{" "}
-                    <span
-                      style={{
-                        color: "#ff8084",
-                        fontSize: 11,
-                        textDecoration: "underline",
-                        cursor: "pointer",
-                      }}
-                      data-toggle="modal"
-                      data-target="#freeShippingModal"
-                      onClick={() => {
-                        this.setState({
-                          freeShipping: this.state.freeShipping,
-                        });
-                      }}
-                    >
-                      Change{" "}
-                    </span>
-                  </span>
                 </div>
 
                 <div className="card-body">
@@ -582,9 +417,9 @@ export class Brands extends Component {
                                         if (this.state.selectAll) {
                                           this.setState(
                                             {
-                                              checkedValues: brands.map(
-                                                (brand) => {
-                                                  return brand.id;
+                                              checkedValues: coupons.map(
+                                                (coupon) => {
+                                                  return coupon.id;
                                                 }
                                               ),
                                             },
@@ -622,23 +457,10 @@ export class Brands extends Component {
                               minWidth: "150px",
                             }}
                           >
-                            Logo
-                          </th>
-                          <th
-                            scope="col"
-                            style={{
-                              padding: "30px 15px",
-                              color: "white",
-                              backgroundColor: "#00254c",
-                              maxWidth: "150px",
-                              minWidth: "150px",
-                            }}
-                          >
                             Name
                           </th>
                           <th
                             scope="col"
-                            colSpan={2}
                             style={{
                               padding: "30px 15px",
                               color: "white",
@@ -647,7 +469,29 @@ export class Brands extends Component {
                               minWidth: "150px",
                             }}
                           >
-                            Slug
+                            Discount Type
+                          </th>
+
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                            }}
+                          >
+                            Discount Amount
+                          </th>
+
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                            }}
+                          >
+                            Expiration Date
                           </th>
                           <th
                             scope="col"
@@ -657,7 +501,7 @@ export class Brands extends Component {
                               backgroundColor: "#00254c",
                             }}
                           >
-                            Parent Brand
+                            Usage Limit
                           </th>
                           <th
                             scope="col"
@@ -667,7 +511,17 @@ export class Brands extends Component {
                               backgroundColor: "#00254c",
                             }}
                           >
-                            Count
+                            Minimum Order Amount
+                          </th>
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                            }}
+                          >
+                            Maximum Discount Amount
                           </th>
                           <th
                             scope="col"
@@ -682,7 +536,7 @@ export class Brands extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {renderableBrands.map((brand, index) => (
+                        {renderableCoupons.map((coupon, index) => (
                           <tr key={index}>
                             <th scope="row">
                               {" "}
@@ -695,43 +549,30 @@ export class Brands extends Component {
                                 >
                                   <input
                                     type="checkbox"
-                                    name={brand.id}
+                                    name={coupon.id}
                                     checked={this.state.checkedValues.includes(
-                                      brand.id
+                                      coupon.id
                                     )}
                                     style={{
                                       height: 20,
                                       width: 20,
                                     }}
                                     onChange={(e) =>
-                                      this.selectRow(e, brand.id)
+                                      this.selectRow(e, coupon.id)
                                     }
                                   />
                                 </span>
                               </div>
                             </th>
-                            <td>
-                              <a href={brand.logo} target="_blank">
-                                <img
-                                  style={{ height: 40, width: 40 }}
-                                  src={brand.logo || man}
-                                />
-                              </a>
-                            </td>
-                            <td>{brand.name}</td>
-                            <td colSpan={2}>{brand.slug}</td>
 
-                            <td>
-                              {brands.length > 0 &&
-                              brands.find(
-                                (brand1) => brand1.id == brand.parentBrand
-                              )
-                                ? brands.find(
-                                    (brand1) => brand1.id == brand.parentBrand
-                                  ).name
-                                : ""}
-                            </td>
-                            <td>{brand.count}</td>
+                            <td>{coupon.name}</td>
+                            <td>{coupon.discountType}</td>
+                            <td>{coupon.discountAmount}</td>
+                            <td>{coupon.expirationDate}</td>
+                            <td>{coupon.usageLimit}</td>
+                            <td>{coupon.minimumOrder}</td>
+                            <td>{coupon.maximumDiscount}</td>
+
                             <td>
                               <div
                                 className="row"
@@ -743,19 +584,18 @@ export class Brands extends Component {
                                   data-target="#personalInfoModal"
                                   onClick={() => {
                                     this.setState({
-                                      id: brand.id,
-                                      name: brand.name,
-                                      slug: brand.slug,
-                                      count: brand.count,
-                                      parentBrand: brand.parentBrand,
-                                      imageUrl: brand.logo
-                                        ? brand.logo
-                                        : this.state.imageUrl,
-                                      imageUrl2: brand.banner
-                                        ? brand.banner
-                                        : this.state.imageUrl2,
+                                      id: coupon.id,
+                                      name: coupon.name,
+                                      discountType: coupon.discountType,
+                                      discountAmount: coupon.discountAmount,
+                                      expirationDate: coupon.expirationDate,
+                                      usageLimit: coupon.usageLimit,
+                                      minimumOrder: coupon.minimumOrder,
+                                      maximumDiscount: coupon.maximumDiscount,
+                                      checkedValues: [],
+                                      selectAll: false,
+                                      searchFor: "",
                                       type: "update",
-                                      productObj: brand,
                                     });
                                   }}
                                   style={{
@@ -770,7 +610,7 @@ export class Brands extends Component {
                                   data-target="#deleteExpenseModal"
                                   onClick={() => {
                                     this.setState({
-                                      productObj: brand,
+                                      productObj: coupon,
                                     });
                                   }}
                                   style={{
@@ -827,7 +667,7 @@ export class Brands extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  {productObj ? "Update" : "Add New"} Brand
+                  {productObj ? "Update" : "Add New"} Coupon
                 </div>
                 <button
                   type="button"
@@ -860,13 +700,14 @@ export class Brands extends Component {
                       value={this.state.name}
                       onChange={this.handleChange}
                       id="exampleFormControlInput1"
-                      placeholder="Enter brand name"
+                      placeholder="Enter coupon name"
                       style={{
                         borderColor: "gainsboro",
                         borderRadius: 5,
                       }}
                     />
                   </div>
+
                   <div className="form-group">
                     <label
                       style={{
@@ -875,47 +716,22 @@ export class Brands extends Component {
                         marginBottom: 5,
                       }}
                     >
-                      Slug
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="slug"
-                      value={this.state.slug}
-                      onChange={this.handleChange}
-                      id="exampleFormControlInput1"
-                      placeholder="Enter slug name"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Parent Brand
+                      Discount Type
                     </label>
                     <select
                       title="Please choose a package"
                       required
-                      name="parentBrand"
+                      name="discountType"
                       className="custom-select"
                       aria-required="true"
                       aria-invalid="false"
                       onChange={this.handleChange}
-                      value={this.state.parentBrand}
+                      value={this.state.discountType}
                     >
-                      <option value="">None</option>
-                      {allBrands.map((brand) => this.getParentBrand(brand, ""))}
+                      <option value="percentage">Percentage Discount</option>
+                      <option value="cash">Cash Discount</option>
                     </select>
                   </div>
-
                   <div className="form-group">
                     <label
                       style={{
@@ -924,58 +740,21 @@ export class Brands extends Component {
                         marginBottom: 5,
                       }}
                     >
-                      Brand Logo
+                      Discount Amount
                     </label>
-                    <div
-                      className="box-input-file"
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="discountAmount"
+                      value={this.state.discountAmount}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter discount amount"
                       style={{
-                        display: "flex",
-                        justifyContent: "flex-start",
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
                       }}
-                    >
-                      {this.state.loading ? (
-                        <div
-                          className="spinner-border text-light mt-3 ml-2"
-                          role="status"
-                        >
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <img
-                            className="img-50 lazyloaded blur-up"
-                            src={this.state.imageUrl}
-                            alt="#"
-                            style={{
-                              zIndex: 10,
-                              cursor: "pointer",
-                              border: "1px solid gainsboro",
-                              borderRadius: 5,
-                              minHeight: 50,
-                              maxHeight: 50,
-                            }}
-                            onClick={() => {
-                              document
-                                .getElementById("upload-image-input")
-                                .click();
-                            }}
-                          />
-
-                          <input
-                            id="upload-image-input"
-                            className="upload"
-                            type="file"
-                            style={{
-                              position: "absolute",
-                              zIndex: 5,
-                              maxWidth: "50px",
-                              marginTop: "10px",
-                            }}
-                            onChange={(e) => this._handleImgChange(e, 0)}
-                          />
-                        </>
-                      )}
-                    </div>
+                    />
                   </div>
                   <div className="form-group">
                     <label
@@ -985,58 +764,93 @@ export class Brands extends Component {
                         marginBottom: 5,
                       }}
                     >
-                      Brand Banner
+                      Expiration Date
                     </label>
-                    <div
-                      className="box-input-file"
+                    <input
+                      className="form-control"
+                      name="expirationDate"
+                      value={this.state.expirationDate}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter expiration date"
                       style={{
-                        display: "flex",
-                        justifyContent: "flex-start",
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                      type="date"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "#505050",
+                        marginBottom: 5,
                       }}
                     >
-                      {this.state.loading2 ? (
-                        <div
-                          className="spinner-border text-light mt-3 ml-2"
-                          role="status"
-                        >
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <img
-                            className="img-50 lazyloaded blur-up"
-                            src={this.state.imageUrl2}
-                            alt="#"
-                            style={{
-                              zIndex: 10,
-                              cursor: "pointer",
-                              border: "1px solid gainsboro",
-                              borderRadius: 5,
-                              minHeight: 50,
-                              maxHeight: 50,
-                            }}
-                            onClick={() => {
-                              document
-                                .getElementById("upload-image-input2")
-                                .click();
-                            }}
-                          />
-
-                          <input
-                            id="upload-image-input2"
-                            className="upload"
-                            type="file"
-                            style={{
-                              position: "absolute",
-                              zIndex: 5,
-                              maxWidth: "50px",
-                              marginTop: "10px",
-                            }}
-                            onChange={(e) => this._handleImgChange2(e, 0)}
-                          />
-                        </>
-                      )}
-                    </div>
+                      Usage Limit
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="usageLimit"
+                      value={this.state.usageLimit}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter usage limit"
+                      style={{
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "#505050",
+                        marginBottom: 5,
+                      }}
+                    >
+                      Minimum Order Amount
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="minimumOrder"
+                      value={this.state.minimumOrder}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter minimum order amount"
+                      style={{
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "#505050",
+                        marginBottom: 5,
+                      }}
+                    >
+                      Maximum Discount Amount
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="maximumDiscount"
+                      value={this.state.maximumDiscount}
+                      onChange={this.handleChange}
+                      id="exampleFormControlInput1"
+                      placeholder="Enter maximum discount amount"
+                      style={{
+                        borderColor: "gainsboro",
+                        borderRadius: 5,
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -1056,366 +870,7 @@ export class Brands extends Component {
                     this.handleSubmit();
                   }}
                 >
-                  {productObj ? "UPDATE" : "ADD"} BRAND
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          className="modal fade"
-          id="freeShippingModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div
-            className="modal-dialog"
-            role="document"
-            style={{ margin: "auto" }}
-          >
-            <div
-              className="modal-content"
-              style={{ top: 10, width: "95%", margin: "auto" }}
-            >
-              <div
-                className="modal-header"
-                style={{
-                  backgroundColor: "rgb(0, 37, 76)",
-                  paddingTop: 20,
-                  paddingBottom: 20,
-                }}
-              >
-                <div
-                  className="modal-title"
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    color: "white",
-                  }}
-                  id="exampleModalLabel"
-                >
-                  Minimum purchase for Free Shipping
-                </div>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                  id="personal-info-close"
-                >
-                  <span aria-hidden="true" style={{ color: "white" }}>
-                    &times;
-                  </span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <div style={{ padding: "10px 15px" }}>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Minimum purchase
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="freeShipping"
-                      value={this.state.freeShipping}
-                      onChange={this.handleChange}
-                      id="exampleFormControlInput1"
-                      placeholder="Enter brand name"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn "
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "darkorange",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                    fontWeight: "lighter",
-                  }}
-                  onClick={() => {
-                    uploadfreeShipping(this.state.freeShipping);
-                  }}
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          className="modal fade"
-          id="InvoiceInfoModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div
-            className="modal-dialog"
-            role="document"
-            style={{ margin: "auto" }}
-          >
-            <div
-              className="modal-content"
-              style={{ top: 10, width: "95%", margin: "auto" }}
-            >
-              <div
-                className="modal-header"
-                style={{
-                  backgroundColor: "rgb(0, 37, 76)",
-                  paddingTop: 20,
-                  paddingBottom: 20,
-                }}
-              >
-                <div
-                  className="modal-title"
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    color: "white",
-                  }}
-                  id="exampleModalLabel"
-                >
-                  Sell
-                </div>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                  id="personal-info-close"
-                >
-                  <span aria-hidden="true" style={{ color: "white" }}>
-                    &times;
-                  </span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <div style={{ padding: "10px 15px" }}>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      SELECT CUSTOMER
-                    </label>
-                    <input
-                      title="Please choose a package"
-                      style={{ padding: 18 }}
-                      type="text"
-                      name="customer"
-                      className="form-control"
-                      placeholder="Enter customer Id"
-                      aria-required="true"
-                      aria-invalid="false"
-                      onChange={this.handleChangeCustomer}
-                      value={this.state.customer}
-                      required
-                      autoComplete="off"
-                      onKeyDown={this.handleKeyDown}
-                    />
-                    {this.state.customer && (
-                      <ul
-                        className="below-searchbar-recommendation"
-                        style={{
-                          display: this.state.showSuggestion ? "flex" : "none",
-                          zIndex: 11,
-                        }}
-                      >
-                        {this.renderShowSuggestion()}
-                      </ul>
-                    )}
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      PRODUCT IMAGE
-                    </label>
-                    <div
-                      className="box-input-file"
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-start",
-                      }}
-                    >
-                      <>
-                        <img
-                          className="img-100 lazyloaded blur-up"
-                          src={this.state.imageUrl}
-                          alt="#"
-                          style={{
-                            zIndex: 10,
-                            cursor: "pointer",
-                          }}
-                          onClick={() => {
-                            document
-                              .getElementById("upload-image-input")
-                              .click();
-                          }}
-                        />
-                      </>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      PRODUCT NAME
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="name"
-                      value={this.state.name}
-                      onChange={this.handleChange}
-                      id="exampleFormControlInput1"
-                      placeholder="Product Name"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                      readOnly
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      DESCRIPTION
-                    </label>
-                    <textarea
-                      type="text"
-                      className="form-control"
-                      name="description"
-                      value={this.state.description}
-                      onChange={this.handleChange}
-                      id="exampleFormControlInput1"
-                      placeholder="Ex: size, color, other details etc"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      QUANTITY
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="quantity"
-                      onChange={this.handleChange}
-                      value={this.state.quantity}
-                      id="exampleFormControlInput1"
-                      placeholder="Enter Product Quantity"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      PRICE/QUANTITY
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="amount"
-                      onChange={this.handleChange}
-                      value={this.state.amount}
-                      id="exampleFormControlInput1"
-                      placeholder="Enter Amount"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn "
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "darkorange",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                    fontWeight: "lighter",
-                  }}
-                  onClick={() => {
-                    this.handleGenerateNow();
-                  }}
-                >
-                  Generate
-                </button>
-                <button
-                  type="button"
-                  className="btn "
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "green",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                    fontWeight: "lighter",
-                  }}
-                  onClick={() => {
-                    this.handlePayNow();
-                  }}
-                >
-                  Pay Now
+                  {productObj ? "UPDATE" : "ADD"} COUPON
                 </button>
               </div>
             </div>
@@ -1455,7 +910,7 @@ export class Brands extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  Delete Brand
+                  Delete Coupon
                 </div>
                 <button
                   type="button"
@@ -1471,7 +926,7 @@ export class Brands extends Component {
               </div>
               <div className="modal-body">
                 <div style={{ padding: "10px 15px" }}>
-                  <div>Are you sure you want to delete this Brand?</div>
+                  <div>Are you sure you want to delete this coupon?</div>
                 </div>
                 <table className="table table-bordered table-striped table-hover">
                   <thead>
@@ -1479,17 +934,10 @@ export class Brands extends Component {
                   </thead>
                   <tbody>
                     <tr>
-                      <td>
-                        {productObj && (
-                          <img
-                            style={{ height: 70, width: 70 }}
-                            src={productObj.logo}
-                          />
-                        )}
-                      </td>
                       <td>{productObj && productObj.name}</td>
-                      <td>{productObj && productObj.slug}</td>
-                      <td>{productObj && productObj.count}</td>
+                      <td>{productObj && productObj.discountType}</td>
+                      <td>{productObj && productObj.discountAmount}</td>
+                      <td>{productObj && productObj.expirationDate}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1513,10 +961,7 @@ export class Brands extends Component {
                     borderRadius: 5,
                   }}
                   onClick={() => {
-                    this.props.deleteBrandRedux(
-                      productObj.id,
-                      productObj.parentBrand
-                    );
+                    this.props.deleteCouponRedux(productObj.id);
                     this.setState({
                       selectAll: false,
                       checkedValues: [],
@@ -1563,7 +1008,7 @@ export class Brands extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  Delete All Selected Brand
+                  Delete All Selected Coupon
                 </div>
                 <button
                   type="button"
@@ -1581,7 +1026,7 @@ export class Brands extends Component {
                 <div style={{ padding: "10px 15px" }}>
                   <div>
                     Are you sure you want to delete{" "}
-                    {this.state.checkedValues.length} Brand?
+                    {this.state.checkedValues.length} Coupon?
                   </div>
                 </div>
                 <table className="table table-bordered table-striped table-hover">
@@ -1610,8 +1055,7 @@ export class Brands extends Component {
                   }}
                   onClick={() => {
                     this.state.checkedValues.map(async (id) => {
-                      let brand = brands.find((brand1) => brand1.id == id);
-                      await this.props.deleteBrandRedux(id, brand.parentBrand);
+                      await this.props.deleteCouponRedux(id);
                     });
                     this.setState({
                       selectAll: false,
@@ -1634,13 +1078,13 @@ const mapStateToProps = (state) => {
   return {
     allUsers: state.users.users,
     currentAdmin: state.admins.currentAdmin,
-    brands: state.brands.brands,
+    coupons: state.coupons.coupons,
   };
 };
 
 export default connect(mapStateToProps, {
-  getAllBrandsRedux,
-  uploadBrandRedux,
-  updateBrandRedux,
-  deleteBrandRedux,
-})(Brands);
+  getAllCouponsRedux,
+  uploadCouponRedux,
+  updateCouponRedux,
+  deleteCouponRedux,
+})(Coupons);

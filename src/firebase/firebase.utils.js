@@ -200,6 +200,7 @@ export const getAllProducts = async () => {
     alert(error);
   }
 };
+
 export const getAllProductsTax = async () => {
   const productsCollectionRef = firestore.collection("taxes");
   try {
@@ -257,6 +258,15 @@ export const updateProductTax = async (productObj) => {
 
 export const getSingleProductTax = async (id) => {
   const productRef = firestore.doc(`taxes/${id}`);
+  try {
+    const product = await productRef.get();
+    return product.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+export const getFreeShipping = async () => {
+  const productRef = firestore.doc(`freeShipping/freeShipping`);
   try {
     const product = await productRef.get();
     return product.data();
@@ -1126,6 +1136,32 @@ export const uploadBrand = async (productObj) => {
     alert("there is already a brand with similar id");
   }
 };
+export const uploadfreeShipping = async (value) => {
+  const productRef = firestore.doc(`freeShipping/freeShipping`);
+  const snapShot = await productRef.get();
+
+  if (!snapShot.exists) {
+    try {
+      await productRef.set({
+        value: value,
+      });
+      const updatedSnapShot = await productRef.get();
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    try {
+      await productRef.update({
+        value: value,
+      });
+      const updatedSnapShot = await productRef.get();
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  }
+};
 
 export const updateBrand = async (productObj) => {
   const productRef = firestore.doc(`brands/${productObj.id}`);
@@ -1153,6 +1189,61 @@ export const deleteBrand = async (id, parentId) => {
         parentBrand: parentId,
       });
     });
+    await productRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+export const getAllCoupons = async () => {
+  const productsCollectionRef = firestore.collection("coupons");
+
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadCoupon = async (productObj) => {
+  const productRef = firestore.doc(`coupons/${productObj.id}`);
+  const snapShot = await productRef.get();
+  const newProductObj = { ...productObj, file: "" };
+  if (!snapShot.exists) {
+    try {
+      await productRef.set({
+        ...newProductObj,
+      });
+      const updatedSnapShot = await productRef.get();
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a coupon with similar id");
+  }
+};
+
+export const updateCoupon = async (productObj) => {
+  const productRef = firestore.doc(`coupons/${productObj.id}`);
+  const product = await productRef.get();
+  try {
+    delete productObj.file;
+    await productRef.update({ ...productObj });
+    const updatedSnapShot = await productRef.get();
+    return updatedSnapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteCoupon = async (id) => {
+  const productRef = firestore.doc(`coupons/${id}`);
+  try {
     await productRef.delete();
   } catch (error) {
     alert(error);

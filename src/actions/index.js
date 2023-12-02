@@ -22,6 +22,10 @@ import {
   uploadBrand,
   updateBrand,
   deleteBrand,
+  getAllCoupons,
+  uploadCoupon,
+  updateCoupon,
+  deleteCoupon,
   getAllCategories,
   getAllHomeScreenCategories,
   uploadCategory,
@@ -245,6 +249,37 @@ export const deleteBrandRedux = (brandId, parentId) => async (dispatch) => {
   dispatch({
     type: "DELETE_BRAND",
     payload: { id: brandId, parentId: parentId },
+  });
+};
+export const getAllCouponsRedux = () => async (dispatch) => {
+  const allCoupons = await getAllCoupons();
+  dispatch({
+    type: "GET_ALL_COUPONS",
+    payload: allCoupons,
+  });
+};
+
+export const uploadCouponRedux = (couponObj) => async (dispatch) => {
+  const uploadedCouponObj = await uploadCoupon(couponObj);
+  dispatch({
+    type: "UPLOAD_COUPON",
+    payload: uploadedCouponObj,
+  });
+};
+
+export const updateCouponRedux = (couponObj) => async (dispatch) => {
+  const updatedCouponObj = await updateCoupon(couponObj);
+  dispatch({
+    type: "UPDATE_COUPON",
+    payload: updatedCouponObj,
+  });
+};
+
+export const deleteCouponRedux = (id) => async (dispatch) => {
+  await deleteCoupon(id);
+  dispatch({
+    type: "DELETE_COUPON",
+    payload: id,
   });
 };
 export const getAllCategoriesRedux = () => async (dispatch) => {

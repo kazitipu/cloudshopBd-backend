@@ -82,6 +82,19 @@ export const MENUITEMSFORADMIN = [
       },
     ],
   },
+  {
+    title: "Coupons",
+    icon: Box,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/coupons/physical/all-coupons",
+        title: "All Coupons",
+        type: "link",
+      },
+    ],
+  },
   // {
   //   title: "Orders",
   //   icon: DollarSign,

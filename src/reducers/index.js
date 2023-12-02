@@ -10,6 +10,7 @@ import brandsReducer from "./brands";
 import categoriesReducer from "./categories";
 import tagsReducer from "./shopByConcern";
 import attributesReducer from "./attributes";
+import couponsReducers from "./coupons";
 const rootReducer = combineReducers({
   orders: setOrdersReducer,
   payments: setPaymentsReducer,
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   users: setUsersReducer,
   chats: chatsReducer,
   brands: brandsReducer,
+  coupons: couponsReducers,
   categories: categoriesReducer,
   tags: tagsReducer,
   attributes: attributesReducer,
