@@ -4,7 +4,6 @@ import Right_sidebar from "./common/right-sidebar";
 import Footer from "./common/footer";
 import Header from "./common/header_components/header";
 import {
-  getAllOrders,
   getAllPayments,
   getAllAdmins,
   getAllProducts,
@@ -34,13 +33,11 @@ export class App extends Component {
   }
 
   componentDidMount = async () => {
-    const allOrdersArray = await getAllOrders();
     const allPaymentsArray = await getAllPayments();
     const allAdminsArray = await getAllAdmins();
     const allAliProductsArray = await getAllAliProducts();
     this.props.getCurrencyRedux();
     this.props.getAllUsersRedux();
-    this.props.setAllOrders(allOrdersArray);
     this.props.setAllPayments(allPaymentsArray);
     this.props.setAllAdmins(allAdminsArray);
     this.props.setAllProducts([...allAliProductsArray]);

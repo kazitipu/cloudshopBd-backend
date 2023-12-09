@@ -320,13 +320,15 @@ export const deleteUser = async (id) => {
 
 // Orders management (get all orders)
 
-export const getAllOrders = async () => {
-  const ordersCollectionRef = firestore.collection("orders");
+export const getAllOrders = async (orderStatus) => {
+  const ordersCollectionRef = firestore
+    .collection("orders")
+    .where("orderStatus", "==", orderStatus);
   try {
     const orders = await ordersCollectionRef.get();
     const ordersArray = [];
     orders.forEach((doc) => {
-      ordersArray.push({ orderId: doc.id, ...doc.data() });
+      ordersArray.push(doc.data());
     });
     return ordersArray;
   } catch (error) {
@@ -375,16 +377,17 @@ export const getSingleAttribute = async (id) => {
 };
 
 export const updateOrder = async (orderObj) => {
-  const orderRef = firestore.doc(`orders/${orderObj.orderId}`);
+  const orderRef = firestore.doc(`orders/${orderObj.id}`);
   const order = await orderRef.get();
   try {
     await orderRef.update({
-      ...order.data(),
-      status: orderObj.status,
-      paymentStatus: { ...order.data().paymentStatus, paid: orderObj.paid },
+      orderObj,
     });
+    const updatedSnapShot = await orderRef.get();
+    return updatedSnapShot.data();
   } catch (error) {
     alert(error);
+    return order.data();
   }
 };
 

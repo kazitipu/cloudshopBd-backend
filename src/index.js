@@ -361,7 +361,7 @@ class Root extends Component {
                 />
                 <Route
                   exact
-                  path={`${process.env.PUBLIC_URL}/1688-taobao-orders/:orderStatus`}
+                  path={`${process.env.PUBLIC_URL}/orders/:orderStatus`}
                   component={OrdersApi}
                 />
                 <Route

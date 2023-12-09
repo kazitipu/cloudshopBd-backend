@@ -667,7 +667,7 @@ export class Coupons extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  {productObj ? "Update" : "Add New"} Coupon
+                  {this.state.id ? "Update" : "Add New"} Coupon
                 </div>
                 <button
                   type="button"
@@ -947,6 +947,11 @@ export class Coupons extends Component {
                   type="button"
                   className="btn btn-secondary"
                   data-dismiss="modal"
+                  onClick={() => {
+                    this.setState({
+                      productObj: null,
+                    });
+                  }}
                 >
                   No
                 </button>

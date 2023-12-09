@@ -125,11 +125,11 @@ export const MENUITEMSFORADMIN = [
     type: "sub",
     active: false,
     children: [
-      { path: "/1688-taobao-orders/new", title: "New Request", type: "link" },
-      { path: "/1688-taobao-orders/paid", title: "Paid", type: "link" },
-      { path: "/1688-taobao-orders/ordered", title: "Ordered", type: "link" },
+      { path: "/orders/Processing", title: "Processing", type: "link" },
+      { path: "/orders/Confirmed", title: "Confirmed", type: "link" },
+      { path: "/orders/Packing", title: "Packing", type: "link" },
       {
-        path: "/1688-taobao-orders/delivered",
+        path: "/orders/Delivered",
         title: "Delivered",
         type: "link",
       },
@@ -311,23 +311,7 @@ export const MENUITEMSFORAGENT = [
       },
     ],
   },
-  {
-    title: "Orders",
-    icon: DollarSign,
-    type: "sub",
-    active: false,
-    children: [
-      { path: "/sales/ordered", title: "Ordered", type: "link" },
-      {
-        path: "/sales/china_warehouse",
-        title: "China Warehouse",
-        type: "link",
-      },
-      { path: "/sales/in-shipping", title: "In Shipment", type: "link" },
-      { path: "/sales/in_stock", title: "In stock", type: "link" },
-      { path: "/sales/delivered", title: "Delivered", type: "link" },
-    ],
-  },
+
   {
     title: "Product to order",
     icon: Clipboard,

@@ -10,7 +10,7 @@ import {
   updatePaymentRequestOrderStatus,
   makePayment,
   getCurrency,
-  getAllOrdersApi,
+  getAllOrders,
   getAllRooms,
   updateOrderApi,
   updateProduct,
@@ -197,11 +197,11 @@ export const getCurrencyRedux = () => async (dispatch) => {
   dispatch({ type: "GET_CURRENCY_REDUX", payload: currency });
 };
 
-export const getAllOrdersApiRedux = (orderStatus) => async (dispatch) => {
-  const ordersApiArray = await getAllOrdersApi(orderStatus);
+export const getAllOrdersRedux = (orderStatus) => async (dispatch) => {
+  const ordersArray = await getAllOrders(orderStatus);
   dispatch({
-    type: "GET_ALL_ORDERS_API_OF_SINGLE_STATUS",
-    payload: ordersApiArray,
+    type: "GET_ALL_ORDERS",
+    payload: ordersArray,
   });
 };
 export const getAllRoomsRedux = (rooms) => async (dispatch) => {
