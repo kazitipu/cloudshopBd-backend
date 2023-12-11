@@ -379,16 +379,10 @@ export const getSingleAttribute = async (id) => {
 export const updateOrder = async (orderObj) => {
   const orderRef = firestore.doc(`orders/${orderObj.id}`);
   const order = await orderRef.get();
-  try {
-    await orderRef.update({
-      orderObj,
-    });
-    const updatedSnapShot = await orderRef.get();
-    return updatedSnapShot.data();
-  } catch (error) {
-    alert(error);
-    return order.data();
-  }
+
+  await orderRef.update(orderObj);
+  const updatedSnapShot = await orderRef.get();
+  return updatedSnapShot.data();
 };
 
 export const updateMultipleOrder = async (orderIdArray, status) => {

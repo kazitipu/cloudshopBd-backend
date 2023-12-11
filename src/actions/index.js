@@ -12,7 +12,7 @@ import {
   getCurrency,
   getAllOrders,
   getAllRooms,
-  updateOrderApi,
+  updateOrder,
   updateProduct,
   getAllProducts,
   deleteOrder,
@@ -212,10 +212,10 @@ export const getAllRoomsRedux = (rooms) => async (dispatch) => {
   });
 };
 
-export const updateOrderApiRedux = (order) => async (dispatch) => {
-  const orderObj = await updateOrderApi(order);
+export const updateOrderRedux = (order) => async (dispatch) => {
+  const orderObj = await updateOrder(order);
   dispatch({
-    type: "UPDATE_ORDER_API",
+    type: "UPDATE_ORDER",
     payload: orderObj,
   });
 };

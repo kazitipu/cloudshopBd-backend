@@ -6,13 +6,17 @@ import Datatable from "./usersDatatable";
 import { Search } from "react-feather";
 import { getAllUsersRedux } from "../../actions/index";
 import { connect } from "react-redux";
-
+import { sendNotifications } from "../../firebase/fcmRestApi";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
 export class List_user extends Component {
   constructor(props) {
     super(props);
     this.state = {
       allUsers: [],
       searchFor: "",
+      messageBody: "",
+      campaign_title: "",
     };
   }
 
@@ -24,6 +28,30 @@ export class List_user extends Component {
     const { name, value } = event.target;
     this.setState({ [name]: value });
     console.log(this.state.searchFor);
+  };
+  handleChange = (event) => {
+    const { name, value } = event.target;
+    this.setState({ [name]: value });
+  };
+
+  handleSubmit = () => {
+    const { allUsers } = this.props;
+    const UsersWithToken = allUsers.filter(
+      (user) => user.deviceToken && user.deviceToken.length > 0
+    );
+    UsersWithToken.map((user) => {
+      const message = {
+        title: this.state.campaign_title,
+        body: this.state.messageBody,
+      };
+      if (user.deviceToken && user.deviceToken.length > 0) {
+        user.deviceToken.map((token) => {
+          console.log(token);
+          sendNotifications(token, message);
+        });
+      }
+    });
+    toast.success("Notification sent successfully!");
   };
 
   render() {
@@ -110,7 +138,23 @@ export class List_user extends Component {
                     </div>
                   </form>
                 </li>
-                <li></li>
+                <li>
+                  {" "}
+                  <div
+                    style={{
+                      padding: 10,
+                      borderRadius: 10,
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "purple",
+                      cursor: "pointer",
+                    }}
+                    data-toggle="modal"
+                    data-target="#personalInfoModal"
+                  >
+                    Send Notification
+                  </div>
+                </li>
               </div>
             </div>
             <div className="card-body">
@@ -128,6 +172,105 @@ export class List_user extends Component {
                   pagination={true}
                   class="-striped -highlight"
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+        <ToastContainer />
+        <div
+          className="modal fade"
+          id="personalInfoModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            role="document"
+            style={{ margin: "auto" }}
+          >
+            <div
+              className="modal-content"
+              style={{ top: 10, width: "100%", margin: "auto" }}
+            >
+              <div
+                className="modal-header"
+                style={{
+                  backgroundColor: "rgb(0, 37, 76)",
+                  paddingTop: 20,
+                  paddingBottom: 20,
+                }}
+              >
+                <div
+                  className="modal-title"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 17,
+                    color: "white",
+                  }}
+                  id="exampleModalLabel"
+                >
+                  Send Notification
+                </div>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  id="personal-info-close"
+                >
+                  <span aria-hidden="true" style={{ color: "white" }}>
+                    &times;
+                  </span>
+                </button>
+              </div>
+              <div style={{ padding: 10 }}>
+                <label>Notification Title</label>
+                <input
+                  type="text"
+                  name="campaign_title"
+                  className="form-control"
+                  placeholder="Campaign Title"
+                  style={{
+                    fontSize: "1rem",
+                  }}
+                  onChange={this.handleChange}
+                  value={this.state.campaign_title}
+                  required
+                />
+              </div>
+              <div style={{ padding: 10 }}>
+                <label>Notification Title</label>
+                <textarea
+                  type="text"
+                  name="messageBody"
+                  className="form-control"
+                  placeholder="Enter text here..."
+                  style={{ fontSize: "1rem", minHeight: "170px" }}
+                  onChange={this.handleChange}
+                  value={this.state.messageBody}
+                  required
+                />
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn "
+                  data-dismiss="modal"
+                  style={{
+                    backgroundColor: "purple",
+                    color: "white",
+                    padding: 8,
+                    borderRadius: 5,
+                    fontWeight: "lighter",
+                  }}
+                  onClick={() => {
+                    this.handleSubmit();
+                  }}
+                >
+                  Send
+                </button>
               </div>
             </div>
           </div>

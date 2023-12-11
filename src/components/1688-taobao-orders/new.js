@@ -2,14 +2,13 @@ import React, { Component, Fragment } from "react";
 import Breadcrumb from "../common/breadcrumb";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
-
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import { Tabs, TabList, TabPanel, Tab } from "react-tabs";
-
 import { uploadImageRechargeRequest } from "../../firebase/firebase.utils";
-import { getAllOrdersRedux } from "../../actions/index";
+import { getAllOrdersRedux, updateOrderRedux } from "../../actions/index";
 import { Search } from "react-feather";
+import { sendNotifications } from "../../firebase/fcmRestApi";
 export class Orders extends Component {
   constructor(props) {
     super(props);
@@ -40,15 +39,24 @@ export class Orders extends Component {
       agentCost: "",
       status: "",
       warehouse: "",
+      orderStatus: "",
     };
   }
 
   componentDidMount = async () => {
-    console.log("new product is getting called");
     const { orderStatus } = this.props.match.params;
     const { getAllOrdersRedux } = this.props;
     console.log(orderStatus);
     getAllOrdersRedux(orderStatus);
+  };
+  UNSAFE_componentWillReceiveProps = async (nextProps) => {
+    const { orderStatus } = this.props.match.params;
+    const orderStatus2 = nextProps.match.params.orderStatus;
+    if (orderStatus !== orderStatus2) {
+      const { getAllOrdersRedux } = this.props;
+      console.log(orderStatus);
+      getAllOrdersRedux(orderStatus2);
+    }
   };
 
   componentWillReceiveProps = async (nextProps) => {
@@ -114,24 +122,84 @@ export class Orders extends Component {
     event.target.classList.add("show");
   };
 
+  createNotification = (order) => {
+    let msg;
+    console.log(order);
+
+    if (order.orderStatus === "Processing") {
+      msg = {
+        title: "Order Processing",
+        body: `We are processing your order.One of our team member is assigned for your order. OrderId:-${order.id}.`,
+      };
+      return msg;
+    }
+    if (order.orderStatus === "Confirmed") {
+      msg = {
+        title: "Order Confirmed",
+        body: `Your order is confirmed. OrderId:-${order.id}.`,
+      };
+      return msg;
+    }
+    if (order.orderStatus === "Packing") {
+      msg = {
+        title: "Reday for delivery",
+        body: `We are packaging your order. OrderId:-${order.id}.`,
+      };
+      return msg;
+    }
+    if (order.orderStatus === "Delivered") {
+      msg = {
+        title: "Order delivered successfully",
+        body: `Your order is delivered. OrderId:-${order.id}. Thank you`,
+      };
+      return msg;
+    }
+    if (order.orderStatus === "Cancelled") {
+      msg = {
+        title: "Sorry. Order cancelled",
+        body: `Your order is cancelled. OrderId:-${order.id}.Contact our customer service to get detail info.Thanks`,
+      };
+      return msg;
+    }
+  };
+
   handleSubmit = async () => {
-    let bookingObj = {
-      id: this.state.id,
-      date: this.state.date,
-      name: this.state.name,
-      imageUrl: this.state.imageUrl,
-      description: this.state.description,
-      amount: this.state.amount,
-      quantity: this.state.quantity,
-      userId: this.state.userId,
-      status: this.state.status,
-      shippingCost: this.state.shippingCost,
-      agentCost: this.state.agentCost,
-      warehouse: this.state.warehouse,
+    console.log("Handle submit is getting called!");
+    let orderObj = {
+      ...this.state.orderObj,
+      orderStatus: this.state.orderStatus,
+      [`${this.state.orderStatus.toLowerCase()}Date`]: new Date()
+        .getTime()
+        .toString(),
+      orderStatusScore:
+        this.state.orderStatus == "Processing"
+          ? 2
+          : this.state.orderStatus == "Confirmed"
+          ? 3
+          : this.state.orderStatus == "Packing"
+          ? 4
+          : this.state.orderStatus == "Delivered"
+          ? 5
+          : 0,
     };
 
-    await this.props.updateP2PRedux(bookingObj);
-
+    await this.props.updateOrderRedux(orderObj);
+    const msg = this.createNotification(orderObj);
+    const message = {
+      title: msg.title,
+      body: msg.body,
+    };
+    if (
+      orderObj &&
+      orderObj.currentUser &&
+      orderObj.currentUser.deviceToken &&
+      orderObj.currentUser.deviceToken.length > 0
+    ) {
+      orderObj.currentUser.deviceToken.map((token) => {
+        console.log(token);
+        sendNotifications(token, message);
+      });
+    }
     this.setState({
       name: "",
       quantity: "",
@@ -145,6 +213,7 @@ export class Orders extends Component {
       agentCost: "",
       status: "",
       warehouse: "",
+      orderStatus: "",
     });
   };
   handleReceive = async () => {
@@ -157,7 +226,7 @@ export class Orders extends Component {
     );
 
     for (let i = 0; i < bookings.length; i++) {
-      await this.props.updateP2PRedux({
+      await this.props.updateOrderRedux({
         ...bookings[i],
         status: this.state.warehouse,
         toWarehouse: this.state.warehouse,
@@ -177,7 +246,7 @@ export class Orders extends Component {
     );
 
     for (let i = 0; i < bookings.length; i++) {
-      await this.props.updateP2PRedux({
+      await this.props.updateOrderRedux({
         ...bookings[i],
         status: "delivered",
         deliveryDate: date.toLocaleDateString("en-GB"),
@@ -320,19 +389,6 @@ export class Orders extends Component {
     const { orderObj } = this.state;
     const { orders } = this.props;
     const { orderStatus } = this.props.match.params;
-    // let agentPayProducts = [];
-    // let total = 0;
-    // let totalShippingCost = 0;
-    // if (this.state.checkedValues2.length > 0) {
-    //   agentPayProducts = p2p.filter((product) => {
-    //     if (this.state.checkedValues2.includes(product.id)) {
-    //       total += parseInt(product.agentCost);
-    //       totalShippingCost += parseInt(product.shippingCost);
-    //       return product;
-    //     }
-    //   });
-    // }
-
     let renderableOrders = orders;
     if (this.state.searchFor) {
       renderableOrders = renderableOrders.filter(
@@ -659,10 +715,11 @@ export class Orders extends Component {
                                 <i
                                   className="icofont-edit"
                                   data-toggle="modal"
-                                  data-target="#deleteExpenseModal"
+                                  data-target="#personalInfoModal"
                                   onClick={() => {
                                     this.setState({
                                       orderObj: order,
+                                      orderStatus: order.orderStatus,
                                     });
                                   }}
                                   style={{
@@ -674,7 +731,7 @@ export class Orders extends Component {
                                 <i
                                   className="icofont-trash"
                                   data-toggle="modal"
-                                  data-target="#deleteExpenseModal"
+                                  data-target="#personalInfoModal"
                                   onClick={() => {
                                     this.setState({
                                       orderObj: order,
@@ -734,7 +791,7 @@ export class Orders extends Component {
                   }}
                   id="exampleModalLabel"
                 >
-                  Update Request
+                  Update Status
                 </div>
                 <button
                   type="button"
@@ -748,83 +805,55 @@ export class Orders extends Component {
                   </span>
                 </button>
               </div>
-              <div className="modal-body">
-                <div style={{ padding: "10px 15px" }}>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Status
-                    </label>
-                    <select
-                      title="Please choose a package"
-                      required
-                      name="status"
-                      className="custom-select"
-                      aria-required="true"
-                      aria-invalid="false"
-                      onChange={this.handleChange}
-                      value={this.state.status}
-                    >
-                      <option value="">Select Status</option>
-                      <option value="approved">approve</option>
-                      <option value="reject">reject</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Customer Shipping Cost
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="shippingCost"
-                      onChange={this.handleChange}
-                      value={this.state.shippingCost}
-                      id="exampleFormControlInput1"
-                      placeholder="Enter Customer Shipping Cost"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Agent Shipping Cost
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="agentCost"
-                      onChange={this.handleChange}
-                      value={this.state.agentCost}
-                      id="exampleFormControlInput1"
-                      placeholder="Enter Agent Shipping Cost"
-                      style={{
-                        borderColor: "gainsboro",
-                        borderRadius: 5,
-                      }}
-                    />
+              {orderObj && (
+                <div className="modal-body">
+                  <div style={{ padding: "10px 15px" }}>
+                    <div className="form-group">
+                      <label
+                        style={{
+                          fontWeight: "bold",
+                          color: "#505050",
+                          marginBottom: 5,
+                        }}
+                      >
+                        Status
+                      </label>
+                      <select
+                        title="Please choose a package"
+                        required
+                        name="orderStatus"
+                        className="custom-select"
+                        aria-required="true"
+                        aria-invalid="false"
+                        onChange={this.handleChange}
+                        value={this.state.orderStatus}
+                      >
+                        <option value="">Select Status</option>
+                        <option value="Processing">Processing</option>
+                        <option
+                          value="Confirmed"
+                          disabled={orderObj.date ? false : true}
+                        >
+                          Confirmed
+                        </option>
+                        <option
+                          value="Packing"
+                          disabled={orderObj.confirmedDate ? false : true}
+                        >
+                          Packing
+                        </option>
+                        <option
+                          value="Delivered"
+                          disabled={orderObj.packingDate ? false : true}
+                        >
+                          Delivered
+                        </option>
+                        <option value="Cancelled"> Cancelled</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               <div className="modal-footer">
                 <button
                   type="button"
@@ -907,6 +936,16 @@ export class Orders extends Component {
                   }}
                 >
                   <div className="col">
+                    <div
+                      style={{
+                        padding: 10,
+                        fontWeight: "bold",
+                        paddingTop: 0,
+                        color: "gray",
+                      }}
+                    >
+                      Order Information
+                    </div>
                     <div
                       style={{
                         padding: 10,
@@ -1052,6 +1091,16 @@ export class Orders extends Component {
                         padding: 10,
                         fontWeight: "bold",
                         paddingTop: 0,
+                        color: "gray",
+                      }}
+                    >
+                      Schedule Information
+                    </div>
+                    <div
+                      style={{
+                        padding: 10,
+                        fontWeight: "bold",
+                        paddingTop: 0,
                       }}
                     >
                       Order Date:{" "}
@@ -1072,7 +1121,7 @@ export class Orders extends Component {
                         {orderObj &&
                           orderObj.confirmedDate &&
                           new Date(
-                            Number(orderObj.confiremdDate)
+                            Number(orderObj.confirmedDate)
                           ).toLocaleDateString()}
                       </span>
                     </div>
@@ -1135,6 +1184,16 @@ export class Orders extends Component {
                         padding: 10,
                         fontWeight: "bold",
                         paddingTop: 0,
+                        color: "gray",
+                      }}
+                    >
+                      Customer Information
+                    </div>
+                    <div
+                      style={{
+                        padding: 10,
+                        fontWeight: "bold",
+                        paddingTop: 0,
                       }}
                     >
                       Customer Id:{" "}
@@ -1180,6 +1239,16 @@ export class Orders extends Component {
                     </div>
                   </div>
                   <div className="col">
+                    <div
+                      style={{
+                        padding: 10,
+                        fontWeight: "bold",
+                        paddingTop: 0,
+                        color: "gray",
+                      }}
+                    >
+                      Delivery Information
+                    </div>
                     <div
                       style={{
                         padding: 10,
@@ -1256,7 +1325,7 @@ export class Orders extends Component {
                   <tbody>
                     {orderObj &&
                       orderObj.orders.map((order) => (
-                        <tr>
+                        <tr key={order.id}>
                           <td>
                             <img
                               style={{ height: 70, width: 70 }}
@@ -1711,4 +1780,5 @@ const mapStateToProps = (state) => {
 
 export default connect(mapStateToProps, {
   getAllOrdersRedux,
+  updateOrderRedux,
 })(Orders);

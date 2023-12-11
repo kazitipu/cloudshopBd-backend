@@ -9,8 +9,8 @@ const setOrdersReducer = (state = INITIAL_STATE, action) => {
     case "UPDATE_ORDER":
       return {
         ...state,
-        ordersApi: state.ordersApi.map((order) => {
-          if (order.orderId == action.payload.orderId) {
+        orders: state.orders.map((order) => {
+          if (order.id == action.payload.id) {
             return action.payload;
           } else {
             return order;

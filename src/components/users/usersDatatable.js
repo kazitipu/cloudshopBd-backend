@@ -48,7 +48,7 @@ export class Datatable extends Component {
           uid: user.uid,
           "User Id": user.userId,
           name: user.displayName,
-          number: user.mobileNo,
+          number: user.mobileNumber,
           email: user.email,
         });
       });
@@ -94,7 +94,7 @@ export class Datatable extends Component {
           uid: user.uid,
           "User Id": user.userId,
           name: user.displayName,
-          number: user.mobileNo,
+          number: user.mobileNumber,
           email: user.email,
         });
       });
