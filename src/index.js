@@ -71,6 +71,7 @@ import NewShipmentRequest from "./components/shipment-request/new";
 import OrdersApi from "./components/1688-taobao-orders/new";
 import PaymentRequestOrder from "./components/payment-request/paymentRequestOrder";
 import Message from "./components/messages/App";
+import Reviews from "./components/products/physical/reviews";
 class Root extends Component {
   constructor(props) {
     super(props);
@@ -159,6 +160,11 @@ class Root extends Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/products/physical/attributes`}
                   component={Attributes}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/reviews`}
+                  component={Reviews}
                 />
                 <Route
                   exact

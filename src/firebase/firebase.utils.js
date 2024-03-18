@@ -83,6 +83,23 @@ export const uploadImage = async (file) => {
 
   return imgUrl[0];
 };
+
+export const getAllDeviceTokens = async () => {
+  const tokensCollectionRef = firestore.collection("deviceTokens");
+  try {
+    const tokens = await tokensCollectionRef.get();
+    const tokensArray = [];
+    tokens.forEach((doc) => {
+      // console.log(doc.id, " => ", doc.data());
+      tokensArray.push(doc.data().deviceToken[0]);
+    });
+    return tokensArray;
+  } catch (error) {
+    alert(error);
+    return [];
+  }
+};
+
 export const uploadProduct = async (productObj) => {
   const productRef = firestore.doc(`products/${productObj.id}`);
   const snapShot = await productRef.get();
@@ -200,6 +217,21 @@ export const getAllProducts = async () => {
     alert(error);
   }
 };
+export const getAllReviews = async () => {
+  const productsCollectionRef = firestore
+    .collection("products")
+    .orderBy("reviews");
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
 
 export const getAllProductsTax = async () => {
   const productsCollectionRef = firestore.collection("taxes");
@@ -233,6 +265,24 @@ export const deleteProduct = async (id) => {
   const productRef = firestore.doc(`products/${id}`);
   try {
     await productRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteReview = async (productId, reviewId) => {
+  const productRef = firestore.doc(`products/${productId}`);
+  const product = await productRef.get();
+  let updatedReviews = [];
+  product.data().reviews.map((review) => {
+    if (review.id != reviewId) {
+      updatedReviews.push(review);
+    }
+  });
+  try {
+    await productRef.update({ ...product.data(), reviews: updatedReviews });
+    const updatedProduct = await productRef.get();
+    return updatedProduct.data();
   } catch (error) {
     alert(error);
   }
@@ -761,6 +811,27 @@ export const updateProduct = async (productObj) => {
     });
     const product = await productRef.get();
     return product.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+export const updateReview = async (reviewObj) => {
+  const productRef = firestore.doc(`products/${reviewObj.productId}`);
+  const product = await productRef.get();
+
+  try {
+    await productRef.update({
+      ...product.data(),
+      reviews: product.data().reviews.map((review) => {
+        if (review.id == reviewObj.id) {
+          return reviewObj;
+        } else {
+          return review;
+        }
+      }),
+    });
+    const updatedProduct = await productRef.get();
+    return updatedProduct.data();
   } catch (error) {
     alert(error);
   }

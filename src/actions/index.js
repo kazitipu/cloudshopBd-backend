@@ -43,6 +43,9 @@ import {
   uploadAttribute,
   updateAttribute,
   deleteAttribute,
+  getAllReviews,
+  updateReview,
+  deleteReview,
   getAllAttributeTerms,
   uploadAttributeTerm,
   updateAttributeTerm,
@@ -421,6 +424,29 @@ export const deleteAttributeRedux = (attrId) => async (dispatch) => {
   dispatch({
     type: "DELETE_ATTRIBUTE",
     payload: { id: attrId },
+  });
+};
+export const getAllReviewsRedux = () => async (dispatch) => {
+  const allReviews = await getAllReviews();
+  dispatch({
+    type: "GET_ALL_REVIEWS",
+    payload: allReviews,
+  });
+};
+
+export const updateReviewRedux = (reviewObj) => async (dispatch) => {
+  const updatedProductObj = await updateReview(reviewObj);
+  dispatch({
+    type: "UPDATE_REVIEW",
+    payload: updatedProductObj,
+  });
+};
+
+export const deleteReviewRedux = (productId, reviewId) => async (dispatch) => {
+  const updatedProductObj = await deleteReview(productId, reviewId);
+  dispatch({
+    type: "UPDATE_REVIEW",
+    payload: updatedProductObj,
   });
 };
 export const getAllAttributeTermsRedux = (id) => async (dispatch) => {

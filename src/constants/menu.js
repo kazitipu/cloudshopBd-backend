@@ -135,62 +135,62 @@ export const MENUITEMSFORADMIN = [
       },
     ],
   },
-  {
-    title: "Product Request",
-    icon: Clipboard,
-    type: "sub",
-    active: false,
-    children: [
-      { path: "/product-request/new", title: "New Request", type: "link" },
-      {
-        path: "/product-request/rates-given",
-        title: "Rates Given",
-        type: "link",
-      },
-      { path: "/product-request/paid", title: "Paid", type: "link" },
-      { path: "/product-request/ordered", title: "Ordered", type: "link" },
-      { path: "/product-request/delivered", title: "Delivered", type: "link" },
-    ],
-  },
-  {
-    title: "Shipment Request",
-    icon: Clipboard,
-    type: "sub",
-    active: false,
-    children: [
-      { path: "/shipment-request/new", title: "New Request", type: "link" },
-      {
-        path: "/shipment-request/rates-given",
-        title: "Rates Given",
-        type: "link",
-      },
-      {
-        path: "/shipment-request/received-in-warehouse",
-        title: "Received in Warehouse",
-        type: "link",
-      },
-      { path: "/shipment-request/delivered", title: "Delivered", type: "link" },
-      { path: "/shipment-request/paid", title: "Paid", type: "link" },
-    ],
-  },
-  {
-    title: "Payment Request",
-    icon: Clipboard,
-    type: "sub",
-    active: false,
-    children: [
-      {
-        path: "/payment-request/pending",
-        title: "Booking Request",
-        type: "link",
-      },
-      {
-        path: "/payment-request-order/pending",
-        title: "Order Request",
-        type: "link",
-      },
-    ],
-  },
+  // {
+  //   title: "Product Request",
+  //   icon: Clipboard,
+  //   type: "sub",
+  //   active: false,
+  //   children: [
+  //     { path: "/product-request/new", title: "New Request", type: "link" },
+  //     {
+  //       path: "/product-request/rates-given",
+  //       title: "Rates Given",
+  //       type: "link",
+  //     },
+  //     { path: "/product-request/paid", title: "Paid", type: "link" },
+  //     { path: "/product-request/ordered", title: "Ordered", type: "link" },
+  //     { path: "/product-request/delivered", title: "Delivered", type: "link" },
+  //   ],
+  // },
+  // {
+  //   title: "Shipment Request",
+  //   icon: Clipboard,
+  //   type: "sub",
+  //   active: false,
+  //   children: [
+  //     { path: "/shipment-request/new", title: "New Request", type: "link" },
+  //     {
+  //       path: "/shipment-request/rates-given",
+  //       title: "Rates Given",
+  //       type: "link",
+  //     },
+  //     {
+  //       path: "/shipment-request/received-in-warehouse",
+  //       title: "Received in Warehouse",
+  //       type: "link",
+  //     },
+  //     { path: "/shipment-request/delivered", title: "Delivered", type: "link" },
+  //     { path: "/shipment-request/paid", title: "Paid", type: "link" },
+  //   ],
+  // },
+  // {
+  //   title: "Payment Request",
+  //   icon: Clipboard,
+  //   type: "sub",
+  //   active: false,
+  //   children: [
+  //     {
+  //       path: "/payment-request/pending",
+  //       title: "Booking Request",
+  //       type: "link",
+  //     },
+  //     {
+  //       path: "/payment-request-order/pending",
+  //       title: "Order Request",
+  //       type: "link",
+  //     },
+  //   ],
+  // },
   // {
   //   title: "Payments",
   //   icon: Tag,

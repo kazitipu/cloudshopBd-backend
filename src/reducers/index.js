@@ -11,6 +11,7 @@ import categoriesReducer from "./categories";
 import tagsReducer from "./shopByConcern";
 import attributesReducer from "./attributes";
 import couponsReducers from "./coupons";
+import reviewsReducer from "./reviews";
 const rootReducer = combineReducers({
   orders: setOrdersReducer,
   payments: setPaymentsReducer,
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
   categories: categoriesReducer,
   tags: tagsReducer,
   attributes: attributesReducer,
+  reviews: reviewsReducer,
 });
 
 export default rootReducer;

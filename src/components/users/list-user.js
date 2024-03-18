@@ -7,6 +7,7 @@ import { Search } from "react-feather";
 import { getAllUsersRedux } from "../../actions/index";
 import { connect } from "react-redux";
 import { sendNotifications } from "../../firebase/fcmRestApi";
+import { getAllDeviceTokens } from "../../firebase/firebase.utils";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 export class List_user extends Component {
@@ -34,23 +35,23 @@ export class List_user extends Component {
     this.setState({ [name]: value });
   };
 
-  handleSubmit = () => {
+  handleSubmit = async () => {
     const { allUsers } = this.props;
     const UsersWithToken = allUsers.filter(
       (user) => user.deviceToken && user.deviceToken.length > 0
     );
-    UsersWithToken.map((user) => {
-      const message = {
-        title: this.state.campaign_title,
-        body: this.state.messageBody,
-      };
-      if (user.deviceToken && user.deviceToken.length > 0) {
-        user.deviceToken.map((token) => {
-          console.log(token);
-          sendNotifications(token, message);
-        });
-      }
-    });
+
+    const message = {
+      title: this.state.campaign_title,
+      body: this.state.messageBody,
+    };
+
+    const allTokens = await getAllDeviceTokens();
+    for (let i = 0; i < allTokens.length; i++) {
+      const token = allTokens[i];
+      sendNotifications(token, message);
+    }
+
     toast.success("Notification sent successfully!");
   };
 
