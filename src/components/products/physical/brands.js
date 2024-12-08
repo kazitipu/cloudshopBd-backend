@@ -37,6 +37,7 @@ export class Brands extends Component {
       selectAll: false,
       searchFor: "",
       freeShipping: 0,
+      homeScreen: false,
     };
   }
 
@@ -151,6 +152,7 @@ export class Brands extends Component {
         parentBrand: this.state.parentBrand,
         logo: this.state.imageUrl,
         banner: this.state.imageUrl2,
+        homeScreen: this.state.homeScreen,
       };
 
       await this.props.uploadBrandRedux(brandObj);
@@ -163,6 +165,7 @@ export class Brands extends Component {
         parentBrand: this.state.parentBrand,
         logo: this.state.imageUrl,
         banner: this.state.imageUrl2,
+        homeScreen: this.state.homeScreen,
       };
       await this.props.updateBrandRedux(brandObj);
     }
@@ -180,6 +183,7 @@ export class Brands extends Component {
       file: "",
       checkedValues: [],
       selectAll: false,
+      homeScreen: false,
     });
   };
   handleChangeCustomer = (e) => {
@@ -325,9 +329,14 @@ export class Brands extends Component {
         brand.name.toLowerCase().includes(this.state.searchFor.toLowerCase())
       );
     }
-    renderableBrands = renderableBrands.sort(
-      (a, b) => a.name.charCodeAt(0) - b.name.charCodeAt(0)
-    );
+    renderableBrands = renderableBrands.sort((a, b) => {
+      if (a.homeScreen === b.homeScreen) {
+        // Sort alphabetically by name if `homeScreen` values are the same
+        return a.name.localeCompare(b.name);
+      }
+      // Sort by `homeScreen` (true first, then false)
+      return a.homeScreen ? -1 : 1;
+    });
 
     console.log(this.props);
     return (
@@ -443,6 +452,7 @@ export class Brands extends Component {
                               checkedValues: [],
                               selectAll: false,
                               type: "upload",
+                              homeScreen: false,
                             });
                           }}
                         >
@@ -655,6 +665,18 @@ export class Brands extends Component {
                               padding: "30px 15px",
                               color: "white",
                               backgroundColor: "#00254c",
+                              maxWidth: "150px",
+                              minWidth: "150px",
+                            }}
+                          >
+                            Homescreen
+                          </th>
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
                             }}
                           >
                             Parent Brand
@@ -720,6 +742,7 @@ export class Brands extends Component {
                             </td>
                             <td>{brand.name}</td>
                             <td colSpan={2}>{brand.slug}</td>
+                            <td>{brand.homeScreen ? "true" : ""}</td>
 
                             <td>
                               {brands.length > 0 &&
@@ -756,6 +779,9 @@ export class Brands extends Component {
                                         : this.state.imageUrl2,
                                       type: "update",
                                       productObj: brand,
+                                      homeScreen: brand.homeScreen
+                                        ? brand.homeScreen
+                                        : false,
                                     });
                                   }}
                                   style={{
@@ -1014,6 +1040,8 @@ export class Brands extends Component {
                               borderRadius: 5,
                               minHeight: 50,
                               maxHeight: 50,
+                              minWidth: 120,
+                              maxWidth: 120,
                             }}
                             onClick={() => {
                               document
@@ -1037,6 +1065,40 @@ export class Brands extends Component {
                         </>
                       )}
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <span
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        name={this.state.homeScreen}
+                        checked={this.state.homeScreen}
+                        onChange={(e) =>
+                          this.setState({
+                            homeScreen: !this.state.homeScreen,
+                          })
+                        }
+                        style={{
+                          height: 20,
+                          width: 20,
+                        }}
+                      />
+
+                      <div
+                        style={{
+                          marginLeft: 5,
+                          fontWeight: "bold",
+                          color: "#505050",
+                          marginBottom: 5,
+                        }}
+                      >
+                        Show on Homescreen
+                      </div>
+                    </span>
                   </div>
                 </div>
               </div>

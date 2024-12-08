@@ -61,13 +61,18 @@ export const MENUITEMSFORADMIN = [
         type: "link",
       },
       {
+        path: "/products/physical/campaigns",
+        title: "Campaigns",
+        type: "link",
+      },
+      {
         path: "/products/physical/banners",
         title: "Banners",
         type: "link",
       },
       {
         path: "/products/physical/shop-by-concern",
-        title: "Shob By Concern",
+        title: "Shop By Concern",
         type: "link",
       },
       {
@@ -290,13 +295,18 @@ export const MENUITEMSFORAGENT = [
         type: "link",
       },
       {
+        path: "/products/physical/campaigns",
+        title: "Campaigns",
+        type: "link",
+      },
+      {
         path: "/products/physical/banners",
         title: "Banners",
         type: "link",
       },
       {
         path: "/products/physical/shop-by-concern",
-        title: "Shob By Concern",
+        title: "Shop By Concern",
         type: "link",
       },
       {

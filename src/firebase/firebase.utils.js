@@ -205,7 +205,7 @@ export const uploadAliProduct = async (productObj) => {
 };
 
 export const getAllProducts = async () => {
-  const productsCollectionRef = firestore.collection("products");
+  const productsCollectionRef = firestore.collection("products").limit(50);
   try {
     const products = await productsCollectionRef.get();
     const productsArray = [];
@@ -1742,6 +1742,86 @@ export const deleteAttributeTerm = async (id, parentId) => {
     await attrRef.update({
       terms: newTerms,
     });
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCampaigns = async () => {
+  const productsCollectionRef = firestore.collection("campaigns");
+
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadCampaign = async (productObj) => {
+  const productRef = firestore.doc(`campaigns/${productObj.id}`);
+  const snapShot = await productRef.get();
+  const newProductObj = { ...productObj, file: "" };
+  if (productObj.secondBanner) {
+    const collectionRef = firestore
+      .collection(`campaigns`)
+      .where("secondBanner", "==", true);
+    const collection = await collectionRef.get();
+    collection.forEach(async (doc) => {
+      const bannerRef = firestore.doc(`campaigns/${doc.data().id}`);
+      await bannerRef.update({
+        secondBanner: false,
+      });
+    });
+  }
+  if (!snapShot.exists) {
+    try {
+      await productRef.set({
+        ...newProductObj,
+      });
+      const updatedSnapShot = await productRef.get();
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a category with similar id");
+  }
+};
+
+export const updateCampaign = async (productObj) => {
+  const productRef = firestore.doc(`campaigns/${productObj.id}`);
+  const product = await productRef.get();
+  if (productObj.secondBanner) {
+    const collectionRef = firestore
+      .collection(`campaigns`)
+      .where("secondBanner", "==", true);
+    const collection = await collectionRef.get();
+    collection.forEach(async (doc) => {
+      const bannerRef = firestore.doc(`campaigns/${doc.data().id}`);
+      await bannerRef.update({
+        secondBanner: false,
+      });
+    });
+  }
+  try {
+    delete productObj.file;
+    await productRef.update({ ...productObj });
+    const updatedSnapShot = await productRef.get();
+    return updatedSnapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteCampaign = async (id) => {
+  const productRef = firestore.doc(`campaigns/${id}`);
+  try {
+    await productRef.delete();
   } catch (error) {
     alert(error);
   }

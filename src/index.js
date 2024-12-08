@@ -72,6 +72,7 @@ import OrdersApi from "./components/1688-taobao-orders/new";
 import PaymentRequestOrder from "./components/payment-request/paymentRequestOrder";
 import Message from "./components/messages/App";
 import Reviews from "./components/products/physical/reviews";
+import Campaigns from "./components/products/physical/allCampaigns";
 class Root extends Component {
   constructor(props) {
     super(props);
@@ -140,6 +141,11 @@ class Root extends Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/products/physical/categories`}
                   component={Categories}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/campaigns`}
+                  component={Campaigns}
                 />
                 <Route
                   exact

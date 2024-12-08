@@ -51,6 +51,10 @@ import {
   updateAttributeTerm,
   deleteAttributeTerm,
   getSingleProduct,
+  getAllCampaigns,
+  uploadCampaign,
+  updateCampaign,
+  deleteCampaign,
 } from "../firebase/firebase.utils";
 
 export const setAllOrders = (ordersArray) => ({
@@ -481,3 +485,35 @@ export const deleteAttributeTermRedux =
       payload: { id: termId, parentId },
     });
   };
+
+export const getAllCampaignsRedux = () => async (dispatch) => {
+  const allCampaigns = await getAllCampaigns();
+  dispatch({
+    type: "GET_ALL_CAMPAIGNS",
+    payload: allCampaigns,
+  });
+};
+
+export const uploadCampaignRedux = (campaignObj) => async (dispatch) => {
+  const uploadedCampaignObj = await uploadCampaign(campaignObj);
+  dispatch({
+    type: "UPLOAD_CAMPAIGN",
+    payload: uploadedCampaignObj,
+  });
+};
+
+export const updateCampaignRedux = (campaignObj) => async (dispatch) => {
+  const updatedCampaignObj = await updateCampaign(campaignObj);
+  dispatch({
+    type: "UPDATE_CAMPAIGN",
+    payload: updatedCampaignObj,
+  });
+};
+
+export const deleteCampaignRedux = (id) => async (dispatch) => {
+  await deleteCampaign(id);
+  dispatch({
+    type: "DELETE_CAMPAIGN",
+    payload: id,
+  });
+};

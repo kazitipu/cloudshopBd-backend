@@ -367,6 +367,18 @@ export class HomeCategories extends Component {
                       ></i>
                       Homescreen Categories
                     </h5>
+                    <div>
+                      <span
+                        style={{ color: "#2271b1", cursor: "pointer" }}
+                        onClick={() => {
+                          this.props.history.push(
+                            "/products/physical/categories"
+                          );
+                        }}
+                      >
+                        All categories{" "}
+                      </span>
+                    </div>
                   </div>
                   <div
                     style={{
