@@ -22,6 +22,10 @@ import {
   uploadBrand,
   updateBrand,
   deleteBrand,
+  getAllScreenShot,
+  uploadScreenShot,
+  updateScreenShot,
+  deleteScreenShot,
   getAllCoupons,
   uploadCoupon,
   updateCoupon,
@@ -55,6 +59,67 @@ import {
   uploadCampaign,
   updateCampaign,
   deleteCampaign,
+  getAllAnnouncements,
+  uploadAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  getSingleOrder,
+  getSingleMonthlyExpense,
+  getAllMonthlyExpense,
+  getAllPendingExpensesByDay,
+  approveExpense,
+  getAllPendingExpenses,
+  deleteExpense,
+  updateExpense,
+  uploadExpense,
+  getAllExpenses,
+  getAllOffices,
+  uploadOffice,
+  updateOffice,
+  deleteOffice,
+  getSingleCashSummary,
+  uploadCashIn,
+  updateCashIn,
+  getAllDocumentExpressRates,
+  getAllEmployees,
+  getAllMonthlyCashSummary,
+  getAllMonthlyCashIn,
+  getAllMonthly,
+  getAllMonthlySalary,
+  getSingleMonthlyCashSummary,
+  getSingleMonthlyCashIn,
+  getSingleMonthly,
+  getSingleMonthlySalary,
+  getSingleMonthlyLoanCashIn,
+  getSingleMonthlyLoanCashOut,
+  getAllPendingCashInByDay,
+  getAllPendingCashIns,
+  getAllLoansCashOuts,
+  getAllLoansCashIns,
+  getAllLoansCashOutCustomer,
+  getSingleCustomerLoan,
+  getAllInstallmentsCashOutCustomer,
+  getAllLoansCashInCustomer,
+  deleteCashIn,
+  deleteEmployee,
+  getAllCustomerLoans,
+  getAllCustomerInstallments,
+  getAllCnfs,
+  uploadCnf,
+  updateCnf,
+  deleteCnf,
+  uploadCnfBill,
+  getAllMonthsCnfBill,
+  getAllCnfBills,
+  getAllCnfExpenses,
+  getAllCnfBillsAllMonths,
+  getAllCnfExpensesAllMonths,
+  updateEmployee,
+  updateSalary,
+  uploadEmployee,
+  getAllFunds,
+  getAllCashIns,
+  createMonth,
 } from "../firebase/firebase.utils";
 
 export const setAllOrders = (ordersArray) => ({
@@ -256,6 +321,37 @@ export const deleteBrandRedux = (brandId, parentId) => async (dispatch) => {
   dispatch({
     type: "DELETE_BRAND",
     payload: { id: brandId, parentId: parentId },
+  });
+};
+export const getAllScreenShotRedux = () => async (dispatch) => {
+  const allBrands = await getAllScreenShot();
+  dispatch({
+    type: "GET_ALL_SCREENSHOT",
+    payload: allBrands,
+  });
+};
+
+export const uploadScreenShotRedux = (brandObj) => async (dispatch) => {
+  const uploadedBrandObj = await uploadScreenShot(brandObj);
+  dispatch({
+    type: "UPLOAD_SCREENSHOT",
+    payload: uploadedBrandObj,
+  });
+};
+
+export const updateScreenShotRedux = (brandObj) => async (dispatch) => {
+  const updatedBrandObj = await updateScreenShot(brandObj);
+  dispatch({
+    type: "UPDATE_SCREENSHOT",
+    payload: updatedBrandObj,
+  });
+};
+
+export const deleteScreenShotRedux = (brandId) => async (dispatch) => {
+  await deleteScreenShot(brandId);
+  dispatch({
+    type: "DELETE_SCREENSHOT",
+    payload: brandId,
   });
 };
 export const getAllCouponsRedux = () => async (dispatch) => {
@@ -515,5 +611,486 @@ export const deleteCampaignRedux = (id) => async (dispatch) => {
   dispatch({
     type: "DELETE_CAMPAIGN",
     payload: id,
+  });
+};
+export const getAllAnnouncementsRedux = () => async (dispatch) => {
+  const allCampaigns = await getAllAnnouncements();
+  dispatch({
+    type: "GET_ALL_ANNOUNCEMENTS",
+    payload: allCampaigns,
+  });
+};
+
+export const uploadAnnouncementRedux = (campaignObj) => async (dispatch) => {
+  const uploadedCampaignObj = await uploadAnnouncement(campaignObj);
+  dispatch({
+    type: "UPLOAD_ANNOUNCEMENT",
+    payload: uploadedCampaignObj,
+  });
+};
+
+export const updateAnnouncementRedux = (campaignObj) => async (dispatch) => {
+  const updatedCampaignObj = await updateAnnouncement(campaignObj);
+  dispatch({
+    type: "UPDATE_ANNOUNCEMENT",
+    payload: updatedCampaignObj,
+  });
+};
+
+export const deleteAnnouncementRedux = (id) => async (dispatch) => {
+  await deleteAnnouncement(id);
+  dispatch({
+    type: "DELETE_ANNOUNCEMENT",
+    payload: id,
+  });
+};
+
+export const getSingleOrderRedux = (id) => async (dispatch) => {
+  const product = await getSingleOrder(id);
+  dispatch({ type: "GET_SINGLE_ORDER", payload: product });
+};
+export const getAllCnfExpenseAllMonthsRedux = (name) => async (dispatch) => {
+  const cnfs = await getAllCnfExpensesAllMonths(name);
+  dispatch({
+    type: "GET_ALL_CNF_EXPENSES_ALL_MONTHS",
+    payload: cnfs,
+  });
+};
+export const getAllCnfExpenseRedux = (month, name) => async (dispatch) => {
+  const cnfs = await getAllCnfExpenses(month, name);
+  dispatch({
+    type: "GET_ALL_CNF_EXPENSES",
+    payload: cnfs,
+  });
+};
+
+export const getAllExpenseRedux = (day) => async (dispatch) => {
+  const expenses = await getAllExpenses(day);
+  dispatch({
+    type: "GET_ALL_EXPENSES",
+    payload: expenses,
+  });
+};
+
+export const getAllMonthlyExpenseRedux = () => async (dispatch) => {
+  const expenses = await getAllMonthlyExpense();
+  dispatch({
+    type: "GET_ALL_MONTHLY_EXPENSES",
+    payload: expenses,
+  });
+};
+
+export const getAllMonthlyCashSummaryRedux = () => async (dispatch) => {
+  const months = await getAllMonthlyCashSummary();
+  dispatch({
+    type: "GET_ALL_MONTHLY_CASH_SUMMARY",
+    payload: months,
+  });
+};
+
+export const getAllMonthlyCashInRedux = () => async (dispatch) => {
+  const expenses = await getAllMonthlyCashIn();
+  dispatch({
+    type: "GET_ALL_MONTHLY_CASH_INS",
+    payload: expenses,
+  });
+};
+export const getAllMonthlyRedux =
+  (category, subCategory) => async (dispatch) => {
+    const expenses = await getAllMonthly(category, subCategory);
+    dispatch({
+      type: "GET_ALL_MONTHLY",
+      payload: expenses,
+    });
+  };
+
+export const getAllMonthlySalaryRedux = () => async (dispatch) => {
+  const expenses = await getAllMonthlySalary();
+  dispatch({
+    type: "GET_ALL_MONTHLY",
+    payload: expenses,
+  });
+};
+
+export const getSingleMonthlyExpenseRedux = (month) => async (dispatch) => {
+  const expenses = await getSingleMonthlyExpense(month);
+  dispatch({
+    type: "GET_SINGLE_MONTHLY_EXPENSES",
+    payload: expenses,
+  });
+};
+export const getSingleMonthlyCashSummaryRedux = (month) => async (dispatch) => {
+  const expenses = await getSingleMonthlyCashSummary(month);
+  dispatch({
+    type: "GET_SINGLE_MONTHLY_CASH_SUMMARY",
+    payload: expenses,
+  });
+};
+
+export const getSingleMonthlyCashInRedux = (month) => async (dispatch) => {
+  const expenses = await getSingleMonthlyCashIn(month);
+  dispatch({
+    type: "GET_SINGLE_MONTHLY_CASH_INS",
+    payload: expenses,
+  });
+};
+
+export const getSingleMonthlyRedux =
+  (month, category, subCategory) => async (dispatch) => {
+    const expenses = await getSingleMonthly(month, category, subCategory);
+    dispatch({
+      type: "GET_SINGLE_MONTHLY",
+      payload: expenses,
+    });
+  };
+export const getSingleMonthlySalaryRedux =
+  (month, category) => async (dispatch) => {
+    const expenses = await getSingleMonthlySalary(month, category);
+    dispatch({
+      type: "GET_SINGLE_MONTHLY",
+      payload: expenses,
+    });
+  };
+
+export const getSingleMonthlyLoanCashInRedux =
+  (month, category) => async (dispatch) => {
+    const cashIns = await getSingleMonthlyLoanCashIn(month, category);
+    dispatch({
+      type: "GET_SINGLE_MONTHLY_LOANS_CASHIN",
+      payload: cashIns,
+    });
+  };
+export const getSingleMonthlyLoanCashOutRedux =
+  (month, category) => async (dispatch) => {
+    const expenses = await getSingleMonthlyLoanCashOut(month, category);
+    dispatch({
+      type: "GET_SINGLE_MONTHLY_LOANS_CASHOUT",
+      payload: expenses,
+    });
+  };
+export const clearSingleMonthRedux = () => async (dispatch) => {
+  dispatch({
+    type: "CLEAR_SINGLE_MONTHLY",
+  });
+};
+
+export const getAllPendingExpenseByDayRedux = (day) => async (dispatch) => {
+  const expenses = await getAllPendingExpensesByDay(day);
+  dispatch({
+    type: "GET_ALL_EXPENSES",
+    payload: expenses,
+  });
+};
+export const getAllPendingCashInByDayRedux = (day) => async (dispatch) => {
+  const cashIns = await getAllPendingCashInByDay(day);
+  dispatch({
+    type: "GET_ALL_CASH_INS",
+    payload: cashIns,
+  });
+};
+export const getAllPendingExpensesRedux = () => async (dispatch) => {
+  const expenses = await getAllPendingExpenses();
+  dispatch({
+    type: "GET_ALL_PENDING_EXPENSES",
+    payload: expenses,
+  });
+};
+export const getAllPendingCashInsRedux = () => async (dispatch) => {
+  const cashIns = await getAllPendingCashIns();
+  dispatch({
+    type: "GET_ALL_PENDING_CASH_INS",
+    payload: cashIns,
+  });
+};
+export const getAllLoansCashOutsRedux = () => async (dispatch) => {
+  const expenses = await getAllLoansCashOuts();
+  dispatch({
+    type: "GET_ALL_LOANS_CASH_OUTS",
+    payload: expenses,
+  });
+};
+export const getAllLoansCashInsRedux = () => async (dispatch) => {
+  const cashIns = await getAllLoansCashIns();
+  dispatch({
+    type: "GET_ALL_LOANS_CASH_INS",
+    payload: cashIns,
+  });
+};
+export const getAllLoansCashOutCustomerRedux =
+  (customer) => async (dispatch) => {
+    const expenses = await getAllLoansCashOutCustomer(customer);
+    dispatch({
+      type: "GET_ALL_LOANS_CASH_OUTS_CUSTOMER",
+      payload: expenses,
+    });
+  };
+export const getSingleCustomerLoanRedux = (customer) => async (dispatch) => {
+  const loan = await getSingleCustomerLoan(customer);
+  dispatch({
+    type: "GET_SINGLE_CUSTOMER_LOAN",
+    payload: loan,
+  });
+};
+export const getAllInstallmentsCashOutCustomerRedux =
+  (customer) => async (dispatch) => {
+    const expenses = await getAllInstallmentsCashOutCustomer(customer);
+    dispatch({
+      type: "GET_ALL_INSTALLMENTS_CASH_OUTS_CUSTOMER",
+      payload: expenses,
+    });
+  };
+export const getAllLoansCashInCustomerRedux =
+  (customer) => async (dispatch) => {
+    const cashIns = await getAllLoansCashInCustomer(customer);
+    dispatch({
+      type: "GET_ALL_LOANS_CASH_INS_CUSTOMER",
+      payload: cashIns,
+    });
+  };
+
+export const uploadExpenseRedux = (expenseObj) => async (dispatch) => {
+  const uploadedExpenseObj = await uploadExpense(expenseObj);
+  dispatch({
+    type: "UPLOAD_EXPENSE",
+    payload: uploadedExpenseObj,
+  });
+};
+
+export const updateExpenseRedux = (expenseObj) => async (dispatch) => {
+  const updatedExpenseObj = await updateExpense(expenseObj);
+  dispatch({
+    type: "UPDATE_EXPENSE",
+    payload: updatedExpenseObj,
+  });
+};
+
+export const deleteExpenseRedux = (expenseId) => async (dispatch) => {
+  await deleteExpense(expenseId);
+  dispatch({
+    type: "DELETE_EXPENSE",
+    payload: expenseId,
+  });
+};
+
+export const approveExpenseRedux = (date) => async (dispatch) => {
+  await approveExpense(date);
+
+  dispatch({
+    type: "APPROVE_EXPENSE",
+    payload: date,
+  });
+};
+export const deleteCashInRedux = (cashInId) => async (dispatch) => {
+  await deleteCashIn(cashInId);
+  dispatch({
+    type: "DELETE_CASH_IN",
+    payload: cashInId,
+  });
+};
+
+export const updateEmployeeRedux = (employeeObj) => async (dispatch) => {
+  const updatedEmployeeObj = await updateEmployee(employeeObj);
+  dispatch({
+    type: "UPDATE_EMPLOYEE",
+    payload: updatedEmployeeObj,
+  });
+};
+
+export const getAllCnfRedux = () => async (dispatch) => {
+  const cnfs = await getAllCnfs();
+  dispatch({
+    type: "GET_ALL_CNFS",
+    payload: cnfs,
+  });
+};
+
+// OFFICE CRUD
+export const getAllOfficeRedux = () => async (dispatch) => {
+  const offices = await getAllOffices();
+  dispatch({
+    type: "GET_ALL_OFFICES",
+    payload: offices,
+  });
+};
+
+export const uploadOfficeRedux = (officeObj) => async (dispatch) => {
+  const uploadedOfficeObj = await uploadOffice(officeObj);
+  dispatch({
+    type: "UPLOAD_OFFICE",
+    payload: uploadedOfficeObj,
+  });
+};
+
+export const updateOfficeRedux = (officeObj) => async (dispatch) => {
+  const updatedOfficeObj = await updateOffice(officeObj);
+  dispatch({
+    type: "UPDATE_OFFICE",
+    payload: updatedOfficeObj,
+  });
+};
+export const deleteOfficeRedux = (officeId) => async (dispatch) => {
+  await deleteOffice(officeId);
+  dispatch({
+    type: "DELETE_OFFICE",
+    payload: officeId,
+  });
+};
+
+export const getSingleCashSummaryRedux = () => async (dispatch) => {
+  const cashObj = await getSingleCashSummary();
+  dispatch({
+    type: "GET_SINGLE_CASH_SUMMARY",
+    payload: cashObj,
+  });
+};
+
+export const deleteCnfRedux = (cnfId) => async (dispatch) => {
+  await deleteCnf(cnfId);
+  dispatch({
+    type: "DELETE_CNF",
+    payload: cnfId,
+  });
+};
+export const uploadCnfRedux = (cnfObj) => async (dispatch) => {
+  const uploadedCnfObj = await uploadCnf(cnfObj);
+  dispatch({
+    type: "UPLOAD_CNF",
+    payload: uploadedCnfObj,
+  });
+};
+
+export const updateCnfRedux = (cnfObj) => async (dispatch) => {
+  const updatedCnfObj = await updateCnf(cnfObj);
+  dispatch({
+    type: "UPDATE_CNF",
+    payload: updatedCnfObj,
+  });
+};
+
+export const deleteEmployeeRedux = (employeeId) => async (dispatch) => {
+  await deleteEmployee(employeeId);
+  dispatch({
+    type: "DELETE_EMPLOYEE",
+    payload: employeeId,
+  });
+};
+
+export const getAllCustomerLoansRedux = () => async (dispatch) => {
+  const allCustomers = await getAllCustomerLoans();
+  dispatch({
+    type: "GET_ALL_CUSTOMERS",
+    payload: allCustomers,
+  });
+};
+
+export const getAllCustomerInstallmentRedux = () => async (dispatch) => {
+  const allCustomers = await getAllCustomerInstallments();
+  dispatch({
+    type: "GET_ALL_CUSTOMERS_INSTALLMENT",
+    payload: allCustomers,
+  });
+};
+
+export const uploadCnfBillRedux = (billObj) => async (dispatch) => {
+  await uploadCnfBill(billObj);
+  dispatch({
+    type: "UPLOAD_CNF_BILL",
+    payload: billObj,
+  });
+};
+
+export const getAllCnfBillMonthsRedux = (month) => async (dispatch) => {
+  const allMonths = await getAllMonthsCnfBill(month);
+  dispatch({
+    type: "ALL_MONTHS_CNF_BILL",
+    payload: allMonths,
+  });
+};
+
+export const getAllCnfBillRedux = (month, name) => async (dispatch) => {
+  const cnfs = await getAllCnfBills(month, name);
+  dispatch({
+    type: "GET_ALL_CNF_BILLS",
+    payload: cnfs,
+  });
+};
+
+export const getAllCnfBillAllMonthsRedux = (name) => async (dispatch) => {
+  const cnfs = await getAllCnfBillsAllMonths(name);
+  dispatch({
+    type: "GET_ALL_CNF_BILLS_ALL_MONTHS",
+    payload: cnfs,
+  });
+};
+
+export const updateSalaryRedux = (employeeObj) => async (dispatch) => {
+  const updatedEmployeeObj = await updateSalary(employeeObj);
+  dispatch({
+    type: "UPDATE_SALARY",
+    payload: updatedEmployeeObj,
+  });
+};
+
+export const uploadEmployeeRedux = (employeeObj) => async (dispatch) => {
+  const uploadedEmployeeObj = await uploadEmployee(employeeObj);
+  dispatch({
+    type: "UPLOAD_EMPLOYEE",
+    payload: uploadedEmployeeObj,
+  });
+};
+
+export const getAllFundsRedux = () => async (dispatch) => {
+  const funds = await getAllFunds();
+  dispatch({
+    type: "GET_ALL_FUNDS",
+    payload: funds,
+  });
+};
+
+export const getAllCashInsRedux = (day) => async (dispatch) => {
+  const cashIns = await getAllCashIns(day);
+  dispatch({
+    type: "GET_ALL_CASH_INS",
+    payload: cashIns,
+  });
+};
+
+export const createMonthRedux = () => async (dispatch) => {
+  const months = await createMonth();
+  dispatch({
+    type: "GET_ALL_MONTHS",
+    payload: months,
+  });
+};
+
+export const uploadCashInRedux = (cashInObj) => async (dispatch) => {
+  const uploadedCashInObj = await uploadCashIn(cashInObj);
+  dispatch({
+    type: "UPLOAD_CASH_IN",
+    payload: uploadedCashInObj,
+  });
+};
+
+export const updateCashInRedux = (cashInObj) => async (dispatch) => {
+  const updatedCashInObj = await updateCashIn(cashInObj);
+  dispatch({
+    type: "UPDATE_CASH_IN",
+    payload: updatedCashInObj,
+  });
+};
+
+export const getAllDocumentExpressRatesRedux = () => async (dispatch) => {
+  const documentExpressRatesArray = await getAllDocumentExpressRates();
+  dispatch({
+    type: "GET_ALL_DOCUMENT_EXPRESS_RATES",
+    payload: documentExpressRatesArray,
+  });
+};
+
+export const getAllEmployeeRedux = () => async (dispatch) => {
+  const employees = await getAllEmployees();
+  dispatch({
+    type: "GET_ALL_EMPLOYEES",
+    payload: employees,
   });
 };

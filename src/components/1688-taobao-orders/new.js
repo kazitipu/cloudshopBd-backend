@@ -562,6 +562,16 @@ export class Orders extends Component {
                           >
                             Order Status
                           </th>
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                            }}
+                          >
+                            Invoice
+                          </th>
 
                           <th
                             scope="col"
@@ -706,6 +716,23 @@ export class Orders extends Component {
                               >
                                 {order.orderStatus}
                               </div>
+                            </td>
+                            <td>
+                              <a
+                                style={{
+                                  color: "white",
+                                  padding: "3px 10px",
+                                  borderRadius: 5,
+                                  backgroundColor: "black",
+                                  textAlign: "center",
+                                  cursor: "pointer",
+                                  display: "inline-block",
+                                }}
+                                href={`/invoice/${order.id}`}
+                                target="_blank"
+                              >
+                                invoice
+                              </a>
                             </td>
                             <td>
                               <div
@@ -1440,332 +1467,6 @@ export class Orders extends Component {
             </div>
           </div>
         </div>
-        {/* <div
-          className="modal fade"
-          id="receiveModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div
-            className="modal-dialog"
-            role="document"
-            style={{ margin: "auto" }}
-          >
-            <div
-              className="modal-content"
-              style={{ top: 10, width: "100%", margin: "auto" }}
-            >
-              <div
-                className="modal-header"
-                style={{
-                  backgroundColor: "rgb(0, 37, 76)",
-                  paddingTop: 20,
-                  paddingBottom: 20,
-                }}
-              >
-                <div
-                  className="modal-title"
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    color: "white",
-                  }}
-                  id="exampleModalLabel"
-                >
-                  Receive in Warehouse
-                </div>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                  id="personal-info-close"
-                >
-                  <span aria-hidden="true" style={{ color: "white" }}>
-                    &times;
-                  </span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <div style={{ padding: "10px 15px" }}>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Receiving in Warehouse
-                    </label>
-                    <select
-                      title="Please choose a package"
-                      required
-                      name="warehouse"
-                      className="custom-select"
-                      aria-required="true"
-                      aria-invalid="false"
-                      onChange={this.handleChange}
-                      value={this.state.warehouse}
-                    >
-                      <option value="">Select Warehouse</option>
-                      <option value="Bangladesh warehouse">Bangladesh</option>
-                      <option value="India warehouse">India</option>
-                      <option value="USA warehouse">USA</option>
-                      <option value="China warehouse">China</option>
-                      <option value="Dubai warehouse">Dubai</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn "
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "darkorange",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                    fontWeight: "lighter",
-                  }}
-                  onClick={() => {
-                    this.handleReceive();
-                  }}
-                >
-                  Receive
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          className="modal fade"
-          id="deliverModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div
-            className="modal-dialog"
-            role="document"
-            style={{ margin: "auto" }}
-          >
-            <div
-              className="modal-content"
-              style={{ top: 10, width: "100%", margin: "auto" }}
-            >
-              <div
-                className="modal-header"
-                style={{
-                  backgroundColor: "rgb(0, 37, 76)",
-                  paddingTop: 20,
-                  paddingBottom: 20,
-                }}
-              >
-                <div
-                  className="modal-title"
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    color: "white",
-                  }}
-                  id="exampleModalLabel"
-                >
-                  Product Delivery
-                </div>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                  id="personal-info-close"
-                >
-                  <span aria-hidden="true" style={{ color: "white" }}>
-                    &times;
-                  </span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <div style={{ padding: "10px 15px" }}>
-                  <div className="form-group">
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "#505050",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Are you sure you want to delivery this products?
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "darkorange",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                    fontWeight: "lighter",
-                  }}
-                >
-                  No
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "darkorange",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                    fontWeight: "lighter",
-                  }}
-                  onClick={() => {
-                    this.handleDelivery();
-                  }}
-                >
-                  Yes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div> */}
-        {/* <div
-          className="modal fade"
-          id="agentPayModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-        >
-          <div
-            className="modal-dialog"
-            role="document"
-            style={{ margin: "auto" }}
-          >
-            <div
-              className="modal-content"
-              style={{
-                top: 10,
-                margin: "auto",
-                minWidth: "150%",
-              }}
-            >
-              <div
-                className="modal-header"
-                style={{
-                  backgroundColor: "rgb(0, 37, 76)",
-                  paddingTop: 20,
-                  paddingBottom: 20,
-                }}
-              >
-                <div
-                  className="modal-title"
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    color: "white",
-                  }}
-                  id="exampleModalLabel"
-                >
-                  Agent Pay
-                </div>
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                  id="personal-info-close"
-                >
-                  <span aria-hidden="true" style={{ color: "white" }}>
-                    &times;
-                  </span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <table className="table table-bordered table-striped table-hover">
-                  <thead>
-                    <tr>
-                      <th>Booking Id</th>
-                      <th>Image</th>
-                      <th>Product</th>
-                      <th>Shipping Cost</th>
-                      <th>Agent Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agentPayProducts.map((orderObj, index) => (
-                      <tr key={index}>
-                        <td>{orderObj && orderObj.bookingId}</td>
-                        <td>
-                          {orderObj && (
-                            <img
-                              style={{ height: 70, width: 70 }}
-                              src={
-                                orderObj.imageUrl ? orderObj.imageUrl : ""
-                              }
-                            />
-                          )}
-                        </td>
-                        <td>{orderObj && orderObj.name}</td>
-                        <td>{orderObj && orderObj.shippingCost}Tk</td>
-                        <td>{orderObj && orderObj.agentCost}Tk</td>
-                      </tr>
-                    ))}
-                    <tr>
-                      <td
-                        colSpan={3}
-                        style={{ textAlign: "end", fontWeight: "bold" }}
-                      >
-                        Total
-                      </td>
-                      <td style={{ fontWeight: "bold" }}>
-                        {totalShippingCost}Tk
-                      </td>
-                      <td style={{ fontWeight: "bold" }}>{total}Tk</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  data-dismiss="modal"
-                >
-                  No
-                </button>
-                <button
-                  type="button"
-                  className="btn "
-                  data-dismiss="modal"
-                  style={{
-                    backgroundColor: "red",
-                    color: "white",
-                    padding: 8,
-                    borderRadius: 5,
-                  }}
-                  onClick={() => {
-                    this.handleCashOut(agentPayProducts);
-                  }}
-                >
-                  Yes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div> */}
       </Fragment>
     );
   }

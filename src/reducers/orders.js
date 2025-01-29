@@ -6,6 +6,12 @@ const setOrdersReducer = (state = INITIAL_STATE, action) => {
       return { ...state, orders: [...action.payload] };
     case "GET_ALL_ORDERS":
       return { ...state, orders: action.payload };
+    case "GET_SINGLE_ORDER":
+      return {
+        ...state,
+        orders: [action.payload, ...state.orders],
+      };
+
     case "UPDATE_ORDER":
       return {
         ...state,

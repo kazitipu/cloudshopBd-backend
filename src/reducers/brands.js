@@ -1,5 +1,6 @@
 const INITIAL_STATE = {
   brands: [],
+  screenshots: [],
 };
 
 const brandsReducer = (state = INITIAL_STATE, action) => {
@@ -35,6 +36,32 @@ const brandsReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         brands: [...brandsArray],
+      };
+    case "GET_ALL_SCREENSHOT":
+      return { ...state, screenshots: [...action.payload] };
+
+    case "UPLOAD_SCREENSHOT":
+      return {
+        ...state,
+        screenshots: [action.payload, ...state.screenshots],
+      };
+    case "UPDATE_SCREENSHOT":
+      const filteredProductsArray3 = state.screenshots.filter(
+        (product) => product.id !== action.payload.id
+      );
+
+      return {
+        ...state,
+        screenshots: [action.payload, ...filteredProductsArray3],
+      };
+    case "DELETE_SCREENSHOT":
+      const updatedProductsArray2 = state.screenshots.filter(
+        (product) => product.id !== action.payload
+      );
+
+      return {
+        ...state,
+        screenshots: updatedProductsArray2,
       };
     default:
       return { ...state };

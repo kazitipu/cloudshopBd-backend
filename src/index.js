@@ -60,7 +60,7 @@ import Add_Product_Tax from "./components/localization/add_product_tax";
 import Update_Product_Tax from "./components/localization/update-product-tax";
 import Profile from "./components/settings/profile";
 import Reports from "./components/reports/report";
-import Invoice from "./components/invoice";
+
 import Datatable from "./components/common/datatable";
 import Login from "./components/auth/login";
 import SearchedOrder from "./components/searched-order/searched-order";
@@ -73,6 +73,48 @@ import PaymentRequestOrder from "./components/payment-request/paymentRequestOrde
 import Message from "./components/messages/App";
 import Reviews from "./components/products/physical/reviews";
 import Campaigns from "./components/products/physical/allCampaigns";
+import Announcements from "./components/products/physical/allAnnouncements";
+import Invoice from "./components/1688-taobao-orders/invoice";
+import MonthlyExpense from "./components/expense-history/monthly-expense/monthlyexpense";
+import DailyExpense from "./components/expense/daily-expense";
+import SalaryMonth from "./components/expense-history/salary/monthlyexpense";
+import Salaries from "./components/expense-history/salary/monthlyexpenseByMonth";
+import Refunds from "./components/expense-history/refund/monthlyexpenseByMonth";
+import RefundsMonth from "./components/expense-history/refund/monthlyexpense";
+import CommisionMonth from "./components/expense-history/agent-commision/monthlyexpense";
+import Commisions from "./components/expense-history/agent-commision/monthlyexpenseByMonth";
+import LotTransportMonth from "./components/expense-history/lot-transport/monthlyexpense";
+import OfficeCostsLotTransport from "./components/expense-history/lot-transport/monthlyexpenseByMonth";
+import Loans from "./components/expense-history/loan/monthlyexpense";
+import Customers from "./components/expense-history/loan/customer";
+import Customers2 from "./components/expense-history/customer-due/customer.js";
+import OnlyInvoiceToPrint2 from "./components/expense-history/customer-due/invoice-by-order.js";
+import SingleCustomer from "./components/expense-history/loan/singleCustomer";
+import Office from "./components/expense-history/office/office";
+import OfficeMonth from "./components/expense-history/office/monthlyexpense";
+import OfficeExpenses from "./components/expense-history/office/monthlyexpenseByMonth";
+import CustomersInstallments from "./components/expense-history/monthly-installment/customer";
+import SingleCustomerInstallments from "./components/expense-history/monthly-installment/singleCustomer";
+import ApproveExpense from "./components/expense-history/approve-expense/approveExpense";
+import ExpenseByDay from "./components/expense-history/approve-expense/daily-expense";
+import Cnf from "./components/expense-history/cnf/cnf";
+import CnfExpenses from "./components/expense-history/cnf/monthlyexpenseByMonth";
+import CnfMonth from "./components/expense-history/cnf/monthlyexpense";
+import InvestMonth from "./components/expense-history/invest/monthlyexpense";
+import Invests from "./components/expense-history/invest/monthlyexpenseByMonth";
+import OfficeCostMonth from "./components/expense-history/daily-cost/monthlyexpense";
+import OfficeCosts from "./components/expense-history/daily-cost/monthlyexpenseByMonth";
+import Employee from "./components/expense-history/employee/employee";
+import EmployeeMonth from "./components/expense-history/employee/monthlyexpense";
+import EmployeeExpenses from "./components/expense-history/employee/monthlyexpenseByMonth";
+import Fund from "./components/expense-history/fund/fund.js";
+import CashSummary from "./components/expense-history/cash-summary/monthlyexpense";
+import CashSummaryByMonth from "./components/expense-history/cash-summary/monthlyexpenseByMonth";
+import CashSummaryByDate from "./components/expense-history/cash-summary/daily-expense";
+import MonthlyExpenseByMonth from "./components/expense-history/monthly-expense/monthlyexpenseByMonth";
+import LoanMonthly from "./components/expense-history/loan/monthlyexpenseByMonth";
+import Screenshots from "./components/products/physical/screenshots.js";
+
 class Root extends Component {
   constructor(props) {
     super(props);
@@ -149,6 +191,11 @@ class Root extends Component {
                 />
                 <Route
                   exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/announcements`}
+                  component={Announcements}
+                />
+                <Route
+                  exact
                   path={`${process.env.PUBLIC_URL}/products/physical/categories/homescreen`}
                   component={HomeCategories}
                 />
@@ -171,6 +218,11 @@ class Root extends Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/products/physical/reviews`}
                   component={Reviews}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/reviews-screenshot`}
+                  component={Screenshots}
                 />
                 <Route
                   exact
@@ -356,11 +408,7 @@ class Root extends Component {
                   path={`${process.env.PUBLIC_URL}/settings/profile`}
                   component={Profile}
                 />
-                <Route
-                  exact
-                  path={`${process.env.PUBLIC_URL}/invoice`}
-                  component={Invoice}
-                />
+
                 <Route
                   exact
                   path={`${process.env.PUBLIC_URL}/product-request/:bookingStatus`}
@@ -386,13 +434,212 @@ class Root extends Component {
                   path={`${process.env.PUBLIC_URL}/payment-request-order/pending`}
                   component={PaymentRequestOrder}
                 />
-
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/invoice/:orderId`}
+                  component={Invoice}
+                />
                 <Route
                   exact
                   path={`${process.env.PUBLIC_URL}/data-table`}
                   component={() =>
                     currentAdmin ? <Datatable /> : <Redirect to="/" />
                   }
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/expense-history`}
+                  component={MonthlyExpense}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/expense-history/:month`}
+                  component={MonthlyExpenseByMonth}
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/salary`}
+                  component={SalaryMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/salary/:month`}
+                  component={Salaries}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/daily-expense`}
+                  component={DailyExpense}
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/refunds`}
+                  component={RefundsMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/refunds/:month`}
+                  component={Refunds}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/agent-commision`}
+                  component={CommisionMonth}
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/agent-commision/:month`}
+                  component={Commisions}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/lot-transport`}
+                  component={LotTransportMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/lot-transport/:month`}
+                  component={OfficeCostsLotTransport}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/loans`}
+                  component={Loans}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/loans/:month`}
+                  component={LoanMonthly}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/loans-by-customers`}
+                  component={Customers}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/loans-by-customers2/pdf`}
+                  component={OnlyInvoiceToPrint2}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/loans-by-customers2`}
+                  component={Customers2}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/loans-by-customers/:customer`}
+                  component={SingleCustomer}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/office`}
+                  component={Office}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/office/:name`}
+                  component={OfficeMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/singleOffice/office/:month`}
+                  component={OfficeExpenses}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/monthly-installment`}
+                  component={CustomersInstallments}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/installments-by-customers/:customer`}
+                  component={SingleCustomerInstallments}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/approve-expense`}
+                  component={ApproveExpense}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/approve-expense/:date`}
+                  component={ExpenseByDay}
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/cnf`}
+                  component={Cnf}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/cnf/:name`}
+                  component={CnfExpenses}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expenses/cnf/:month`}
+                  component={CnfMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/invest`}
+                  component={InvestMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/invest/:month`}
+                  component={Invests}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/daily-cost`}
+                  component={OfficeCostMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/daily-cost/:month`}
+                  component={OfficeCosts}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/employee`}
+                  component={Employee}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/employee/:name`}
+                  component={EmployeeMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/employees/:month`}
+                  component={EmployeeExpenses}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/fund`}
+                  component={Fund}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/cash-summary`}
+                  component={CashSummary}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/cash-summary/:month`}
+                  component={CashSummaryByMonth}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/cash-summary-by-day/:date`}
+                  component={CashSummaryByDate}
                 />
               </App>
             </Switch>

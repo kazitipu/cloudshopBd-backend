@@ -1826,3 +1826,1551 @@ export const deleteCampaign = async (id) => {
     alert(error);
   }
 };
+export const getAllAnnouncements = async () => {
+  const productsCollectionRef = firestore.collection("announcements");
+
+  try {
+    const products = await productsCollectionRef.get();
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return productsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadAnnouncement = async (productObj) => {
+  const productRef = firestore.doc(`announcements/${productObj.id}`);
+  const snapShot = await productRef.get();
+  const newProductObj = { ...productObj, file: "" };
+  if (productObj.secondBanner) {
+    const collectionRef = firestore
+      .collection(`announcements`)
+      .where("secondBanner", "==", true);
+    const collection = await collectionRef.get();
+    collection.forEach(async (doc) => {
+      const bannerRef = firestore.doc(`announcements/${doc.data().id}`);
+      await bannerRef.update({
+        secondBanner: false,
+      });
+    });
+  }
+  if (!snapShot.exists) {
+    try {
+      await productRef.set({
+        ...newProductObj,
+      });
+      const updatedSnapShot = await productRef.get();
+      return updatedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a category with similar id");
+  }
+};
+
+export const updateAnnouncement = async (productObj) => {
+  const productRef = firestore.doc(`announcements/${productObj.id}`);
+  const product = await productRef.get();
+  if (productObj.visible) {
+    const productsCollectionRef = firestore.collection("announcements");
+    const products = await productsCollectionRef.get();
+    products.forEach(async (doc) => {
+      const annoucementRef = firestore.doc(`announcements/${doc.data().id}`);
+      await annoucementRef.update({
+        ...doc.data(),
+        visible: false,
+      });
+    });
+  }
+  try {
+    delete productObj.file;
+    await productRef.update({ ...productObj });
+    const updatedSnapShot = await productRef.get();
+    return updatedSnapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteAnnouncement = async (id) => {
+  const productRef = firestore.doc(`announcements/${id}`);
+  try {
+    await productRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getSingleMonthlyExpense = async (month) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("month", "==", month);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllMonthlyExpense = async () => {
+  const expensesCollectionRef = firestore.collection("monthlyExpense");
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllPendingExpensesByDay = async (day) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("date", "==", day)
+    .where("status", "==", "pending");
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const approveExpense = async (expense) => {
+  const batch = firestore.batch();
+  const expenseRef = firestore.doc(`dailyExpenses/${expense.id}`);
+
+  // Get the expense document snapshot
+  const expenseSnapShot = await expenseRef.get();
+  console.log(expenseSnapShot.data());
+
+  // Get references to related documents
+  const categoryMonthlyExpenseRef = firestore.doc(
+    `categoryMonthlyExpense/${expenseSnapShot.data().month}-${
+      expenseSnapShot.data().category
+    }-${expenseSnapShot.data().subCategory.replaceAll("/", "_")}`
+  );
+  const monthlyExpenseRef = firestore.doc(
+    `monthlyExpense/${expenseSnapShot.data().month}`
+  );
+
+  // Get document snapshots
+  const categoryMonthlyExpenseSnapShot = await categoryMonthlyExpenseRef.get();
+  const monthlyExpenseSnapShot = await monthlyExpenseRef.get();
+
+  // Update expense status
+  batch.update(expenseRef, { status: "approved" });
+
+  // Update related documents based on expense category
+  if (expenseSnapShot.data().category === "SALARY") {
+    const monthlySalaryRef = firestore.doc(
+      `monthlySalary/${expenseSnapShot.data().month}`
+    );
+    const monthlySalarySnapShot = await monthlySalaryRef.get();
+    if (monthlySalarySnapShot.exists) {
+      batch.update(monthlySalaryRef, {
+        amount:
+          parseInt(monthlySalarySnapShot.data().amount) +
+          parseInt(expenseSnapShot.data().amount),
+      });
+    } else {
+      batch.set(monthlySalaryRef, {
+        month: expenseSnapShot.data().month,
+        amount: parseInt(expenseSnapShot.data().amount),
+      });
+    }
+  } else if (
+    expenseSnapShot.data().category === "LOAN" ||
+    expenseSnapShot.data().category === "MONTHLY INSTALLMENT"
+  ) {
+    const customerRef = firestore.doc(
+      `${
+        expenseSnapShot.data().category === "LOAN"
+          ? "customerLoans"
+          : "customerInstallments"
+      }/${expenseSnapShot.data().uid}`
+    );
+    const customerSnapShot = await customerRef.get();
+    if (customerSnapShot.exists) {
+      batch.update(customerRef, {
+        amount:
+          parseInt(customerSnapShot.data().amount) +
+          parseInt(expenseSnapShot.data().amount),
+        customer: expenseSnapShot.data().subCategory,
+      });
+    } else {
+      batch.set(customerRef, {
+        customer: expenseSnapShot.data().subCategory,
+        amount: parseInt(expenseSnapShot.data().amount),
+        uid: expenseSnapShot.data().uid,
+      });
+    }
+  }
+
+  // Update categorywise monthly expense
+  if (categoryMonthlyExpenseSnapShot.exists) {
+    if (expenseSnapShot.data().category == "SALARY") {
+      batch.update(categoryMonthlyExpenseRef, {
+        amount:
+          parseInt(categoryMonthlyExpenseSnapShot.data().amount) +
+          parseInt(expenseSnapShot.data().amount),
+        paid:
+          categoryMonthlyExpenseSnapShot.data().salary ==
+          parseInt(categoryMonthlyExpenseSnapShot.data().amount) +
+            parseInt(expenseSnapShot.data().amount)
+            ? true
+            : false,
+      });
+    } else {
+      batch.update(categoryMonthlyExpenseRef, {
+        amount:
+          parseInt(categoryMonthlyExpenseSnapShot.data().amount) +
+          parseInt(expenseSnapShot.data().amount),
+      });
+    }
+  } else {
+    batch.set(categoryMonthlyExpenseRef, {
+      id: `${expenseSnapShot.data().month}-${expenseSnapShot.data().category}-${
+        expenseSnapShot.data().subCategory
+      }`,
+      amount: parseInt(expenseSnapShot.data().amount),
+      category: expenseSnapShot.data().category,
+      subCategory: expenseSnapShot.data().subCategory,
+      month: expenseSnapShot.data().month,
+      paid: false,
+      salary: 0,
+    });
+  }
+
+  // Update monthly expense
+  if (monthlyExpenseSnapShot.exists) {
+    batch.update(monthlyExpenseRef, {
+      amount:
+        parseInt(monthlyExpenseSnapShot.data().amount) +
+        parseInt(expenseSnapShot.data().amount),
+    });
+  } else {
+    batch.set(monthlyExpenseRef, {
+      id: `${expenseSnapShot.data().month}`,
+      amount: parseInt(expenseSnapShot.data().amount),
+    });
+  }
+
+  // Commit the batch
+  try {
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error("Error approving expense:", error);
+    return false;
+  }
+};
+
+export const getAllPendingExpenses = async () => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("status", "==", "pending");
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteExpense = async (expenseId) => {
+  const expenseRef = firestore.doc(`dailyExpenses/${expenseId}`);
+  const snapShot = await expenseRef.get();
+  console.log(snapShot.data());
+  try {
+    await expenseRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const updateExpense = async (expenseObj) => {
+  const expenseRef = firestore.doc(`dailyExpenses/${expenseObj.id}`);
+  try {
+    await expenseRef.update({ ...expenseObj });
+    const snapShot = await expenseRef.get();
+    return snapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadExpense = async (expenseObj) => {
+  const expenseRef = firestore.doc(`dailyExpenses/${expenseObj.id}`);
+  const snapShot = await expenseRef.get();
+  if (!snapShot.exists) {
+    try {
+      await expenseRef.set({
+        ...expenseObj,
+      });
+      console.log(snapShot.data());
+      const uploadedSnapShot = await expenseRef.get();
+      return uploadedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a expense with similar id,try again later");
+  }
+};
+
+export const getAllExpenses = async (day) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("date", "==", day);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllOffices = async () => {
+  const officesCollectionRef = firestore.collection("offices");
+  try {
+    const offices = await officesCollectionRef.get();
+    const officesArray = [];
+    offices.forEach((doc) => {
+      officesArray.push(doc.data());
+    });
+    return officesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadOffice = async (officeObj) => {
+  const officeRef = firestore.doc(`offices/${officeObj.officeId}`);
+  const snapShot = await officeRef.get();
+  if (!snapShot.exists) {
+    try {
+      await officeRef.set({
+        ...officeObj,
+      });
+      console.log(snapShot.data());
+      const uploadedSnapShot = await officeRef.get();
+      return uploadedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert(
+      "there is already a office with similar name, please change the country name and try again"
+    );
+  }
+};
+
+export const updateOffice = async (officeObj) => {
+  const officeRef = firestore.doc(`offices/${officeObj.officeId}`);
+  try {
+    await officeRef.update({ ...officeObj });
+    const snapShot = await officeRef.get();
+    return snapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteOffice = async (officeId) => {
+  const officeRef = firestore.doc(`offices/${officeId}`);
+  const snapShot = await officeRef.get();
+  console.log(snapShot.data());
+  try {
+    await officeRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getSingleCashSummary = async () => {
+  const date = new Date();
+  const cashSummaryRef = firestore.doc(
+    `cashSummary/${date.toLocaleDateString("en-GB").replaceAll("/", "-")}`
+  );
+  const cashSummary = await cashSummaryRef.get();
+  if (cashSummary.exists) {
+    return cashSummary.data();
+  } else {
+    let lastDay;
+    for (let i = 0; i < 365; i++) {
+      let [day, month, year] = date.toLocaleDateString("en-GB").split("/");
+      let dateObj = new Date(year, parseInt(month - 1), day - i);
+      let previousDate = new Date(dateObj.getTime().toString() - 86400000);
+      const previousDayRef = firestore.doc(
+        `cashSummary/${previousDate
+          .toLocaleDateString("en-GB")
+          .replaceAll("/", "-")}`
+      );
+      const previouseDay = await previousDayRef.get();
+      if (previouseDay.exists) {
+        lastDay = previouseDay.data();
+        break;
+      }
+    }
+    console.log(lastDay);
+    await cashSummaryRef.set({
+      month: getMonthName(),
+      date: date.toLocaleDateString("en-GB"),
+      previousCash:
+        lastDay && lastDay.remainingBalance
+          ? parseInt(lastDay.remainingBalance)
+          : 0,
+      totalCashIns: 0,
+      totalCashOuts: 0,
+      remainingBalance:
+        lastDay && lastDay.remainingBalance
+          ? parseInt(lastDay.remainingBalance)
+          : 0,
+    });
+    const updatedSnapShot = await cashSummaryRef.get();
+    return updatedSnapShot.data();
+  }
+};
+
+export const uploadCashIn = async (cashInObj) => {
+  const cashInRef = firestore.doc(`dailyCashIn/${cashInObj.id}`);
+  const snapShot = await cashInRef.get();
+  if (!snapShot.exists) {
+    try {
+      await cashInRef.set({
+        ...cashInObj,
+      });
+      console.log(snapShot.data());
+      const uploadedSnapShot = await cashInRef.get();
+      return uploadedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a cash in with similar id,try again later");
+  }
+};
+
+export const updateCashIn = async (cashInObj) => {
+  const cashInRef = firestore.doc(`dailyCashIn/${cashInObj.id}`);
+  try {
+    await cashInRef.update({ ...cashInObj });
+    const snapShot = await cashInRef.get();
+    return snapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllDocumentExpressRates = async () => {
+  const expressRatesDocumentsCollectionRef = firestore.collection(
+    "expressRatesDocuments"
+  );
+  try {
+    const expressRatesDocuments =
+      await expressRatesDocumentsCollectionRef.get();
+    const expressRatesDocumentsArray = [];
+    expressRatesDocuments.forEach((doc) => {
+      expressRatesDocumentsArray.push(doc.data());
+    });
+    return expressRatesDocumentsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllEmployees = async () => {
+  const employeesCollectionRef = firestore.collection("employees");
+  try {
+    const employees = await employeesCollectionRef.get();
+    const employeesArray = [];
+    employees.forEach((doc) => {
+      employeesArray.push(doc.data());
+    });
+    return employeesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllMonthlyCashSummary = async () => {
+  const expensesCollectionRef = firestore.collection("cashSummary");
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllMonthlyCashIn = async () => {
+  const expensesCollectionRef = firestore.collection("monthlyCashIn");
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllMonthlySalary = async () => {
+  const expensesCollectionRef = firestore.collection(`monthlySalary`);
+
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllMonthly = async (category, subCategory) => {
+  if (category == "REFUND") {
+    const expensesCollectionRef = firestore
+      .collection(`categoryMonthlyExpense`)
+      .where("category", "==", category);
+
+    try {
+      const expenses = await expensesCollectionRef.get();
+      const expensesArray = [];
+      expenses.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+      return expensesArray;
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    const expensesCollectionRef = firestore
+      .collection(`categoryMonthlyExpense`)
+      .where("category", "==", category)
+      .where("subCategory", "==", subCategory);
+    try {
+      const expenses = await expensesCollectionRef.get();
+      const expensesArray = [];
+      expenses.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+      return expensesArray;
+    } catch (error) {
+      alert(error);
+    }
+  }
+};
+
+export const getSingleMonthlyCashSummary = async (month) => {
+  const expensesCollectionRef = firestore
+    .collection("cashSummary")
+    .where("month", "==", month);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getSingleMonthlyCashIn = async (month) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("month", "==", month);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getSingleMonthly = async (month, category, subCategory) => {
+  if (category === "INVEST") {
+    const expensesCollectionRef = firestore
+      .collection("dailyExpenses")
+      .where("month", "==", month)
+      .where("category", "==", category)
+      .where("subCategory", "==", subCategory);
+    const cashInCollectionRef = firestore
+      .collection("dailyCashIn")
+      .where("month", "==", month)
+      .where("category", "==", category)
+      .where("subCategory", "==", subCategory);
+    try {
+      const expenses = await expensesCollectionRef.get();
+      const cashIns = await cashInCollectionRef.get();
+      const expensesArray = [];
+      expenses.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+
+      cashIns.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+      return expensesArray.sort((a, b) => a.id - b.id);
+    } catch (error) {
+      alert(error);
+    }
+  } else if (category == "REFUND") {
+    const expensesCollectionRef = firestore
+      .collection("dailyExpenses")
+      .where("month", "==", month)
+      .where("category", "==", category);
+
+    try {
+      const expenses = await expensesCollectionRef.get();
+      const expensesArray = [];
+      expenses.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+      return expensesArray;
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    const expensesCollectionRef = firestore
+      .collection("dailyExpenses")
+      .where("month", "==", month)
+      .where("category", "==", category)
+      .where("subCategory", "==", subCategory);
+    try {
+      const expenses = await expensesCollectionRef.get();
+      const expensesArray = [];
+      expenses.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+      return expensesArray;
+    } catch (error) {
+      alert(error);
+    }
+  }
+};
+
+export const getSingleMonthlySalary = async (month, category) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("month", "==", month)
+    .where("category", "==", category);
+
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+export const getSingleMonthlyLoanCashIn = async (month, category) => {
+  const cashInsCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("month", "==", month)
+    .where("category", "==", category);
+
+  try {
+    const cashIns = await cashInsCollectionRef.get();
+    const cashInsArray = [];
+    cashIns.forEach((doc) => {
+      cashInsArray.push(doc.data());
+    });
+    return cashInsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+export const getSingleMonthlyLoanCashOut = async (month, category) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("month", "==", month)
+    .where("category", "==", category);
+
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllPendingCashInByDay = async (day) => {
+  const cashInsCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("date", "==", day)
+    .where("status", "==", "pending");
+  try {
+    const cashIns = await cashInsCollectionRef.get();
+    const cashInsArray = [];
+    cashIns.forEach((doc) => {
+      cashInsArray.push(doc.data());
+    });
+    return cashInsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllPendingCashIns = async () => {
+  const cashInsCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("status", "==", "pending");
+  try {
+    const cashIns = await cashInsCollectionRef.get();
+    const cashInsArray = [];
+    cashIns.forEach((doc) => {
+      cashInsArray.push(doc.data());
+    });
+    return cashInsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllLoansCashOuts = async () => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("category", "==", "LOAN");
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllLoansCashIns = async () => {
+  const cashInsCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("category", "==", "LOAN");
+  try {
+    const cashIns = await cashInsCollectionRef.get();
+    const cashInsArray = [];
+    cashIns.forEach((doc) => {
+      cashInsArray.push(doc.data());
+    });
+    return cashInsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllLoansCashOutCustomer = async (customer) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("category", "==", "LOAN")
+    .where("uid", "==", customer);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getSingleCustomerLoan = async (customer) => {
+  const loanRef = firestore.doc(`customerLoans/${customer}`);
+  try {
+    const customerLoan = await loanRef.get();
+    return customerLoan.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllInstallmentsCashOutCustomer = async (customer) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("category", "==", "MONTHLY INSTALLMENT")
+    .where("uid", "==", customer);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllLoansCashInCustomer = async (customer) => {
+  const cashInsCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("category", "==", "LOAN")
+    .where("uid", "==", customer);
+  try {
+    const cashIns = await cashInsCollectionRef.get();
+    const cashInsArray = [];
+    cashIns.forEach((doc) => {
+      cashInsArray.push(doc.data());
+    });
+    return cashInsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteCashIn = async (cashId) => {
+  const cashInRef = firestore.doc(`dailyCashIn/${cashId}`);
+  const snapShot = await cashInRef.get();
+  console.log(snapShot.data());
+  try {
+    await cashInRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteEmployee = async (employeeId) => {
+  const employeeRef = firestore.doc(`employees/${employeeId}`);
+  const snapShot = await employeeRef.get();
+  console.log(snapShot.data());
+  try {
+    await employeeRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCustomerLoans = async () => {
+  const usersCollectionRef = firestore.collection("customerLoans");
+  try {
+    const users = await usersCollectionRef.get();
+    const usersArray = [];
+    users.forEach((doc) => {
+      // console.log(doc.id, " => ", doc.data());
+      usersArray.push({ uid: doc.id, ...doc.data() });
+    });
+    return usersArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCustomerInstallments = async () => {
+  const usersCollectionRef = firestore.collection("customerInstallments");
+  try {
+    const users = await usersCollectionRef.get();
+    const usersArray = [];
+    users.forEach((doc) => {
+      // console.log(doc.id, " => ", doc.data());
+      usersArray.push({ uid: doc.id, ...doc.data() });
+    });
+    return usersArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCnfs = async () => {
+  const cnfsCollectionRef = firestore.collection("cnfs");
+  try {
+    const cnfs = await cnfsCollectionRef.get();
+    const cnfsArray = [];
+    cnfs.forEach((doc) => {
+      cnfsArray.push(doc.data());
+    });
+    return cnfsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadCnf = async (cnfObj) => {
+  const cnfRef = firestore.doc(`cnfs/${cnfObj.cnfId}`);
+  const snapShot = await cnfRef.get();
+  if (!snapShot.exists) {
+    try {
+      await cnfRef.set({
+        ...cnfObj,
+      });
+      console.log(snapShot.data());
+      const uploadedSnapShot = await cnfRef.get();
+      return uploadedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert(
+      "there is already a cnf with similar name, please change the name and try again"
+    );
+  }
+};
+
+export const updateCnf = async (cnfObj) => {
+  const cnfRef = firestore.doc(`cnfs/${cnfObj.cnfId}`);
+  try {
+    await cnfRef.update({ ...cnfObj });
+    const snapShot = await cnfRef.get();
+    return snapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteCnf = async (cnfId) => {
+  const cnfRef = firestore.doc(`cnfs/${cnfId}`);
+  const snapShot = await cnfRef.get();
+  console.log(snapShot.data());
+  try {
+    await cnfRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadCnfBill = async (billObj) => {
+  const batch = firestore.batch();
+  const cnfBillRef = firestore.doc(`cnfBills/${billObj.id}`);
+  const cnfBillMonthRef = firestore.doc(`cnfBillMonths/${billObj.month}`);
+
+  // Get the documents
+  const cnfBillSnapShot = await cnfBillRef.get();
+  const cnfBillMonthSnapShot = await cnfBillMonthRef.get();
+
+  // Check if the bill document exists
+  if (!cnfBillSnapShot.exists) {
+    try {
+      // Set the bill document
+      batch.set(cnfBillRef, {
+        ...billObj,
+      });
+      console.log(cnfBillSnapShot.data());
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert("there is already a bill with similar id, please try again later");
+  }
+
+  // Check if the bill month document exists
+  if (!cnfBillMonthSnapShot.exists) {
+    // Set the bill month document
+    batch.set(cnfBillMonthRef, { month: billObj.month });
+  }
+
+  // Commit the batch
+  await batch.commit();
+
+  return true;
+};
+
+export const getAllMonthsCnfBill = async (month) => {
+  const monthRef = firestore.doc(`cnfBillMonths/${month}`);
+  const monthdata = await monthRef.get();
+
+  if (!monthdata.exists) {
+    await monthRef.set({
+      month: month,
+    });
+  }
+
+  const monthsCollectionRef = firestore.collection(`cnfBillMonths`);
+  try {
+    const expenses = await monthsCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCnfBills = async (month, name) => {
+  const cnfsCollectionRef = firestore
+    .collection("cnfBills")
+    .where("month", "==", month)
+    .where("cnf", "==", name);
+  try {
+    const cnfs = await cnfsCollectionRef.get();
+    const cnfsArray = [];
+    cnfs.forEach((doc) => {
+      cnfsArray.push(doc.data());
+    });
+    return cnfsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCnfExpenses = async (month, name) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("month", "==", month)
+    .where("subCategory", "==", name);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCnfBillsAllMonths = async (name) => {
+  const cnfsCollectionRef = firestore
+    .collection("cnfBills")
+    .where("cnf", "==", name);
+  try {
+    const cnfs = await cnfsCollectionRef.get();
+    const cnfsArray = [];
+    cnfs.forEach((doc) => {
+      cnfsArray.push(doc.data());
+    });
+    return cnfsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCnfExpensesAllMonths = async (name) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyExpenses")
+    .where("subCategory", "==", name);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const updateEmployee = async (employeeObj) => {
+  const employeeRef = firestore.doc(`employees/${employeeObj.employeeId}`);
+  try {
+    await employeeRef.update({ ...employeeObj });
+    const snapShot = await employeeRef.get();
+    return snapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const updateSalary = async (employee) => {
+  const categoryMonthlyExpenseRef = firestore.doc(
+    `categoryMonthlyExpense/${employee.id}`
+  );
+  const categoryMonthlyExpnese = await categoryMonthlyExpenseRef.get();
+  await categoryMonthlyExpenseRef.update({
+    ...categoryMonthlyExpnese.data(),
+    salary: employee.salary,
+  });
+  const updatedSnapShot = await categoryMonthlyExpenseRef.get();
+  return updatedSnapShot.data();
+};
+
+export const uploadEmployee = async (employeeObj) => {
+  const employeeRef = firestore.doc(`employees/${employeeObj.employeeId}`);
+  const snapShot = await employeeRef.get();
+  if (!snapShot.exists) {
+    try {
+      await employeeRef.set({
+        ...employeeObj,
+      });
+      console.log(snapShot.data());
+      const uploadedSnapShot = await employeeRef.get();
+      return uploadedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert(
+      "there is already a employee with similar name, please change the name and try again"
+    );
+  }
+};
+
+export const getAllFunds = async () => {
+  const expensesCollectionRef = firestore
+    .collection(`dailyExpenses`)
+    .where("category", "==", "FUND");
+
+  const cashInCollectionRef = firestore
+    .collection(`dailyCashIn`)
+    .where("category", "==", "FUND");
+
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const cashIns = await cashInCollectionRef.get();
+    const expensesArray = [];
+    const cashInsArray = [];
+    cashIns.forEach((doc) => {
+      cashInsArray.push({ ...doc.data(), type: "cashIn" });
+    });
+    expenses.forEach((doc) => {
+      expensesArray.push({ ...doc.data(), type: "expense" });
+    });
+    let mergedArray = [...expensesArray, ...cashInsArray];
+    return mergedArray.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const getAllCashIns = async (day) => {
+  const expensesCollectionRef = firestore
+    .collection("dailyCashIn")
+    .where("date", "==", day);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const createMonth = async () => {
+  const date = new Date();
+  const monthRef = firestore.doc(`months/${getMonthName()}`);
+  const month = await monthRef.get();
+  if (month.exists) {
+    let monthsArray = [];
+    const monthsCollectionRef = firestore.collection("months");
+    const monthsCollection = await monthsCollectionRef.get();
+    monthsCollection.forEach((doc) => {
+      monthsArray.push(doc.data());
+    });
+    return monthsArray;
+  } else {
+    await monthRef.set({
+      month: getMonthName(),
+    });
+    let monthsArray = [];
+    const monthsCollectionRef = firestore.collection("months");
+    const monthsCollection = await monthsCollectionRef.get();
+    monthsCollection.forEach((doc) => {
+      monthsArray.push(doc.data());
+    });
+    return monthsArray;
+  }
+};
+export const getMonthName = () => {
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const d = new Date();
+  return `${monthNames[d.getMonth()]},${d.getFullYear()}`;
+};
+
+export const approveCashIn = async (expense) => {
+  const batch = firestore.batch();
+  const expenseRef = firestore.doc(`dailyCashIn/${expense.id}`);
+
+  // Get the expense document snapshot
+  const expenseSnapShot = await expenseRef.get();
+  console.log(expenseSnapShot.data());
+
+  // Get references to related documents
+  const monthlyExpenseRef = firestore.doc(
+    `monthlyCashIn/${expenseSnapShot.data().month}`
+  );
+
+  // Get document snapshots
+  const monthlyExpenseSnapShot = await monthlyExpenseRef.get();
+
+  // Update expense status
+  batch.update(expenseRef, { status: "approved" });
+
+  // Update related documents based on expense category
+  if (expenseSnapShot.data().category === "LOAN") {
+    const customerRef = firestore.doc(
+      `customerLoans/${expenseSnapShot.data().uid}`
+    );
+    const customerSnapShot = await customerRef.get();
+    if (customerSnapShot.exists) {
+      batch.update(customerRef, {
+        amount:
+          parseInt(customerSnapShot.data().amount) -
+          parseInt(expenseSnapShot.data().amount),
+        customer: expenseSnapShot.data().subCategory,
+      });
+    } else {
+      batch.set(customerRef, {
+        customer: expenseSnapShot.data().subCategory,
+        amount: -parseInt(expenseSnapShot.data().amount),
+        uid: expenseSnapShot.data().uid,
+      });
+    }
+  } else if (expenseSnapShot.data().category === "INVEST") {
+    const categoryMonthlyExpenseRef = firestore.doc(
+      `categoryMonthlyExpense/${expenseSnapShot.data().month}-${
+        expenseSnapShot.data().category
+      }-${expenseSnapShot.data().subCategory.replaceAll("/", "_")}`
+    );
+    const categoryMonthlyExpenseSnapShot =
+      await categoryMonthlyExpenseRef.get();
+    if (categoryMonthlyExpenseSnapShot.exists) {
+      batch.update(categoryMonthlyExpenseRef, {
+        amount:
+          parseInt(categoryMonthlyExpenseSnapShot.data().amount) -
+          parseInt(expenseSnapShot.data().amount),
+      });
+    } else {
+      batch.set(categoryMonthlyExpenseRef, {
+        id: `${expenseSnapShot.data().month}-${
+          expenseSnapShot.data().category
+        }-${expenseSnapShot.data().subCategory}`,
+        amount: -parseInt(expenseSnapShot.data().amount),
+        category: expenseSnapShot.data().category,
+        subCategory: expenseSnapShot.data().subCategory,
+        month: expenseSnapShot.data().month,
+        paid: false,
+        salary: 0,
+      });
+    }
+  }
+
+  // Update monthly expense
+  if (monthlyExpenseSnapShot.exists) {
+    batch.update(monthlyExpenseRef, {
+      amount:
+        parseInt(monthlyExpenseSnapShot.data().amount) +
+        parseInt(expenseSnapShot.data().amount),
+    });
+  } else {
+    batch.set(monthlyExpenseRef, {
+      id: `${expenseSnapShot.data().month}`,
+      amount: parseInt(expenseSnapShot.data().amount),
+    });
+  }
+
+  // Commit the batch
+  try {
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error("Error approving cash-in:", error);
+    return false;
+  }
+};
+
+export const createSalaryMonth = async (month, employee) => {
+  const categoryMonthlyExpenseRef = firestore.doc(
+    `categoryMonthlyExpense/${month}-SALARY-${employee.name}`
+  );
+  const categoryMonthlyExpnese = await categoryMonthlyExpenseRef.get();
+  if (!categoryMonthlyExpnese.exists) {
+    await categoryMonthlyExpenseRef.set({
+      id: `${month}-SALARY-${employee.name}`,
+      amount: 0,
+      category: "SALARY",
+      subCategory: employee.name,
+      month: month,
+      paid: false,
+      salary: 0,
+    });
+  }
+};
+
+export const getMonth = async (employee, month) => {
+  const expensesCollectionRef = firestore
+    .collection(`categoryMonthlyExpense`)
+    .where("category", "==", "SALARY")
+    .where("subCategory", "==", employee);
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+
+    const unPaidMonths = expensesArray.filter((expense) => !expense.paid);
+    return unPaidMonths;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const updateCashSummaryCashOut = async (cashOutMonth, date, total) => {
+  const [day, month, year] = date.split("/");
+  let today = new Date();
+  let expenseDate = new Date(year, parseInt(month - 1), day);
+
+  const diffTime = Math.abs(today - expenseDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  console.log(diffDays + " days");
+  // get the last day remaining balance and update today's cash
+  const cashSummaryRef = firestore.doc(
+    `cashSummary/${date.replaceAll("/", "-")}`
+  );
+
+  let lastDay;
+  for (let i = 1; i < 365; i++) {
+    let dateObj = new Date(year, parseInt(month - 1), day - i);
+    let previousDate = new Date(dateObj.getTime().toString() - 86400000);
+    const previousDayRef = firestore.doc(
+      `cashSummary/${previousDate
+        .toLocaleDateString("en-GB")
+        .replaceAll("/", "-")}`
+    );
+    const previouseDay = await previousDayRef.get();
+    if (previouseDay.exists) {
+      lastDay = previouseDay.data();
+      break;
+    }
+  }
+  console.log(lastDay);
+  const cashSummary = await cashSummaryRef.get();
+  if (cashSummary.exists) {
+    cashSummaryRef.update({
+      totalCashOuts:
+        parseInt(cashSummary.data().totalCashOuts) + parseInt(total),
+      remainingBalance:
+        parseInt(cashSummary.data().remainingBalance) - parseInt(total),
+    });
+  } else {
+    cashSummaryRef.set({
+      month: cashOutMonth,
+      date: date,
+      previousCash: parseInt(lastDay.remainingBalance || 0),
+      totalCashIns: 0,
+      totalCashOuts: total,
+      remainingBalance:
+        parseInt(lastDay.remainingBalance || 0) - parseInt(total),
+    });
+  }
+
+  // update every next day
+  if (diffDays > 0) {
+    for (let i = 1; i < parseInt(diffDays + 1); i++) {
+      let dateObj = new Date(
+        year,
+        parseInt(parseInt(month) - 1),
+        parseInt(day) + i
+      );
+      dateObj.setDate(dateObj.getDate());
+
+      console.log(dateObj.toLocaleDateString("en-GB").replaceAll("/", "-"));
+      const nextDayRef = firestore.doc(
+        `cashSummary/${dateObj
+          .toLocaleDateString("en-GB")
+          .replaceAll("/", "-")}`
+      );
+      const nextDay = await nextDayRef.get();
+      console.log(nextDay.data());
+      if (nextDay.exists) {
+        await nextDayRef.update({
+          previousCash: parseInt(nextDay.data().previousCash) - parseInt(total),
+          remainingBalance:
+            parseInt(nextDay.data().remainingBalance) - parseInt(total),
+        });
+      }
+    }
+  }
+};
+export const updateCashSummaryCashIn = async (cashInMonth, date, total) => {
+  const [day, month, year] = date.split("/");
+  let today = new Date();
+  let expenseDate = new Date(year, parseInt(month - 1), day);
+
+  const diffTime = Math.abs(today - expenseDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  console.log(diffDays + " days");
+  // get the last day remaining balance and update today's cash
+  const cashSummaryRef = firestore.doc(
+    `cashSummary/${date.replaceAll("/", "-")}`
+  );
+
+  let lastDay;
+  for (let i = 1; i < 365; i++) {
+    let dateObj = new Date(year, parseInt(month - 1), day - i);
+    let previousDate = new Date(dateObj.getTime().toString() - 86400000);
+    const previousDayRef = firestore.doc(
+      `cashSummary/${previousDate
+        .toLocaleDateString("en-GB")
+        .replaceAll("/", "-")}`
+    );
+    const previouseDay = await previousDayRef.get();
+    if (previouseDay.exists) {
+      lastDay = previouseDay.data();
+      break;
+    }
+  }
+  console.log(lastDay);
+  const cashSummary = await cashSummaryRef.get();
+  if (cashSummary.exists) {
+    cashSummaryRef.update({
+      totalCashIns: parseInt(cashSummary.data().totalCashIns) + parseInt(total),
+      remainingBalance:
+        parseInt(cashSummary.data().remainingBalance) + parseInt(total),
+    });
+  } else {
+    cashSummaryRef.set({
+      month: cashInMonth,
+      date: date,
+      previousCash: parseInt(lastDay.remainingBalance || 0),
+      totalCashIns: parseInt(total),
+      totalCashOuts: 0,
+      remainingBalance:
+        parseInt(lastDay.remainingBalance || 0) + parseInt(total),
+    });
+  }
+
+  // update every next day
+  if (diffDays > 0) {
+    for (let i = 1; i < parseInt(diffDays + 1); i++) {
+      let dateObj = new Date(
+        year,
+        parseInt(parseInt(month) - 1),
+        parseInt(day) + i
+      );
+      dateObj.setDate(dateObj.getDate());
+
+      console.log(dateObj.toLocaleDateString("en-GB").replaceAll("/", "-"));
+      const nextDayRef = firestore.doc(
+        `cashSummary/${dateObj
+          .toLocaleDateString("en-GB")
+          .replaceAll("/", "-")}`
+      );
+      const nextDay = await nextDayRef.get();
+      console.log(nextDay.data());
+      if (nextDay.exists) {
+        await nextDayRef.update({
+          previousCash: parseInt(nextDay.data().previousCash) + parseInt(total),
+          remainingBalance:
+            parseInt(nextDay.data().remainingBalance) + parseInt(total),
+        });
+      }
+    }
+  }
+};
+
+export const getAllScreenShot = async () => {
+  const cnfsCollectionRef = firestore.collection("screenshots");
+  try {
+    const cnfs = await cnfsCollectionRef.get();
+    const cnfsArray = [];
+    cnfs.forEach((doc) => {
+      cnfsArray.push(doc.data());
+    });
+    return cnfsArray;
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const uploadScreenShot = async (cnfObj) => {
+  const cnfRef = firestore.doc(`screenshots/${cnfObj.id}`);
+  const snapShot = await cnfRef.get();
+  if (!snapShot.exists) {
+    try {
+      await cnfRef.set({
+        ...cnfObj,
+      });
+      console.log(snapShot.data());
+      const uploadedSnapShot = await cnfRef.get();
+      return uploadedSnapShot.data();
+    } catch (error) {
+      alert(error);
+    }
+  } else {
+    alert(
+      "there is already a cnf with similar name, please change the name and try again"
+    );
+  }
+};
+
+export const updateScreenShot = async (cnfObj) => {
+  const cnfRef = firestore.doc(`screenshots/${cnfObj.id}`);
+  try {
+    await cnfRef.update({ ...cnfObj });
+    const snapShot = await cnfRef.get();
+    return snapShot.data();
+  } catch (error) {
+    alert(error);
+  }
+};
+
+export const deleteScreenShot = async (cnfId) => {
+  const cnfRef = firestore.doc(`screenshots/${cnfId}`);
+  const snapShot = await cnfRef.get();
+  console.log(snapShot.data());
+  try {
+    await cnfRef.delete();
+  } catch (error) {
+    alert(error);
+  }
+};

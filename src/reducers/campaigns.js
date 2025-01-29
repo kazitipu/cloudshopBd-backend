@@ -1,6 +1,7 @@
 const INITIAL_STATE = {
   campaigns: [],
   homeCategories: [],
+  announcements: [],
 };
 
 const campaignsReducers = (state = INITIAL_STATE, action) => {
@@ -29,6 +30,31 @@ const campaignsReducers = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         campaigns: [...updatedProductsArray],
+      };
+    case "GET_ALL_ANNOUNCEMENTS":
+      return { ...state, announcements: [...action.payload] };
+
+    case "UPLOAD_ANNOUNCEMENT":
+      return {
+        ...state,
+        announcements: [action.payload, ...state.announcements],
+      };
+    case "UPDATE_ANNOUNCEMENT":
+      const filteredProductsArray3 = state.announcements.filter(
+        (announcement) => announcement.id !== action.payload.id
+      );
+
+      return {
+        ...state,
+        announcements: [action.payload, ...filteredProductsArray3],
+      };
+    case "DELETE_ANNOUNCEMENT":
+      const updatedProductsArray3 = state.announcements.filter(
+        (product) => product.id !== action.payload
+      );
+      return {
+        ...state,
+        announcements: [...updatedProductsArray3],
       };
     case "GET_ALL_HOME_CATEGORIES":
       return { ...state, homeCategories: [...action.payload] };

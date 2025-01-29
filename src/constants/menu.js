@@ -26,6 +26,176 @@ export const MENUITEMSFORADMIN = [
     active: false,
   },
   {
+    title: "Cash in/Cash out",
+    icon: DollarSign,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/expense/daily-expense",
+        title: new Date().toDateString(),
+        type: "link",
+      },
+      {
+        path: "/expense/expense-history",
+        title: "History",
+        type: "link",
+      },
+      {
+        path: "/expense/salary",
+        title: "Salary",
+        type: "link",
+      },
+      {
+        path: "/expense/refunds",
+        title: "Refund",
+        type: "link",
+      },
+      {
+        path: "/expense/agent-commision",
+        title: "Agent commision",
+        type: "link",
+      },
+      {
+        path: "/expense/lot-transport",
+        title: "Lot Transport",
+        type: "link",
+      },
+      {
+        title: "Loans",
+        type: "sub",
+        active: false,
+        children: [
+          {
+            title: "Monthly",
+            type: "link",
+            path: "/expense/loans",
+          },
+          {
+            title: "Customer wise",
+            type: "link",
+            path: "/expense/loans-by-customers",
+          },
+        ],
+      },
+      {
+        path: "/expense/office",
+        title: "Office",
+        type: "link",
+      },
+      {
+        path: "/expense/monthly-installment",
+        title: "Monthly Installment",
+        type: "link",
+      },
+    ],
+  },
+  {
+    title: "Cash in/out History",
+    icon: Clipboard,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/expense/approve-expense",
+        title: "Pending",
+        type: "link",
+      },
+      {
+        path: "/expense/expense-history",
+        title: "Monthly",
+        type: "link",
+      },
+      {
+        path: "/expense/cnf",
+        title: "CNF",
+        type: "link",
+      },
+      {
+        path: "/expense/office",
+        title: "Office",
+        type: "link",
+      },
+      {
+        path: "/expense/salary",
+        title: "Salary",
+        type: "link",
+      },
+      {
+        path: "/expense/refunds",
+        title: "Refund",
+        type: "link",
+      },
+      {
+        path: "/expense/agent-commision",
+        title: "Agent commision",
+        type: "link",
+      },
+      {
+        path: "/expense/invest",
+        title: "Invest",
+        type: "link",
+      },
+
+      {
+        path: "/expense/daily-cost",
+        title: "Daily Cost",
+        type: "link",
+      },
+      {
+        path: "/expense/lot-transport",
+        title: "Lot Transport",
+        type: "link",
+      },
+      {
+        title: "Loans",
+        type: "sub",
+        active: false,
+        children: [
+          {
+            title: "Monthly",
+            type: "link",
+            path: "/expense/loans",
+          },
+          {
+            title: "Customer wise",
+            type: "link",
+            path: "/expense/loans-by-customers",
+          },
+        ],
+      },
+      {
+        path: "/expense/monthly-installment",
+        title: "Monthly Installment",
+        type: "link",
+      },
+
+      {
+        path: "/expense/employee",
+        title: "Employee",
+        type: "link",
+      },
+      {
+        path: "/expense/fund",
+        title: "Fund",
+        type: "link",
+      },
+    ],
+  },
+  {
+    title: "Cash Summary",
+    icon: Clipboard,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/cash-summary",
+        title: "Monthly",
+        type: "link",
+      },
+    ],
+  },
+  {
     path: "/messages",
     title: "Messages",
     icon: MessageCircle,
@@ -83,6 +253,16 @@ export const MENUITEMSFORADMIN = [
       {
         path: "/products/physical/reviews",
         title: "Reviews",
+        type: "link",
+      },
+      {
+        path: "/products/physical/reviews-screenshot",
+        title: "Review Screenshot",
+        type: "link",
+      },
+      {
+        path: "/products/physical/announcements",
+        title: "Announcements",
         type: "link",
       },
     ],
@@ -268,6 +448,176 @@ export const MENUITEMSFORAGENT = [
     active: false,
   },
   {
+    title: "Cash in/Cash out",
+    icon: DollarSign,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/expense/daily-expense",
+        title: new Date().toDateString(),
+        type: "link",
+      },
+      {
+        path: "/expense/expense-history",
+        title: "History",
+        type: "link",
+      },
+      {
+        path: "/expense/salary",
+        title: "Salary",
+        type: "link",
+      },
+      {
+        path: "/expense/refunds",
+        title: "Refund",
+        type: "link",
+      },
+      {
+        path: "/expense/agent-commision",
+        title: "Agent commision",
+        type: "link",
+      },
+      {
+        path: "/expense/lot-transport",
+        title: "Lot Transport",
+        type: "link",
+      },
+      {
+        title: "Loans",
+        type: "sub",
+        active: false,
+        children: [
+          {
+            title: "Monthly",
+            type: "link",
+            path: "/expense/loans",
+          },
+          {
+            title: "Customer wise",
+            type: "link",
+            path: "/expense/loans-by-customers",
+          },
+        ],
+      },
+      {
+        path: "/expense/office",
+        title: "Office",
+        type: "link",
+      },
+      {
+        path: "/expense/monthly-installment",
+        title: "Monthly Installment",
+        type: "link",
+      },
+    ],
+  },
+  {
+    title: "Cash in/out History",
+    icon: Clipboard,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/expense/approve-expense",
+        title: "Pending",
+        type: "link",
+      },
+      {
+        path: "/expense/expense-history",
+        title: "Monthly",
+        type: "link",
+      },
+      {
+        path: "/expense/cnf",
+        title: "CNF",
+        type: "link",
+      },
+      {
+        path: "/expense/office",
+        title: "Office",
+        type: "link",
+      },
+      {
+        path: "/expense/salary",
+        title: "Salary",
+        type: "link",
+      },
+      {
+        path: "/expense/refunds",
+        title: "Refund",
+        type: "link",
+      },
+      {
+        path: "/expense/agent-commision",
+        title: "Agent commision",
+        type: "link",
+      },
+      {
+        path: "/expense/invest",
+        title: "Invest",
+        type: "link",
+      },
+
+      {
+        path: "/expense/daily-cost",
+        title: "Daily Cost",
+        type: "link",
+      },
+      {
+        path: "/expense/lot-transport",
+        title: "Lot Transport",
+        type: "link",
+      },
+      {
+        title: "Loans",
+        type: "sub",
+        active: false,
+        children: [
+          {
+            title: "Monthly",
+            type: "link",
+            path: "/expense/loans",
+          },
+          {
+            title: "Customer wise",
+            type: "link",
+            path: "/expense/loans-by-customers",
+          },
+        ],
+      },
+      {
+        path: "/expense/monthly-installment",
+        title: "Monthly Installment",
+        type: "link",
+      },
+
+      {
+        path: "/expense/employee",
+        title: "Employee",
+        type: "link",
+      },
+      {
+        path: "/expense/fund",
+        title: "Fund",
+        type: "link",
+      },
+    ],
+  },
+  {
+    title: "Cash Summary",
+    icon: Clipboard,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/cash-summary",
+        title: "Monthly",
+        type: "link",
+      },
+    ],
+  },
+  {
     title: "Products",
     icon: Box,
     type: "sub",
@@ -317,6 +667,16 @@ export const MENUITEMSFORAGENT = [
       {
         path: "/products/physical/reviews",
         title: "Reviews",
+        type: "link",
+      },
+      {
+        path: "/products/physical/reviews-screenshot",
+        title: "Review Screenshot",
+        type: "link",
+      },
+      {
+        path: "/products/physical/announcements",
+        title: "Announcements",
         type: "link",
       },
     ],

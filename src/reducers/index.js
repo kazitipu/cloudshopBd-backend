@@ -13,6 +13,16 @@ import attributesReducer from "./attributes";
 import couponsReducers from "./coupons";
 import reviewsReducer from "./reviews";
 import campaignsReducers from "./campaigns";
+import partialsReducers from "./partials";
+import officesReducer from "./offices";
+import cnfsReducer from "./cnfs";
+import employeesReducer from "./employee";
+import expensesReducer from "./expenses";
+import cashInsReducer from "./cashIn";
+import setExpressRatesDocumentsReducer from "./expressRatesDocuments";
+import setExpressRatesParcelReducer from "./expressRatesParcel";
+import loansReducer from "./loans";
+import installmentsReducer from "./installments";
 const rootReducer = combineReducers({
   orders: setOrdersReducer,
   payments: setPaymentsReducer,
@@ -28,6 +38,15 @@ const rootReducer = combineReducers({
   attributes: attributesReducer,
   reviews: reviewsReducer,
   campaigns: campaignsReducers,
+  offices: officesReducer,
+  cnfs: cnfsReducer,
+  employees: employeesReducer,
+  expenses: expensesReducer,
+  cashIns: cashInsReducer,
+  expressRatesDocuments: setExpressRatesDocumentsReducer,
+  expressRatesParcel: setExpressRatesParcelReducer,
+  loans: loansReducer,
+  installments: installmentsReducer,
 });
 
 export default rootReducer;
