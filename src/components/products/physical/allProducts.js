@@ -10,11 +10,19 @@ import {
   getAllProductsRedux,
   getAllCategoriesRedux,
   deleteProductRedux,
+  setAllProductsRedux,
 } from "../../../actions";
 import { connect } from "react-redux";
 import Product_list from "./product-list";
 import { Search } from "react-feather";
 import "./add-aliexpress-product.css";
+import { ClipLoader } from "react-spinners";
+import { fetchAllProducts } from "../../../firebase/firebase.utils";
+const algoliasearch = require("algoliasearch");
+
+// the algoliasearch version is different from user panel so the syntax and api is also different. here using admin api. but in user panel using search api
+const client = algoliasearch("NILPZSAV6Q", "f8dd9476cf54f47a7e1594f3f3b238cb");
+const index = client.initIndex("products");
 export class AllProducts extends Component {
   constructor(props) {
     super(props);
@@ -22,14 +30,35 @@ export class AllProducts extends Component {
       open: false,
       checkedValues: [],
       productObj: null,
+      totalProducts: 0,
+      page: 1,
+      loading: false,
+      loader: false,
+      products: [],
+      searchFor: "",
+      nbHits: 0,
     };
   }
-  componentDidMount = async () => {
-    this.props.getAllProductsRedux();
-    if (this.props.categories.length == 0) {
-      this.props.getAllCategoriesRedux();
-    }
-  };
+  // componentDidMount = async () => {
+  //   this.props.getAllProductsRedux(this.state.page);
+
+  //   console.log(algoliasearch);
+  //
+
+  //   index
+  //     .search("", { hitsPerPage: 1 })
+  //     .then((response) => {
+  //       console.log(response.nbHits);
+  //       this.setState({ totalProducts: response.nbHits });
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+
+  //   if (this.props.categories.length == 0) {
+  //     this.props.getAllCategoriesRedux();
+  //   }
+  // };
 
   selectRow = (e, i) => {
     if (!e.target.checked) {
@@ -78,10 +107,39 @@ export class AllProducts extends Component {
 
   render() {
     const { allProducts } = this.props;
-    const { productObj } = this.state;
+    const { productObj, loader, products, nbHits, searchFor } = this.state;
     console.log(this.props);
     return (
       <Fragment>
+        {this.state.loading && (
+          <div
+            style={{
+              height: "100%",
+              width: "100%",
+              zIndex: "999",
+              backgroundColor: "white",
+              position: "absolute",
+            }}
+          >
+            <div
+              className="text-center align-items-center"
+              style={{ marginTop: "300px" }}
+            >
+              <div
+                className="spinner-grow "
+                role="status"
+                style={{
+                  width: "4rem",
+                  height: "4rem",
+                  zIndex: "1000",
+                  color: "#ff8084",
+                }}
+              >
+                <span className="sr-only">Loading...</span>
+              </div>
+            </div>
+          </div>
+        )}
         <Breadcrumb title={"All Products"} parent="Products" />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
@@ -110,13 +168,8 @@ export class AllProducts extends Component {
                       All Products
                     </h5>
                     <div>
-                      <span style={{ color: "#2271b1" }}>All </span>(3968)
-                      &nbsp;|&nbsp;{" "}
-                      <span style={{ color: "#2271b1" }}>Published </span>(3930)
-                      &nbsp;|&nbsp;{" "}
-                      <span style={{ color: "#2271b1" }}>Drafts </span>(38)
-                      &nbsp;|&nbsp;{" "}
-                      <span style={{ color: "#2271b1" }}>Trash </span>(13)
+                      <span style={{ color: "#2271b1" }}>All </span>(
+                      {this.state.totalProducts})
                     </div>
                   </div>
                   <div
@@ -125,6 +178,7 @@ export class AllProducts extends Component {
                       flexDirection: "row",
                       justifyContent: "space-around",
                       marginTop: 5,
+                      position: "relative",
                     }}
                   >
                     {" "}
@@ -160,7 +214,46 @@ export class AllProducts extends Component {
                             type="search"
                             placeholder="Search Product"
                             style={{ paddingLeft: 10 }}
-                            onChange={this.handleSearchBarChange}
+                            onChange={async (e) => {
+                              let value = e.target.value;
+                              this.setState({
+                                searchFor: value,
+                              });
+
+                              if (value && value.length >= 3) {
+                                console.log(
+                                  "searchbar value is getting changed inside"
+                                );
+                                this.setState({
+                                  loader: true,
+                                });
+
+                                const response = await index.search(value, {
+                                  hitsPerPage: 20,
+                                });
+                                console.log(response);
+                                if (
+                                  response &&
+                                  response.hits &&
+                                  response.hits.length > 0
+                                ) {
+                                  this.setState({
+                                    products: response.hits,
+                                    nbHits: response.nbHits,
+                                  });
+                                }
+                                this.setState({
+                                  loader: false,
+                                });
+                              }
+                              console.log(value);
+                              if (!value || value == "") {
+                                this.setState({
+                                  products: [],
+                                  nbHits: 0,
+                                });
+                              }
+                            }}
                           />
                           <span>
                             <Search
@@ -172,6 +265,258 @@ export class AllProducts extends Component {
                               }}
                             />
                           </span>
+                          {loader ? (
+                            <ul
+                              className="list-group position-absolute w-100"
+                              style={{
+                                maxHeight: "500px",
+                                overflowY: "auto",
+                                zIndex: 1000,
+                                borderBottom: "1px solid gainsboro",
+                                top: "40px",
+                                marginLeft: "130px",
+                              }}
+                            >
+                              <li
+                                className="list-group-item"
+                                style={{
+                                  cursor: "pointer",
+                                  borderRadius: 0,
+                                  border: 0,
+                                  padding: 10,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <ClipLoader
+                                    loading={loader}
+                                    size={28}
+                                    color="#ec345b"
+                                  />
+                                </div>
+                              </li>
+                            </ul>
+                          ) : products.length > 0 ? (
+                            <ul
+                              className="list-group position-absolute w-100"
+                              style={{
+                                maxHeight: "500px",
+                                overflowY: "auto",
+                                zIndex: 1000,
+                                borderBottom: "1px solid gainsboro",
+                                top: "40px",
+                                marginLeft: "130px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "space-between",
+                                  padding: "5px 10px",
+                                  background: "white",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    color: "#ec345b",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {nbHits} items found
+                                </div>
+                                <div
+                                  style={{
+                                    color: "#ec345b",
+                                    textDecoration: "underline",
+                                    fontSize: 14,
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={async () => {
+                                    this.setState({
+                                      loading: true,
+                                      products: [],
+                                    });
+                                    // get all matching product from firestore
+                                    const response = await index.search(
+                                      searchFor,
+                                      {
+                                        hitsPerPage: 100,
+                                      }
+                                    );
+                                    this.setState({
+                                      searchFor: "",
+                                    });
+                                    console.log(response);
+                                    if (
+                                      response &&
+                                      response.hits &&
+                                      response.hits.length > 0
+                                    ) {
+                                      const objectIDs = response.hits.map(
+                                        (hit) => hit.objectID
+                                      );
+                                      const chunkArray = (array, chunkSize) => {
+                                        const chunks = [];
+                                        for (
+                                          let i = 0;
+                                          i < array.length;
+                                          i += chunkSize
+                                        ) {
+                                          chunks.push(
+                                            array.slice(i, i + chunkSize)
+                                          );
+                                        }
+                                        return chunks;
+                                      };
+                                      const chunks = chunkArray(objectIDs, 10);
+
+                                      let products = await fetchAllProducts(
+                                        chunks
+                                      );
+                                      this.props.setAllProductsRedux(products);
+                                    }
+                                    this.setState({
+                                      loading: false,
+                                    });
+                                  }}
+                                >
+                                  see all
+                                </div>
+                              </div>
+
+                              {products.map((product, index) => {
+                                return (
+                                  <li
+                                    className="list-group-item"
+                                    key={index}
+                                    style={{
+                                      cursor: "pointer",
+                                      borderRadius: 0,
+                                      borderBottom: "1px solid gainsboro",
+                                      padding: 10,
+                                    }}
+                                    onClick={() => {
+                                      console.log(product);
+                                      this.props.history.push(
+                                        `/products/physical/add-product/${product.objectID}`
+                                      );
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        justifyContent: "space-between",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "row",
+                                          justifyContent: "flex-start",
+                                        }}
+                                      >
+                                        <img
+                                          src={
+                                            product.pictures &&
+                                            product.pictures.length > 0
+                                              ? product.pictures[0]
+                                              : ""
+                                          }
+                                          style={{
+                                            height: 80,
+                                            width: 80,
+                                            borderRadius: 5,
+                                            border: "1px solid gainsboro",
+                                          }}
+                                        />
+                                        <div
+                                          style={{
+                                            padding: 5,
+                                            position: "relative",
+                                          }}
+                                        >
+                                          <div
+                                            className="two-lines2"
+                                            style={{ textAlign: "left" }}
+                                          >
+                                            {product.name}
+                                          </div>
+                                          <div
+                                            style={{
+                                              textAlign: "left",
+                                              position: "absolute",
+                                              bottom: "10px",
+                                              color: "#ec345b",
+                                              fontWeight: "bold",
+                                            }}
+                                          >
+                                            ৳
+                                            {product.price ? product.price : ""}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : !loader && searchFor.length >= 3 ? (
+                            <ul
+                              className="list-group position-absolute w-100"
+                              style={{
+                                maxHeight: "500px",
+                                overflowY: "auto",
+                                zIndex: 1000,
+                                borderBottom: "1px solid gainsboro",
+                                top: "40px",
+                                marginLeft: "130px",
+                              }}
+                            >
+                              <li
+                                className="list-group-item"
+                                style={{
+                                  cursor: "pointer",
+                                  borderRadius: 0,
+                                  border: 0,
+                                  padding: 10,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "flex-start",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        padding: 5,
+                                        position: "relative",
+                                      }}
+                                    >
+                                      <div className="two-lines2">
+                                        No matching results found
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </li>
+                            </ul>
+                          ) : null}
                         </div>
                       </form>
                     </li>
@@ -603,7 +948,14 @@ export class AllProducts extends Component {
                     className="row"
                     style={{ justifyContent: "flex-end", marginRight: "10px" }}
                   >
-                    <div style={{ alignSelf: "center" }}>110 items</div>
+                    <div style={{ alignSelf: "center" }}>
+                      Showing{" "}
+                      {this.state.page * 100 < this.state.totalProducts
+                        ? this.state.page * 100
+                        : this.state.totalProducts}{" "}
+                      of {this.state.totalProducts} items
+                    </div>
+
                     <div
                       style={{
                         padding: 5,
@@ -613,33 +965,30 @@ export class AllProducts extends Component {
                         margin: 0,
                         marginLeft: 5,
                       }}
-                    >
-                      <i className="icofont-double-left"></i>
-                    </div>
-                    <div
-                      style={{
-                        padding: 5,
-                        border: "1px solid gainsboro",
-                        borderRadius: 2,
-                        color: "gray",
-                        margin: 0,
-                        marginLeft: 5,
+                      onClick={async () => {
+                        window.scrollTo({ top: 0, behavior: "smooth" }); // Smooth scroll to the top
+
+                        if (this.state.page > 1) {
+                          this.setState({
+                            loading: true,
+                          });
+                          await this.props.getAllProductsRedux(
+                            this.state.page - 1
+                          );
+                          this.setState({
+                            page: this.state.page - 1,
+                            loading: false,
+                          });
+                        } else {
+                          alert("Already on the first page");
+                        }
                       }}
                     >
                       <i className="icofont-rounded-left"></i>
                     </div>
-                    <div style={{ alignSelf: "center" }}>&nbsp; 1 of 6</div>
-                    <div
-                      style={{
-                        padding: 5,
-                        border: "1px solid gainsboro",
-                        borderRadius: 2,
-                        color: "gray",
-                        margin: 0,
-                        marginLeft: 5,
-                      }}
-                    >
-                      <i className="icofont-rounded-right"></i>
+                    <div style={{ alignSelf: "center" }}>
+                      &nbsp; {this.state.page} of{" "}
+                      {Math.ceil(this.state.totalProducts / 100)}
                     </div>
                     <div
                       style={{
@@ -650,8 +999,29 @@ export class AllProducts extends Component {
                         margin: 0,
                         marginLeft: 5,
                       }}
+                      onClick={async () => {
+                        window.scrollTo({ top: 0, behavior: "smooth" }); // Smooth scroll to the top
+
+                        if (
+                          this.state.page <
+                          Math.ceil(this.state.totalProducts / 100)
+                        ) {
+                          this.setState({
+                            loading: true,
+                          });
+                          await this.props.getAllProductsRedux(
+                            this.state.page + 1
+                          );
+                          this.setState({
+                            page: this.state.page + 1,
+                            loading: false,
+                          });
+                        } else {
+                          alert("Already on the last page");
+                        }
+                      }}
                     >
-                      <i className="icofont-double-right"></i>
+                      <i className="icofont-rounded-right"></i>
                     </div>
                   </div>
                 </div>
@@ -1264,4 +1634,5 @@ export default connect(mapStateToProps, {
   getAllProductsRedux,
   getAllCategoriesRedux,
   deleteProductRedux,
+  setAllProductsRedux,
 })(AllProducts);

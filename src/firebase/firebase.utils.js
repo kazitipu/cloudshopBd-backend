@@ -204,19 +204,62 @@ export const uploadAliProduct = async (productObj) => {
   }
 };
 
-export const getAllProducts = async () => {
-  const productsCollectionRef = firestore.collection("products").limit(50);
+let lastVisible = null; // This will hold the last document snapshot from the previous query
+const cache = {}; // Store results in the cache for efficiency
+
+export const getAllProducts = async (pageNo) => {
+  console.log(`Fetching page: ${pageNo}`);
+  const productsPerPage = 100;
+  let productsArray = [];
+
+  // Check if the data for this page is already in the cache
+  if (cache[pageNo]) {
+    console.log("Returning from cache");
+    return cache[pageNo];
+  }
+
   try {
-    const products = await productsCollectionRef.get();
-    const productsArray = [];
-    products.forEach((doc) => {
-      productsArray.push(doc.data());
-    });
-    return productsArray;
+    // Initial query, ordered by 'name', limited to productsPerPage
+    let query = firestore
+      .collection("products")
+      .orderBy("name")
+      .limit(productsPerPage);
+
+    // If we're beyond the first page, use the last document from the previous page as the cursor
+    if (pageNo > 1 && lastVisible) {
+      query = query.startAfter(lastVisible); // Start after the last document of the previous page
+    }
+
+    // Fetch the products snapshot
+    const productsSnapshot = await query.get();
+
+    // Check if there are any products
+    if (!productsSnapshot.empty) {
+      // Update the lastVisible document to the last document in the current snapshot
+      lastVisible = productsSnapshot.docs[productsSnapshot.docs.length - 1];
+
+      // Push the fetched products to the array
+      productsSnapshot.forEach((doc) => {
+        productsArray.push(doc.data());
+      });
+
+      // Cache the result for the current page
+      cache[pageNo] = productsArray;
+
+      console.log(
+        `Fetched ${productsArray.length} products for page ${pageNo}`
+      );
+      return productsArray;
+    } else {
+      console.log("No products found");
+      return []; // Return an empty array if no products are found
+    }
   } catch (error) {
-    alert(error);
+    console.error("Error fetching products:", error);
+    alert("Failed to fetch products. Please try again.");
   }
 };
+
 export const getAllReviews = async () => {
   const productsCollectionRef = firestore
     .collection("products")
@@ -1706,6 +1749,26 @@ export const uploadAttributeTerm = async (productObj) => {
   } else {
     alert("there is already a terms with similar id");
   }
+};
+
+export const fetchAllProducts = async (chunks) => {
+  const promises = chunks.map((chunk) => {
+    // Create a query for each chunk using the "in" operator
+    const q = firestore.collection("products").where("id", "in", chunk);
+
+    // Fetch documents for the query
+    return q
+      .get()
+      .then((querySnapshot) =>
+        querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
+  });
+
+  // Wait for all queries to resolve
+  const results = await Promise.all(promises);
+
+  // Flatten the array of arrays into a single array of documents
+  return results.flat();
 };
 
 export const updateAttributeTerm = async (productObj) => {

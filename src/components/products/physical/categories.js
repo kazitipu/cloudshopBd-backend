@@ -311,10 +311,23 @@ export class Categories extends Component {
   getCategories = (categories) => {
     const tree = categories.reduce((t, o) => {
       Object.assign((t[o.id] = t[o.id] || {}), o);
-      ((t[o.parentCategory] ??= {}).children ??= []).push(t[o.id]);
+
+      // Check if `t[o.parentCategory]` is undefined or null, and initialize it if needed
+      if (!t[o.parentCategory]) {
+        t[o.parentCategory] = { children: [] };
+      }
+
+      // Ensure `children` array is initialized for `t[o.parentCategory]`
+      if (!t[o.parentCategory].children) {
+        t[o.parentCategory].children = [];
+      }
+
+      t[o.parentCategory].children.push(t[o.id]);
+
       return t;
-    }, {})[""].children;
-    return tree;
+    }, {});
+
+    return tree[""].children;
   };
 
   render() {

@@ -201,9 +201,12 @@ export const deleteProductRedux = (id) => async (dispatch) => {
   await deleteProduct(id);
   dispatch({ type: "DELETE_PRODUCT", payload: id });
 };
-export const getAllProductsRedux = () => async (dispatch) => {
-  const allProducts = await getAllProducts();
+export const getAllProductsRedux = (pageNo) => async (dispatch) => {
+  const allProducts = await getAllProducts(pageNo);
   dispatch({ type: "GET_ALL_PRODUCTS", payload: allProducts });
+};
+export const setAllProductsRedux = (products) => async (dispatch) => {
+  dispatch({ type: "GET_ALL_PRODUCTS", payload: products });
 };
 export const getSingleProductRedux = (id) => async (dispatch) => {
   const product = await getSingleProduct(id);

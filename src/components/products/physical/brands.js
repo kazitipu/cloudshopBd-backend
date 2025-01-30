@@ -306,10 +306,23 @@ export class Brands extends Component {
   getBrands = (categories) => {
     const tree = categories.reduce((t, o) => {
       Object.assign((t[o.id] = t[o.id] || {}), o);
-      ((t[o.parentBrand] ??= {}).children ??= []).push(t[o.id]);
+
+      // Check if `t[o.parentBrand]` is undefined or null, and initialize it if needed
+      if (!t[o.parentBrand]) {
+        t[o.parentBrand] = { children: [] };
+      }
+
+      // Check if `children` is initialized, then push the current object to it
+      if (!t[o.parentBrand].children) {
+        t[o.parentBrand].children = [];
+      }
+
+      t[o.parentBrand].children.push(t[o.id]);
+
       return t;
-    }, {})[""].children;
-    return tree;
+    }, {});
+
+    return tree[""].children;
   };
 
   render() {

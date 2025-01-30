@@ -777,22 +777,65 @@ export class Edit_product extends Component {
     );
   };
 
+  // getCategories = (categories) => {
+  //   const tree = categories.reduce((t, o) => {
+  //     Object.assign((t[o.id] = t[o.id] || {}), o);
+  //     ((t[o.parentCategory] ??= {}).children ??= []).push(t[o.id]);
+  //     return t;
+  //   }, {})[""].children;
+  //   return tree;
+  // };
   getCategories = (categories) => {
     const tree = categories.reduce((t, o) => {
       Object.assign((t[o.id] = t[o.id] || {}), o);
-      ((t[o.parentCategory] ??= {}).children ??= []).push(t[o.id]);
+
+      // Check if `t[o.parentCategory]` is undefined or null, and initialize it if needed
+      if (!t[o.parentCategory]) {
+        t[o.parentCategory] = { children: [] };
+      }
+
+      // Ensure `children` array is initialized for `t[o.parentCategory]`
+      if (!t[o.parentCategory].children) {
+        t[o.parentCategory].children = [];
+      }
+
+      t[o.parentCategory].children.push(t[o.id]);
+
       return t;
-    }, {})[""].children;
-    return tree;
+    }, {});
+
+    return tree[""].children;
   };
+
+  // getBrands = (categories) => {
+  //   const tree = categories.reduce((t, o) => {
+  //     Object.assign((t[o.id] = t[o.id] || {}), o);
+  //     ((t[o.parentBrand] ??= {}).children ??= []).push(t[o.id]);
+  //     return t;
+  //   }, {})[""].children;
+  //   return tree;
+  // };
 
   getBrands = (categories) => {
     const tree = categories.reduce((t, o) => {
       Object.assign((t[o.id] = t[o.id] || {}), o);
-      ((t[o.parentBrand] ??= {}).children ??= []).push(t[o.id]);
+
+      // Check if `t[o.parentBrand]` is undefined or null, and initialize it if needed
+      if (!t[o.parentBrand]) {
+        t[o.parentBrand] = { children: [] };
+      }
+
+      // Check if `children` is initialized, then push the current object to it
+      if (!t[o.parentBrand].children) {
+        t[o.parentBrand].children = [];
+      }
+
+      t[o.parentBrand].children.push(t[o.id]);
+
       return t;
-    }, {})[""].children;
-    return tree;
+    }, {});
+
+    return tree[""].children;
   };
 
   handleSubmit = async () => {
