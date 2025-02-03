@@ -213,6 +213,7 @@ export class Add_product extends Component {
       alert("You must choose at least one category");
       return;
     }
+    // product non branded hotei pare. but product must kono na kono category er hobe
 
     let currentDate = new Date();
 

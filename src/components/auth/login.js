@@ -6,7 +6,7 @@ import Slider from "react-slick";
 import stats from "../../assets/images/dashboard/stats.png";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-
+import "./login.css";
 export class Login extends Component {
   render() {
     var settings = {

@@ -2424,6 +2424,65 @@ export const getAllMonthlySalary = async () => {
   }
 };
 
+export const getSingleCategoryProducts = async (categories, startAfter) => {
+  let productsCollectionRef;
+  console.log(startAfter);
+  if (startAfter) {
+    productsCollectionRef = firestore
+      .collection("products")
+      .where("checkedValues", "array-contains-any", categories)
+      .orderBy("name")
+      .startAfter(startAfter);
+  } else {
+    productsCollectionRef = firestore
+      .collection("products")
+      .where("checkedValues", "array-contains-any", categories)
+      .orderBy("name");
+  }
+  const products = await productsCollectionRef.get();
+  const lastProduct = products.docs[products.docs.length - 1];
+
+  try {
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return { productsArray, lastProduct };
+  } catch (error) {
+    alert(error);
+    console.log(error);
+  }
+};
+
+export const getSingleBrandProducts = async (brandId, startAfter) => {
+  let productsCollectionRef;
+  console.log(startAfter);
+  if (startAfter) {
+    productsCollectionRef = firestore
+      .collection("products")
+      .where("checkedValues2", "array-contains", brandId)
+      .orderBy("id", "desc")
+      .startAfter(startAfter);
+  } else {
+    productsCollectionRef = firestore
+      .collection("products")
+      .where("checkedValues2", "array-contains", brandId)
+      .orderBy("id", "desc");
+  }
+  const products = await productsCollectionRef.get();
+  const lastProduct = products.docs[products.docs.length - 1];
+  try {
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return { productsArray, lastProduct };
+  } catch (error) {
+    alert(error);
+    console.log(error);
+  }
+};
+
 export const getAllMonthly = async (category, subCategory) => {
   if (category == "REFUND") {
     const expensesCollectionRef = firestore

@@ -12,6 +12,8 @@ import Dashboard from "./components/dashboard";
 
 // Products physical
 import AllProducts from "./components/products/physical/allProducts";
+import AllProductsByCategory from "./components/products/physical/allProductsByCategory";
+import AllProductsByBrand from "./components/products/physical/allProductsByBrand";
 import AllCoupons from "./components/products/physical/allCoupons";
 import Sub_category from "./components/products/physical/sub-category";
 import Product_list from "./components/products/physical/product-list";
@@ -183,6 +185,16 @@ class Root extends Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/products/physical/categories`}
                   component={Categories}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/categories/:id`}
+                  component={AllProductsByCategory}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/brands/:id`}
+                  component={AllProductsByBrand}
                 />
                 <Route
                   exact

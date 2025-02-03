@@ -470,7 +470,7 @@ const Invoice = ({ orders, getSingleOrderRedux, match }) => {
                             borderBottom: "1px solid gainsboro",
                           }}
                         >
-                          Discount applied
+                          Discount Applied
                         </td>
                         <td
                           style={{
@@ -507,7 +507,18 @@ const Invoice = ({ orders, getSingleOrderRedux, match }) => {
                               borderBottom: "1px solid gainsboro",
                             }}
                           >
-                            Coupon applied{" "}
+                            Coupon Applied{" "}
+                            <span
+                              style={{
+                                color: "white",
+                                backgroundColor: "cadetblue",
+                                fontSize: 9,
+                                borderRadius: 5,
+                                padding: "2px 5px",
+                              }}
+                            >
+                              {order.couponApplied.name}
+                            </span>
                             <span
                               style={{ fontSize: 12, color: "#ff8084" }}
                             ></span>

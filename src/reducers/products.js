@@ -1,9 +1,26 @@
-const INITIAL_STATE = { products: [], productObj: null };
+const INITIAL_STATE = {
+  products: [],
+  productObj: null,
+  categoryProducts: [],
+  brandProducts: [],
+};
 
 const setProductsReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case "GET_ALL_PRODUCTS":
       return { ...state, products: [...action.payload] };
+    case "GET_ALL_SINGLE_CATEGORY_PRODUCTS":
+      return {
+        ...state,
+        categoryProducts: [...action.payload.productsArray],
+        lastProduct: action.payload.lastProduct,
+      };
+    case "GET_ALL_SINGLE_BRAND_PRODUCTS":
+      return {
+        ...state,
+        brandProducts: [...action.payload.productsArray],
+        lastProductBrand: action.payload.lastProduct,
+      };
     case "GET_SINGLE_PRODUCT":
       return { ...state, productObj: action.payload };
     case "UPDATE_PRODUCT":

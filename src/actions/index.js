@@ -120,6 +120,8 @@ import {
   getAllFunds,
   getAllCashIns,
   createMonth,
+  getSingleCategoryProducts,
+  getSingleBrandProducts,
 } from "../firebase/firebase.utils";
 
 export const setAllOrders = (ordersArray) => ({
@@ -946,6 +948,26 @@ export const getSingleCashSummaryRedux = () => async (dispatch) => {
     payload: cashObj,
   });
 };
+export const getSingleCategoryProductsRedux =
+  (categories, lastProduct) => async (dispatch) => {
+    const allProducts = await getSingleCategoryProducts(
+      categories,
+      lastProduct
+    );
+    dispatch({
+      type: "GET_ALL_SINGLE_CATEGORY_PRODUCTS",
+      payload: allProducts,
+    });
+  };
+
+export const getSingleBrandProductsRedux =
+  (brand, startAfter) => async (dispatch) => {
+    const allProducts = await getSingleBrandProducts(brand, startAfter);
+    dispatch({
+      type: "GET_ALL_SINGLE_BRAND_PRODUCTS",
+      payload: allProducts,
+    });
+  };
 
 export const deleteCnfRedux = (cnfId) => async (dispatch) => {
   await deleteCnf(cnfId);

@@ -11,6 +11,7 @@ import {
   getAllCategoriesRedux,
   deleteProductRedux,
   setAllProductsRedux,
+  getSingleCategoryProductsRedux,
 } from "../../../actions";
 import { connect } from "react-redux";
 import Product_list from "./product-list";
@@ -23,7 +24,7 @@ const algoliasearch = require("algoliasearch");
 // the algoliasearch version is different from user panel so the syntax and api is also different. here using admin api. but in user panel using search api
 const client = algoliasearch("NILPZSAV6Q", "f8dd9476cf54f47a7e1594f3f3b238cb");
 const index = client.initIndex("products");
-export class AllProducts extends Component {
+export class AllProductsByCategory extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -39,25 +40,134 @@ export class AllProducts extends Component {
       searchFor2: "",
       nbHits: 0,
       algolia: false,
+      hasUpdated: false,
     };
   }
 
   componentDidMount = async () => {
-    this.props.getAllProductsRedux(this.state.page);
-    console.log(algoliasearch);
-    index
-      .search("", { hitsPerPage: 1 })
-      .then((response) => {
-        console.log(response.nbHits);
-        this.setState({ totalProducts: response.nbHits });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-
+    const { id } = this.props.match.params;
+    this.setState({
+      loading: true,
+    });
     if (this.props.categories.length == 0) {
-      this.props.getAllCategoriesRedux();
+      await this.props.getAllCategoriesRedux();
+      let category = this.props.categories.find(
+        (category) => category.id == this.props.match.params.id
+      );
+      console.log(category);
+      let results = this.getAllChildCategories(category, this.props.categories);
+      console.log(results);
+      this.setState(
+        {
+          results: [category, ...results],
+          category: category,
+        },
+        async () => {
+          if ([category, ...results].length > 0) {
+            let categories = [category, ...results].map((cat) => cat.id);
+            console.log(categories);
+
+            await this.props.getSingleCategoryProductsRedux(
+              categories.slice(0, 10),
+              null
+            );
+            console.log("getting category products");
+          }
+        }
+      );
+    } else {
+      let category = this.props.categories.find(
+        (category) => category.id == this.props.match.params.id
+      );
+      console.log(category);
+      let results = this.getAllChildCategories(category, this.props.categories);
+      console.log(results);
+      this.setState(
+        {
+          results: [category, ...results],
+          category: category,
+        },
+        async () => {
+          if ([category, ...results].length > 0) {
+            let categories = [category, ...results].map((cat) => cat.id);
+            console.log(categories);
+
+            await this.props.getSingleCategoryProductsRedux(
+              categories.slice(0, 10),
+              null
+            );
+            console.log("getting category products");
+          }
+        }
+      );
     }
+    this.setState({
+      loading: false,
+    });
+  };
+
+  componentWillReceiveProps = (nextProps) => {
+    this.setState({
+      loading: true,
+    });
+    console.log(this.props.match.params.id);
+    console.log(nextProps.match.params.id);
+    console.log(this.state.hasUpdated);
+    if (
+      nextProps.categories.length > 0 &&
+      this.props.match.params.id !== nextProps.match.params.id
+    ) {
+      console.log(nextProps.categories);
+      let category = nextProps.categories.find(
+        (category) => category.id == nextProps.match.params.id
+      );
+      console.log(category);
+      let results = this.getAllChildCategories(category, nextProps.categories);
+      console.log(results);
+      this.setState(
+        {
+          results: [category, ...results],
+          category: category,
+          hasUpdated: true,
+        },
+        async () => {
+          if ([category, ...results].length > 0) {
+            let categories = [category, ...results].map((cat) => cat.id);
+            console.log(categories);
+
+            await this.props.getSingleCategoryProductsRedux(
+              categories.slice(0, 10),
+              null
+            );
+            console.log("getting category products");
+          }
+        }
+      );
+    }
+    this.setState({
+      loading: false,
+    });
+  };
+
+  getAllChildCategories = (category, categories) => {
+    console.log(this.props);
+    const categoriesById = new Map(
+      categories.map((category) => [category.id, category])
+    );
+    console.log(categoriesById);
+    const targetId = category.id;
+    const results = [];
+    for (const cat of categories) {
+      let c = cat;
+      while (c && c.parentCategory) {
+        c = c.parentCategory && categoriesById.get(c.parentCategory);
+        if (c && c.id === targetId) {
+          results.push(cat);
+          break;
+        }
+      }
+    }
+    return results;
   };
 
   selectRow = (e, i) => {
@@ -109,6 +219,12 @@ export class AllProducts extends Component {
     const { allProducts } = this.props;
     const { productObj, loader, products, nbHits, searchFor } = this.state;
     console.log(this.props);
+    let renderableProducts = allProducts;
+    if (searchFor) {
+      renderableProducts = allProducts.filter((product) =>
+        product.name.toLowerCase().includes(searchFor.toLowerCase())
+      );
+    }
     return (
       <Fragment>
         {this.state.loading && (
@@ -140,7 +256,10 @@ export class AllProducts extends Component {
             </div>
           </div>
         )}
-        <Breadcrumb title={"All Products"} parent="Products" />
+        <Breadcrumb
+          title={this.state.category && this.state.category.name}
+          parent="Products"
+        />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
           <div className="row" style={{ justifyContent: "center" }}>
@@ -165,47 +284,13 @@ export class AllProducts extends Component {
                           color: "#00254c",
                         }}
                       ></i>
-                      All Products
+                      {this.state.category && this.state.category.name}
                     </h5>
                     <div>
-                      <span
-                        style={{ color: "#2271b1" }}
-                        onClick={async () => {
-                          this.setState({
-                            loading: true,
-                            algolia: false,
-                            page: 1,
-                          });
-                          await this.props.getAllProductsRedux(1);
-
-                          console.log(algoliasearch);
-
-                          index
-                            .search("", { hitsPerPage: 1 })
-                            .then((response) => {
-                              console.log(response.nbHits);
-                              this.setState({ totalProducts: response.nbHits });
-                            })
-                            .catch((err) => {
-                              console.log(err);
-                            });
-                          this.setState({
-                            loading: false,
-                            page: 1,
-                          });
-
-                          if (this.props.categories.length == 0) {
-                            this.props.getAllCategoriesRedux();
-                          }
-                        }}
-                      >
-                        All{" "}
+                      <span style={{ color: "#2271b1", cursor: "pointer" }}>
+                        Total Products
                       </span>
-                      (
-                      {this.state.algolia
-                        ? `Total found ${this.state.nbHits} items for-${this.state.searchFor2}`
-                        : this.state.totalProducts}
-                      )
+                      ({allProducts.length})
                     </div>
                   </div>
                   <div
@@ -255,40 +340,6 @@ export class AllProducts extends Component {
                               this.setState({
                                 searchFor: value,
                               });
-
-                              if (value && value.length >= 3) {
-                                console.log(
-                                  "searchbar value is getting changed inside"
-                                );
-                                this.setState({
-                                  loader: true,
-                                });
-
-                                const response = await index.search(value, {
-                                  hitsPerPage: 20,
-                                });
-                                console.log(response);
-                                if (
-                                  response &&
-                                  response.hits &&
-                                  response.hits.length > 0
-                                ) {
-                                  this.setState({
-                                    products: response.hits,
-                                    nbHits: response.nbHits,
-                                  });
-                                }
-                                this.setState({
-                                  loader: false,
-                                });
-                              }
-                              console.log(value);
-                              if (!value || value == "") {
-                                this.setState({
-                                  products: [],
-                                  nbHits: 0,
-                                });
-                              }
                             }}
                           />
                           <span>
@@ -301,266 +352,6 @@ export class AllProducts extends Component {
                               }}
                             />
                           </span>
-                          {loader ? (
-                            <ul
-                              className="list-group position-absolute w-100"
-                              style={{
-                                maxHeight: "500px",
-                                overflowY: "auto",
-                                zIndex: 1000,
-                                borderBottom: "1px solid gainsboro",
-                                top: "40px",
-                                marginLeft: "130px",
-                              }}
-                            >
-                              <li
-                                className="list-group-item"
-                                style={{
-                                  cursor: "pointer",
-                                  borderRadius: 0,
-                                  border: 0,
-                                  padding: 10,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "row",
-                                    justifyContent: "center",
-                                  }}
-                                >
-                                  <ClipLoader
-                                    loading={loader}
-                                    size={28}
-                                    color="#ec345b"
-                                  />
-                                </div>
-                              </li>
-                            </ul>
-                          ) : products.length > 0 ? (
-                            <ul
-                              className="list-group position-absolute w-100"
-                              style={{
-                                maxHeight: "500px",
-                                overflowY: "auto",
-                                zIndex: 1000,
-                                borderBottom: "1px solid gainsboro",
-                                top: "40px",
-                                marginLeft: "130px",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "row",
-                                  justifyContent: "space-between",
-                                  padding: "5px 10px",
-                                  background: "white",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    color: "#ec345b",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {nbHits} items found
-                                </div>
-                                <div
-                                  style={{
-                                    color: "#ec345b",
-                                    textDecoration: "underline",
-                                    fontSize: 14,
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={async () => {
-                                    this.setState({
-                                      loading: true,
-                                      products: [],
-                                      algolia: true,
-                                    });
-                                    // get all matching product from firestore
-                                    const response = await index.search(
-                                      searchFor,
-                                      {
-                                        hitsPerPage: 100,
-                                        page: 0,
-                                      }
-                                    );
-                                    this.setState({
-                                      searchFor2: this.state.searchFor,
-                                      searchFor: "",
-                                    });
-                                    console.log(response);
-                                    if (
-                                      response &&
-                                      response.hits &&
-                                      response.hits.length > 0
-                                    ) {
-                                      const objectIDs = response.hits.map(
-                                        (hit) => hit.objectID
-                                      );
-                                      const chunkArray = (array, chunkSize) => {
-                                        const chunks = [];
-                                        for (
-                                          let i = 0;
-                                          i < array.length;
-                                          i += chunkSize
-                                        ) {
-                                          chunks.push(
-                                            array.slice(i, i + chunkSize)
-                                          );
-                                        }
-                                        return chunks;
-                                      };
-                                      const chunks = chunkArray(objectIDs, 10);
-
-                                      let products = await fetchAllProducts(
-                                        chunks
-                                      );
-                                      this.props.setAllProductsRedux(products);
-                                    }
-                                    this.setState({
-                                      loading: false,
-                                      nbHits: response.nbHits,
-                                      page: this.state.page,
-                                    });
-                                  }}
-                                >
-                                  see all
-                                </div>
-                              </div>
-
-                              {products.map((product, index) => {
-                                return (
-                                  <li
-                                    className="list-group-item"
-                                    key={index}
-                                    style={{
-                                      cursor: "pointer",
-                                      borderRadius: 0,
-                                      borderBottom: "1px solid gainsboro",
-                                      padding: 10,
-                                    }}
-                                    onClick={() => {
-                                      console.log(product);
-                                      this.props.history.push(
-                                        `/products/physical/add-product/${product.objectID}`
-                                      );
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        justifyContent: "space-between",
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          flexDirection: "row",
-                                          justifyContent: "flex-start",
-                                        }}
-                                      >
-                                        <img
-                                          src={
-                                            product.pictures &&
-                                            product.pictures.length > 0
-                                              ? product.pictures[0]
-                                              : ""
-                                          }
-                                          style={{
-                                            minHeight: 80,
-                                            maxHeight: 80,
-                                            minWidth: 80,
-                                            maxWidth: 80,
-
-                                            borderRadius: 5,
-                                            border: "1px solid gainsboro",
-                                          }}
-                                        />
-                                        <div
-                                          style={{
-                                            padding: 5,
-                                            position: "relative",
-                                          }}
-                                        >
-                                          <div
-                                            className="two-lines2"
-                                            style={{ textAlign: "left" }}
-                                          >
-                                            {product.name}
-                                          </div>
-                                          <div
-                                            style={{
-                                              textAlign: "left",
-                                              position: "absolute",
-                                              bottom: "10px",
-                                              color: "#ec345b",
-                                              fontWeight: "bold",
-                                            }}
-                                          >
-                                            ৳
-                                            {product.price ? product.price : ""}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          ) : !loader && searchFor.length >= 3 ? (
-                            <ul
-                              className="list-group position-absolute w-100"
-                              style={{
-                                maxHeight: "500px",
-                                overflowY: "auto",
-                                zIndex: 1000,
-                                borderBottom: "1px solid gainsboro",
-                                top: "40px",
-                                marginLeft: "130px",
-                              }}
-                            >
-                              <li
-                                className="list-group-item"
-                                style={{
-                                  cursor: "pointer",
-                                  borderRadius: 0,
-                                  border: 0,
-                                  padding: 10,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "row",
-                                    justifyContent: "space-between",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "row",
-                                      justifyContent: "flex-start",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        padding: 5,
-                                        position: "relative",
-                                      }}
-                                    >
-                                      <div className="two-lines2">
-                                        No matching results found
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </li>
-                            </ul>
-                          ) : null}
                         </div>
                       </form>
                     </li>
@@ -831,7 +622,7 @@ export class AllProducts extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {allProducts.map((product, index) => (
+                        {renderableProducts.map((product, index) => (
                           <tr key={index} style={{ height: 120 }}>
                             <th scope="row">
                               <div>
@@ -867,10 +658,8 @@ export class AllProducts extends Component {
                                 alt="#"
                                 style={{
                                   cursor: "pointer",
-                                  minHeight: 80,
-                                  maxHeight: 80,
-                                  minWidth: 80,
-                                  maxWidth: 80,
+                                  height: 50,
+                                  width: 50,
                                 }}
                               />
                             </td>
@@ -888,7 +677,7 @@ export class AllProducts extends Component {
                                   );
                                 }}
                               >
-                                {product.name.slice(0, 100)}{" "}
+                                {product.name}{" "}
                               </div>
 
                               <span>
@@ -914,23 +703,29 @@ export class AllProducts extends Component {
                                 cursor: "pointer",
                               }}
                             >
-                              {product.selectedCategories.map((value) => {
-                                return (
-                                  <div
-                                    onClick={() => {
-                                      localStorage.setItem(
-                                        "category",
-                                        JSON.stringify(value)
-                                      );
-                                      this.props.history.push(
-                                        `/products/physical/categories/${value.id}`
-                                      );
-                                    }}
-                                  >
-                                    {value.name},
-                                  </div>
-                                );
-                              })}
+                              {product.selectedCategories.map(
+                                (value, index) => {
+                                  return (
+                                    <div
+                                      key={index}
+                                      onClick={() => {
+                                        this.setState({
+                                          hasUpdated: false,
+                                        });
+                                        localStorage.setItem(
+                                          "category",
+                                          JSON.stringify(value)
+                                        );
+                                        this.props.history.push(
+                                          `/products/physical/categories/${value.id}`
+                                        );
+                                      }}
+                                    >
+                                      {value.name},
+                                    </div>
+                                  );
+                                }
+                              )}
                             </td>
                             <td
                               style={{
@@ -1013,196 +808,6 @@ export class AllProducts extends Component {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                  <div
-                    className="row"
-                    style={{ justifyContent: "flex-end", marginRight: "10px" }}
-                  >
-                    <div style={{ alignSelf: "center" }}>
-                      {this.state.algolia
-                        ? `Showing
-                      ${
-                        this.state.page * 100 < this.state.nbHits
-                          ? this.state.page * 100
-                          : this.state.nbHits
-                      }
-                      of ${this.state.nbHits} items`
-                        : `Showing
-                      ${
-                        this.state.page * 100 < this.state.totalProducts
-                          ? this.state.page * 100
-                          : this.state.totalProducts
-                      }
-                      of ${this.state.totalProducts} items`}
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 5,
-                        border: "1px solid gainsboro",
-                        borderRadius: 2,
-                        color: "gray",
-                        margin: 0,
-                        marginLeft: 5,
-                      }}
-                      onClick={async () => {
-                        window.scrollTo({ top: 0, behavior: "smooth" }); // Smooth scroll to the top
-                        if (this.state.algolia) {
-                          if (this.state.page > 1) {
-                            this.setState({
-                              loading: true,
-                              algolia: true,
-                            });
-                            const response = await index.search(
-                              this.state.searchFor2,
-                              {
-                                hitsPerPage: 100,
-                                page: this.state.page - 2,
-                              }
-                            );
-                            console.log(response);
-                            if (
-                              response &&
-                              response.hits &&
-                              response.hits.length > 0
-                            ) {
-                              const objectIDs = response.hits.map(
-                                (hit) => hit.objectID
-                              );
-                              const chunkArray = (array, chunkSize) => {
-                                const chunks = [];
-                                for (
-                                  let i = 0;
-                                  i < array.length;
-                                  i += chunkSize
-                                ) {
-                                  chunks.push(array.slice(i, i + chunkSize));
-                                }
-                                return chunks;
-                              };
-                              const chunks = chunkArray(objectIDs, 10);
-
-                              let products = await fetchAllProducts(chunks);
-                              this.props.setAllProductsRedux(products);
-                            }
-                            this.setState({
-                              loading: false,
-                              nbHits: response.nbHits,
-                              page: this.state.page - 1,
-                            });
-                            return;
-                          } else {
-                            alert("Already on the first page");
-                            return;
-                          }
-                        }
-                        if (this.state.page > 1) {
-                          this.setState({
-                            loading: true,
-                          });
-                          await this.props.getAllProductsRedux(
-                            this.state.page - 1
-                          );
-                          this.setState({
-                            page: this.state.page - 1,
-                            loading: false,
-                          });
-                        } else {
-                          alert("Already on the first page");
-                        }
-                      }}
-                    >
-                      <i className="icofont-rounded-left"></i>
-                    </div>
-                    <div style={{ alignSelf: "center" }}>
-                      &nbsp; {this.state.page} of{" "}
-                      {this.state.algolia
-                        ? Math.ceil(this.state.nbHits / 100)
-                        : Math.ceil(this.state.totalProducts / 100)}
-                    </div>
-                    <div
-                      style={{
-                        padding: 5,
-                        border: "1px solid gainsboro",
-                        borderRadius: 2,
-                        color: "gray",
-                        margin: 0,
-                        marginLeft: 5,
-                      }}
-                      onClick={async () => {
-                        window.scrollTo({ top: 0, behavior: "smooth" }); // Smooth scroll to the
-                        // algolia serch kore pawa product er jonno ekrokom pagination
-                        if (this.state.algolia) {
-                          if (this.state.nbHits > this.state.page * 100) {
-                            this.setState({
-                              loading: true,
-                              algolia: true,
-                            });
-                            const response = await index.search(
-                              this.state.searchFor2,
-                              {
-                                hitsPerPage: 100,
-                                page: this.state.page,
-                              }
-                            );
-                            console.log(response);
-                            if (
-                              response &&
-                              response.hits &&
-                              response.hits.length > 0
-                            ) {
-                              const objectIDs = response.hits.map(
-                                (hit) => hit.objectID
-                              );
-                              const chunkArray = (array, chunkSize) => {
-                                const chunks = [];
-                                for (
-                                  let i = 0;
-                                  i < array.length;
-                                  i += chunkSize
-                                ) {
-                                  chunks.push(array.slice(i, i + chunkSize));
-                                }
-                                return chunks;
-                              };
-                              const chunks = chunkArray(objectIDs, 10);
-
-                              let products = await fetchAllProducts(chunks);
-                              this.props.setAllProductsRedux(products);
-                            }
-                            this.setState({
-                              loading: false,
-                              nbHits: response.nbHits,
-                              page: this.state.page + 1,
-                            });
-                            return;
-                          } else {
-                            alert("Already on the last page.");
-                            return;
-                          }
-                        }
-                        // r normal pagination er jonno ekrokom pagination
-                        if (
-                          this.state.page <
-                          Math.ceil(this.state.totalProducts / 100)
-                        ) {
-                          this.setState({
-                            loading: true,
-                          });
-                          await this.props.getAllProductsRedux(
-                            this.state.page + 1
-                          );
-                          this.setState({
-                            page: this.state.page + 1,
-                            loading: false,
-                          });
-                        } else {
-                          alert("Already on the last page");
-                        }
-                      }}
-                    >
-                      <i className="icofont-rounded-right"></i>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1806,7 +1411,7 @@ export class AllProducts extends Component {
 }
 const mapStateToProps = (state) => {
   return {
-    allProducts: state.products.products,
+    allProducts: state.products.categoryProducts,
     categories: state.categories.categories,
   };
 };
@@ -1815,4 +1420,5 @@ export default connect(mapStateToProps, {
   getAllCategoriesRedux,
   deleteProductRedux,
   setAllProductsRedux,
-})(AllProducts);
+  getSingleCategoryProductsRedux,
+})(AllProductsByCategory);
