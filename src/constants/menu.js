@@ -618,6 +618,35 @@ export const MENUITEMSFORAGENT = [
     ],
   },
   {
+    title: "Coupons",
+    icon: Box,
+    type: "sub",
+    active: false,
+    children: [
+      {
+        path: "/coupons/physical/all-coupons",
+        title: "All Coupons",
+        type: "link",
+      },
+    ],
+  },
+  {
+    title: "Orders",
+    icon: Clipboard,
+    type: "sub",
+    active: false,
+    children: [
+      { path: "/orders/Processing", title: "Processing", type: "link" },
+      { path: "/orders/Confirmed", title: "Confirmed", type: "link" },
+      { path: "/orders/Packing", title: "Packing", type: "link" },
+      {
+        path: "/orders/Delivered",
+        title: "Delivered",
+        type: "link",
+      },
+    ],
+  },
+  {
     title: "Products",
     icon: Box,
     type: "sub",

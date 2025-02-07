@@ -208,7 +208,7 @@ class Root extends Component {
                 />
                 <Route
                   exact
-                  path={`${process.env.PUBLIC_URL}/products/physical/categories/homescreen`}
+                  path={`${process.env.PUBLIC_URL}/products/physical/categories-2/homescreen`}
                   component={HomeCategories}
                 />
                 <Route

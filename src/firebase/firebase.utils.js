@@ -1401,8 +1401,28 @@ export const uploadCategory = async (productObj, homeCategoriesLength) => {
       await productRef.set({
         ...newProductObj,
       });
-      const updatedSnapShot = await productRef.get();
-      if (productObj.homePosition) {
+      const singlCategoryProductsCollectionRef = firestore
+        .collection("products")
+        .where("checkedValues", "array-contains", productObj.id)
+        .orderBy("id", "desc")
+        .limit(10);
+      const products = await singlCategoryProductsCollectionRef.get();
+      console.log(products);
+      if (productObj.homePage && productObj.homePosition) {
+        // jodi homepage er hoy shekhetre dekhbo etar product gula already available ache kina. na thakle add korbo r thakle bad dibo
+        products.forEach(async (doc) => {
+          const productRef = firestore.doc(`homeProducts/${doc.data().id}`);
+          const product = await productRef.get();
+          if (product.exists) {
+            // jodi product agei thake in that case product r add korbo na
+          } else {
+            // product jodi homeproducts te na thake tokhon add korbo
+            productRef.set({
+              ...doc.data(),
+              categoryId: productObj.id,
+            });
+          }
+        });
         const productsCollectionRef = firestore
           .collection("categories")
           .where("homePage", "==", true);
@@ -1420,7 +1440,21 @@ export const uploadCategory = async (productObj, homeCategoriesLength) => {
             });
           }
         });
+      } else {
+        // jodi product homscreen te na hoy tokhon jodi homeproducts te product thake remove kore dibo
+        products.forEach(async (doc) => {
+          const productRef = firestore.doc(`homeProducts/${doc.data().id}`);
+          const product = await productRef.get();
+          if (product.exists) {
+            // jodi product agei thake in that case product delete kore dibo. jehetu eta r homescreen te nai
+            await productRef.delete();
+          } else {
+            // product jodi homeproducts te na thake tokhon kichu korar dorkar nai
+          }
+        });
       }
+      const updatedSnapShot = await productRef.get();
+
       return updatedSnapShot.data();
     } catch (error) {
       alert(error);
@@ -1436,19 +1470,40 @@ export const updateCategory = async (productObj, homeCategoriesLength) => {
   try {
     delete productObj.file;
     await productRef.update({ ...productObj });
-    const updatedSnapShot = await productRef.get();
-    if (productObj.homePosition) {
+    const singlCategoryProductsCollectionRef = firestore
+      .collection("products")
+      .where("checkedValues", "array-contains", productObj.id)
+      .orderBy("id", "desc")
+      .limit(10);
+    const products = await singlCategoryProductsCollectionRef.get();
+    console.log(products);
+    if (productObj.homePage && productObj.homePosition) {
+      // jodi homepage er hoy shekhetre dekhbo etar product gula already available ache kina. na thakle add korbo r thakle bad dibo
+      products.forEach(async (doc) => {
+        const productRef = firestore.doc(`homeProducts/${doc.data().id}`);
+        const product = await productRef.get();
+        if (product.exists) {
+          // jodi product agei thake in that case product r add korbo na
+        } else {
+          // product jodi homeproducts te na thake tokhon add korbo
+          productRef.set({
+            ...doc.data(),
+            categoryId: productObj.id,
+          });
+        }
+      });
       const productsCollectionRef = firestore
         .collection("categories")
         .where("homePage", "==", true);
-      const products = await productsCollectionRef.get();
-
-      products.forEach(async (doc) => {
+      const products2 = await productsCollectionRef.get();
+      products2.forEach(async (doc) => {
         const productRef2 = firestore.doc(`categories/${doc.data().id}`);
         const product2 = await productRef2.get();
+        console.log(doc.data());
+        // ekane proti ta category er product nibo 10 ta kore and save korbo homeProducts collection te
+
         if (product.data().homePosition) {
           // homePostion age thakle shekhetre only swap hobe oi duitar moddhe or
-
           if (
             product2.data().homePosition == productObj.homePosition &&
             product2.data().id != productObj.id
@@ -1468,7 +1523,20 @@ export const updateCategory = async (productObj, homeCategoriesLength) => {
           }
         }
       });
+    } else {
+      // jodi product homscreen te na hoy tokhon jodi homeproducts te product thake remove kore dibo
+      products.forEach(async (doc) => {
+        const productRef = firestore.doc(`homeProducts/${doc.data().id}`);
+        const product = await productRef.get();
+        if (product.exists) {
+          // jodi product agei thake in that case product delete kore dibo. jehetu eta r homescreen te nai
+          await productRef.delete();
+        } else {
+          // product jodi homeproducts te na thake tokhon kichu korar dorkar nai
+        }
+      });
     }
+    const updatedSnapShot = await productRef.get();
     return updatedSnapShot.data();
   } catch (error) {
     alert(error);

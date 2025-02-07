@@ -9,6 +9,15 @@ import { uploadImageRechargeRequest } from "../../firebase/firebase.utils";
 import { getAllOrdersRedux, updateOrderRedux } from "../../actions/index";
 import { Search } from "react-feather";
 import { sendNotifications } from "../../firebase/fcmRestApi";
+import SteadFast from "./steadFast.png";
+import Pathao from "./pathao.png";
+import axios from "axios";
+import { ClipLoader } from "react-spinners";
+import loader from "sass-loader";
+const api_key = "xzxz8veesykaes09owbphuqbel5yx6cx";
+const secret_key = "uuvywmhr3amooqiyjnaf7l9v";
+const base_url = "https://portal.packzy.com/api/v1";
+
 export class Orders extends Component {
   constructor(props) {
     super(props);
@@ -40,6 +49,9 @@ export class Orders extends Component {
       status: "",
       warehouse: "",
       orderStatus: "",
+      courier: "",
+      note: "",
+      loader: false,
     };
   }
 
@@ -54,7 +66,7 @@ export class Orders extends Component {
     const orderStatus2 = nextProps.match.params.orderStatus;
     if (orderStatus !== orderStatus2) {
       const { getAllOrdersRedux } = this.props;
-      console.log(orderStatus);
+      console.log(orderStatus2);
       getAllOrdersRedux(orderStatus2);
     }
   };
@@ -214,6 +226,104 @@ export class Orders extends Component {
       status: "",
       warehouse: "",
       orderStatus: "",
+      courier: "",
+      note: "",
+    });
+  };
+  handleCourier = async () => {
+    const { orderObj } = this.state;
+
+    const create_order = `${base_url}/create_order`;
+    axios
+      .post(
+        create_order,
+        {
+          invoice: `${orderObj.id}`,
+          recipient_name: orderObj.currentUser
+            ? orderObj.currentUser.address.find(
+                (address) => address.defaultShipping
+              ).fullName
+            : orderObj.guest.address.find((address) => address.defaultShipping)
+                .fullName,
+          recipient_phone: orderObj.currentUser
+            ? orderObj.currentUser.address.find(
+                (address) => address.defaultShipping
+              ).mobileNo
+            : orderObj.guest.address.find((address) => address.defaultShipping)
+                .mobileNo,
+          recipient_address: orderObj.currentUser
+            ? `${
+                orderObj.currentUser.address.find(
+                  (address) => address.defaultShipping
+                ).address
+              },${
+                orderObj.currentUser.address.find(
+                  (address) => address.defaultShipping
+                ).district
+              },${
+                orderObj.currentUser.address.find(
+                  (address) => address.defaultShipping
+                ).division
+              }`
+            : `${
+                orderObj.guest.address.find(
+                  (address) => address.defaultShipping
+                ).address
+              },${
+                orderObj.guest.address.find(
+                  (address) => address.defaultShipping
+                ).district
+              },${
+                orderObj.guest.address.find(
+                  (address) => address.defaultShipping
+                ).division
+              }`,
+          cod_amount: parseInt(
+            orderObj.subTotal +
+              orderObj.deliveryCharge -
+              orderObj.discountApplied -
+              (orderObj.couponApplied ? orderObj.couponApplied.discount : 0)
+          ),
+          note: this.state.note,
+        }, // Request body (if needed)
+        {
+          headers: {
+            "Api-Key": api_key,
+            "Secret-Key": secret_key,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then(async (response) => {
+        await this.props.updateOrderRedux({
+          ...orderObj,
+          courier: response.data,
+        });
+        toast.success(
+          "Consignment has been created successfully at steadfast!"
+        );
+      })
+      .catch((error) => {
+        toast.error("Error creating consignment at steadfast.");
+      });
+    console.log("Handle submit is getting called!");
+
+    this.setState({
+      name: "",
+      quantity: "",
+      amount: "",
+      description: "",
+      orderObj: null,
+      loading: false,
+      imageUrl: "",
+      file: "",
+      shippingCost: "",
+      agentCost: "",
+      status: "",
+      warehouse: "",
+      orderStatus: "",
+      courier: "",
+      note: "",
     });
   };
   handleReceive = async () => {
@@ -430,17 +540,54 @@ export class Orders extends Component {
                     borderBottom: "1px solid gainsboro",
                   }}
                 >
-                  <h5>
-                    <i
-                      className="icofont-money"
-                      style={{
-                        fontSize: "130%",
-                        marginRight: "5px",
-                        color: "#00254c",
-                      }}
-                    ></i>
-                    {orderStatus}
-                  </h5>
+                  <div>
+                    <h5>
+                      <i
+                        className="icofont-money"
+                        style={{
+                          fontSize: "130%",
+                          marginRight: "5px",
+                          color: "#00254c",
+                        }}
+                      ></i>
+                      {orderStatus}
+                    </h5>
+                  </div>
+                  <div
+                    style={{
+                      background: "#00B795",
+                      color: "white",
+                      padding: 10,
+                      borderRadius: 10,
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      minWidth: 200,
+                      textAlign: "center",
+                    }}
+                    onClick={async () => {
+                      if (!this.state.balance) {
+                        let response = await axios.get(
+                          `${base_url}/get_balance`,
+                          {
+                            headers: {
+                              "Api-Key": api_key,
+                              "Secret-Key": secret_key,
+                              "Content-Type": "application/json",
+                            },
+                          }
+                        );
+                        if (response.data && response.data.current_balance) {
+                          this.setState({
+                            balance: response.data.current_balance,
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    {this.state.balance
+                      ? `Tk ${this.state.balance} `
+                      : "👆🏻 Steadfast Balance"}
+                  </div>
                   <li
                     style={{
                       border: "1px solid gainsboro",
@@ -484,9 +631,87 @@ export class Orders extends Component {
                     </form>
                   </li>
                 </div>
+
                 <div className="card-body">
+                  <div
+                    style={{
+                      background: "#00b795",
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: 13,
+                      padding: "10px 10px",
+                      borderRadius: 5,
+                      display: "inline-block",
+                      textAlign: "center",
+                      minWidth: 250,
+                    }}
+                    onClick={async () => {
+                      if (this.state.loader) {
+                        return;
+                      }
+                      this.setState({
+                        loader: true,
+                      });
+                      let notDeliveredOrders = orders.filter(
+                        (order) => order.orderStatus !== "Delivered"
+                      );
+                      let orderAwait = await notDeliveredOrders.map(
+                        async (order) => {
+                          if (
+                            order.courier &&
+                            order.courier.consignment &&
+                            order.courier.consignment.consignment_id
+                          ) {
+                            const response = await axios.get(
+                              `${base_url}/status_by_cid/${order.courier.consignment.consignment_id}`,
+                              {
+                                headers: {
+                                  "Api-Key": api_key,
+                                  "Secret-Key": secret_key,
+                                  "Content-Type": "application/json",
+                                },
+                              }
+                            );
+                            if (
+                              response.data &&
+                              response.data.delivery_status &&
+                              response.data.delivery_status == "delivered"
+                            ) {
+                              await this.props.updateOrderRedux({
+                                ...order,
+                                orderStatus: "Delivered",
+                                [`${"Delivered".toLowerCase()}Date`]: new Date()
+                                  .getTime()
+                                  .toString(),
+                                orderStatusScore: 5,
+                              });
+                            }
+                          }
+                        }
+                      );
+
+                      this.setState({
+                        loader: false,
+                      });
+                      toast.success("Successfully updated all order status");
+                    }}
+                  >
+                    {this.state.loader ? (
+                      <ClipLoader
+                        loading={this.state.loader}
+                        color="white"
+                        size={14}
+                      />
+                    ) : (
+                      "Update all Orders"
+                    )}
+                  </div>
                   <div className="clearfix"></div>
-                  <div id="basicScenario" className="product-physical">
+                  <div
+                    id="basicScenario"
+                    className="product-physical"
+                    style={{ marginTop: 20 }}
+                  >
                     <table className="table table-bordered table-striped table-hover">
                       <thead>
                         <tr>
@@ -571,6 +796,16 @@ export class Orders extends Component {
                             }}
                           >
                             Invoice
+                          </th>
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                            }}
+                          >
+                            Courier
                           </th>
 
                           <th
@@ -733,6 +968,177 @@ export class Orders extends Component {
                               >
                                 invoice
                               </a>
+                            </td>
+                            <td>
+                              {order.courier &&
+                              order.courier.consignment &&
+                              order.courier.consignment.consignment_id ? (
+                                <div
+                                  style={{
+                                    display: "inline",
+                                    padding: "2px 7px",
+                                    borderRadius: 4,
+                                    color: "white",
+                                    background: "green",
+                                    cursor: "pointer",
+                                    fontSize: 13,
+                                  }}
+                                  data-toggle="modal"
+                                  data-target="#courierModal"
+                                  onClick={async () => {
+                                    const response = await axios.get(
+                                      `${base_url}/status_by_cid/${order.courier.consignment.consignment_id}`,
+                                      {
+                                        headers: {
+                                          "Api-Key": api_key,
+                                          "Secret-Key": secret_key,
+                                          "Content-Type": "application/json",
+                                        },
+                                      }
+                                    );
+                                    console.log(response.data);
+                                    let description = "";
+                                    if (
+                                      response.data &&
+                                      response.data.delivery_status
+                                    ) {
+                                      if (
+                                        response.data.delivery_status ==
+                                        "pending"
+                                      ) {
+                                        description =
+                                          "Consignment is not delivered or cancelled yet.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "delivered_approval_pending"
+                                      ) {
+                                        description =
+                                          "Consignment is delivered but waiting for admin approval.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "partial_delivered_approval_pending"
+                                      ) {
+                                        description =
+                                          "Consignment is delivered partially and waiting for admin approval.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "cancelled_approval_pending"
+                                      ) {
+                                        description =
+                                          "Consignment is cancelled and waiting for admin approval.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "unknown_approval_pending"
+                                      ) {
+                                        description =
+                                          "Unknown Pending status. Need contact with the support team.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "delivered"
+                                      ) {
+                                        description =
+                                          "Consignment is delivered and balance added.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "partial_delivered"
+                                      ) {
+                                        description =
+                                          "Consignment is partially delivered and balance added.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "cancelled"
+                                      ) {
+                                        description =
+                                          "Consignment is cancelled and balance updated.";
+                                      } else if (
+                                        response.data.delivery_status == "hold"
+                                      ) {
+                                        description = "Consignment is held.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "in_review"
+                                      ) {
+                                        description =
+                                          "Order is placed and waiting to be reviewed.";
+                                      } else if (
+                                        response.data.delivery_status ==
+                                        "unknown"
+                                      ) {
+                                        description =
+                                          "Unknown status. Need contact with the support team.";
+                                      }
+                                    }
+                                    this.setState({
+                                      orderObj: {
+                                        ...order,
+                                        deliveryStatus:
+                                          response.data &&
+                                          response.data.delivery_status
+                                            ? response.data.delivery_status
+                                            : "",
+                                        deliveryStatusDescription: description,
+                                      },
+                                      orderStatus: order.orderStatus,
+                                      courier: "SteadFast",
+                                    });
+                                  }}
+                                >
+                                  track
+                                </div>
+                              ) : order && order.courier ? (
+                                <div
+                                  style={{
+                                    display: "inline",
+                                    padding: "2px 7px",
+                                    borderRadius: 4,
+                                    color: "white",
+                                    background: "red",
+                                    cursor: "pointer",
+                                    fontSize: 13,
+                                  }}
+                                >
+                                  Cancelled
+                                </div>
+                              ) : (
+                                <img
+                                  data-toggle="modal"
+                                  data-target="#courierModal"
+                                  onClick={() => {
+                                    this.setState({
+                                      orderObj: order,
+                                      orderStatus: order.orderStatus,
+                                      courier: "SteadFast",
+                                    });
+                                  }}
+                                  src={SteadFast}
+                                  style={{
+                                    width: "80%",
+                                    border: "2px solid #319f82",
+                                    borderRadius: 5,
+                                    cursor: "pointer",
+                                  }}
+                                />
+                              )}
+                              {/* <img
+                                data-toggle="modal"
+                                data-target="#courierModal"
+                                onClick={() => {
+                                  this.setState({
+                                    orderObj: order,
+                                    orderStatus: order.orderStatus,
+                                    courier: "Pathao",
+                                  });
+                                }}
+                                src={Pathao}
+                                style={{
+                                  width: "80%",
+                                  height: 35,
+                                  border: "2px solid #e83234",
+                                  borderRadius: 5,
+                                  cursor: "pointer",
+                                  marginTop: 5,
+                                }}
+                              /> */}
                             </td>
                             <td>
                               <div
@@ -900,6 +1306,414 @@ export class Orders extends Component {
                   Update
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="modal fade"
+          id="courierModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            role="document"
+            style={{ margin: "auto" }}
+          >
+            <div
+              className="modal-content"
+              style={{ top: 10, width: "100%", margin: "auto" }}
+            >
+              <div
+                className="modal-header"
+                style={{
+                  backgroundColor: "rgb(0, 37, 76)",
+                  paddingTop: 20,
+                  paddingBottom: 20,
+                }}
+              >
+                <div
+                  className="modal-title"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 17,
+                    color: "white",
+                  }}
+                  id="exampleModalLabel"
+                >
+                  {orderObj &&
+                  orderObj.courier &&
+                  orderObj.courier.status == 200
+                    ? "Consignment has been created"
+                    : orderObj &&
+                      orderObj.courier &&
+                      orderObj.courier.status != 200
+                    ? "An error occurred creating the consignment."
+                    : "Select Courier"}
+                </div>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  id="personal-info-close"
+                >
+                  <span aria-hidden="true" style={{ color: "white" }}>
+                    &times;
+                  </span>
+                </button>
+              </div>
+              {orderObj && (
+                <div className="modal-body">
+                  <div style={{ padding: "10px 15px" }}>
+                    <div className="form-group">
+                      {!orderObj.courier && (
+                        <div>
+                          Are you sure you want to deliver this order with{" "}
+                          {this.state.courier}?
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "flex-start",
+                          marginTop: 20,
+                        }}
+                      >
+                        <div style={{ fontWeight: "bold", marginTop: 10 }}>
+                          {" "}
+                          Selected Courier:{" "}
+                        </div>
+                        <img
+                          src={
+                            this.state.courier == "SteadFast"
+                              ? SteadFast
+                              : Pathao
+                          }
+                          style={{
+                            width: 100,
+                            marginLeft: 6,
+                            border:
+                              this.state.courier == "SteadFast"
+                                ? "2px solid #319f82"
+                                : "2px solid #e83234",
+                            borderRadius: 5,
+                          }}
+                        />
+                      </div>
+                      {!orderObj.courier && (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            marginTop: 20,
+                          }}
+                        >
+                          <div
+                            // className="form-group"
+                            style={{ minWidth: "100%" }}
+                          >
+                            <div style={{ fontWeight: "bold" }}>
+                              Write Delivery Instruction
+                            </div>
+                            <textarea
+                              name="note"
+                              value={this.state.note}
+                              style={{
+                                width: "100%",
+                                height: 200,
+                                border: "1px solid gainsboro",
+                                borderRadius: 5,
+                                textAlign: "left",
+                                marginTop: 5,
+                                padding: 10,
+                              }}
+                              type="search"
+                              placeholder="Wrtie delivery instruction to courier partner"
+                              onChange={(e) => {
+                                this.setState({
+                                  note: e.target.value,
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          marginTop: 30,
+                          fontWeight: "bold",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Courier Information
+                      </div>
+                      {orderObj &&
+                        orderObj.courier &&
+                        orderObj.courier.consignment && (
+                          <div style={{ marginTop: 5 }}>
+                            Created At:{" "}
+                            <span style={{ fontWeight: "bold" }}>
+                              {new Date(
+                                orderObj.courier.consignment.created_at
+                              ).toLocaleString("en-BD", {
+                                timeZone: "Asia/Dhaka",
+                              })}
+                            </span>
+                          </div>
+                        )}
+                      {orderObj &&
+                        orderObj.courier &&
+                        orderObj.courier.consignment && (
+                          <div style={{ marginTop: 5 }}>
+                            Consignment id:{" "}
+                            <span style={{ fontWeight: "bold" }}>
+                              {orderObj &&
+                                orderObj.courier.consignment.consignment_id}
+                            </span>
+                          </div>
+                        )}
+                      {orderObj &&
+                        orderObj.courier &&
+                        orderObj.courier.consignment && (
+                          <div style={{ marginTop: 5 }}>
+                            Tracking Code:{" "}
+                            <span style={{ fontWeight: "bold" }}>
+                              {orderObj &&
+                                orderObj.courier.consignment.tracking_code}
+                            </span>
+                          </div>
+                        )}
+                      <div style={{ marginTop: 5 }}>
+                        Invoice:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          {orderObj && orderObj.id}
+                        </span>
+                      </div>
+                      {orderObj && (
+                        <div className="wrap-info">
+                          {orderObj.currentUser ? (
+                            <ul>
+                              <li style={{ marginTop: 5 }}>
+                                Name :{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.currentUser.address.find(
+                                      (address) => address.defaultShipping
+                                    ).fullName
+                                  }
+                                </span>
+                              </li>{" "}
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                Mobile No :{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.currentUser.address.find(
+                                      (address) => address.defaultShipping
+                                    ).mobileNo
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                Address :{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  {
+                                    orderObj.currentUser.address.find(
+                                      (address) => address.defaultShipping
+                                    ).address
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                District :
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.currentUser.address.find(
+                                      (address) => address.defaultShipping
+                                    ).district
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                Division :
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.currentUser.address.find(
+                                      (address) => address.defaultShipping
+                                    ).division
+                                  }
+                                </span>
+                              </li>
+                            </ul>
+                          ) : (
+                            <ul>
+                              <li style={{ marginTop: 5 }}>
+                                Name :{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.guest.address.find(
+                                      (address) => address.defaultShipping
+                                    ).fullName
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                Mobile No :{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.guest.address.find(
+                                      (address) => address.defaultShipping
+                                    ).mobileNo
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                Address :{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  {
+                                    orderObj.guest.address.find(
+                                      (address) => address.defaultShipping
+                                    ).address
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                District :
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.guest.address.find(
+                                      (address) => address.defaultShipping
+                                    ).district
+                                  }
+                                </span>
+                              </li>
+                              <br />
+                              <li style={{ marginTop: 5 }}>
+                                Division :
+                                <span style={{ fontWeight: "bold" }}>
+                                  {" "}
+                                  {
+                                    orderObj.guest.address.find(
+                                      (address) => address.defaultShipping
+                                    ).division
+                                  }
+                                </span>
+                              </li>
+                            </ul>
+                          )}
+                        </div>
+                      )}
+                      <div style={{ marginTop: 5 }}>
+                        COD Amount:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          {orderObj.subTotal +
+                            orderObj.deliveryCharge -
+                            orderObj.discountApplied -
+                            (orderObj.couponApplied
+                              ? orderObj.couponApplied.discount
+                              : 0)}
+                          Tk
+                        </span>
+                      </div>
+                      <div style={{ marginTop: 5 }}>
+                        Note: <br />
+                        <span
+                          style={{
+                            fontSize: 12,
+                            marginTop: 2,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {this.state.note}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {orderObj &&
+                    orderObj.courier &&
+                    orderObj.courier.consignment && (
+                      <div style={{ marginLeft: 12 }}>
+                        <div style={{ fontWeight: "bold" }}>
+                          Tracking Details
+                        </div>
+                        <div style={{ marginTop: 5 }}>
+                          Delivery Status:{" "}
+                          <span
+                            style={{
+                              fontWeight: "bold",
+                              color: "white",
+                              background: "#00B795",
+                              borderRadius: 5,
+                              padding: "0px 10px",
+                            }}
+                          >
+                            {orderObj.deliveryStatus}
+                          </span>
+                        </div>
+                        <div style={{ marginTop: 5 }}>
+                          Status Details:{" "}
+                          <span style={{ fontWeight: "bold" }}>
+                            {orderObj.deliveryStatusDescription}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              )}
+
+              {orderObj && !orderObj.courier && (
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn "
+                    data-dismiss="modal"
+                    style={{
+                      backgroundColor: "red",
+                      color: "white",
+                      padding: 8,
+                      borderRadius: 5,
+                      fontWeight: "lighter",
+                    }}
+                  >
+                    No
+                  </button>
+                  <button
+                    type="button"
+                    className="btn "
+                    data-dismiss="modal"
+                    style={{
+                      backgroundColor: "darkgreen",
+                      color: "white",
+                      padding: 8,
+                      borderRadius: 5,
+                      fontWeight: "lighter",
+                    }}
+                    onClick={() => {
+                      this.handleCourier();
+                    }}
+                  >
+                    Yes
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
