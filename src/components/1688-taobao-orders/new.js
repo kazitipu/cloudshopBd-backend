@@ -52,6 +52,9 @@ export class Orders extends Component {
       courier: "",
       note: "",
       loader: false,
+      method: "",
+      amount: 0,
+      paymentStatus: "",
     };
   }
 
@@ -230,7 +233,7 @@ export class Orders extends Component {
       note: "",
     });
   };
-  handleCourier = async () => {
+  handleCourier = async (codAmount) => {
     const { orderObj } = this.state;
 
     const create_order = `${base_url}/create_order`;
@@ -278,12 +281,7 @@ export class Orders extends Component {
                   (address) => address.defaultShipping
                 ).division
               }`,
-          cod_amount: parseInt(
-            orderObj.subTotal +
-              orderObj.deliveryCharge -
-              orderObj.discountApplied -
-              (orderObj.couponApplied ? orderObj.couponApplied.discount : 0)
-          ),
+          cod_amount: codAmount,
           note: this.state.note,
         }, // Request body (if needed)
         {
@@ -451,6 +449,62 @@ export class Orders extends Component {
       }
     }
   };
+  handleSubmit2 = async (event, totalDue) => {
+    event.preventDefault();
+
+    if (this.state.amount == 0) {
+      alert("Paid amount must be more than 0");
+      return;
+    }
+    if (this.state.amount > totalDue) {
+      alert("Paid amount can't be more than due amount.");
+      return;
+    }
+    console.log(this.state);
+
+    await this.props.updateOrderRedux({
+      ...this.state.orderObj,
+      paymentStatus:
+        this.state.paymentStatus !== ""
+          ? this.state.paymentStatus
+          : this.state.orderObj.paymentStatus
+          ? this.state.orderObj.paymentStatus
+          : "purchaseLater",
+      payments:
+        this.state.orderObj.payments && this.state.orderObj.payments.length > 0
+          ? [
+              ...this.state.orderObj.payments,
+              {
+                amount: this.state.amount,
+                method: this.state.method,
+                receivedBy:
+                  this.props.currentAdmin && this.props.currentAdmin.name
+                    ? this.props.currentAdmin.name
+                    : "",
+                date: new Date().toLocaleDateString("en-GB"),
+              },
+            ]
+          : [
+              {
+                amount: this.state.amount,
+                method: this.state.method,
+                receivedBy:
+                  this.props.currentAdmin && this.props.currentAdmin.name
+                    ? this.props.currentAdmin.name
+                    : "",
+                date: new Date().toLocaleDateString("en-GB"),
+              },
+            ],
+    });
+    toast.success("successfully updated the payment");
+
+    this.setState({
+      method: "",
+      amount: "",
+      paymentStatus: "",
+    });
+    document.getElementById("close-button-for-payment-modal").click();
+  };
   getPrice3 = (product) => {
     if (product.selectedVariation.id) {
       if (product.selectedVariation.salePrice == 0) {
@@ -522,6 +576,22 @@ export class Orders extends Component {
       deliveryAddress = orderObj.currentUser.address.find(
         (address) => address.defaultShipping
       );
+    }
+
+    let totalPaid = 0;
+    if (orderObj && orderObj.payments && orderObj.payments.length > 0) {
+      orderObj.payments.map((payment) => {
+        totalPaid += parseInt(payment.amount);
+      });
+    }
+    let amountPayable = 0;
+    if (orderObj) {
+      amountPayable =
+        orderObj &&
+        orderObj.subTotal +
+          orderObj.deliveryCharge -
+          orderObj.discountApplied -
+          (orderObj.couponApplied ? orderObj.couponApplied.discount : 0);
     }
     return (
       <Fragment>
@@ -795,7 +865,7 @@ export class Orders extends Component {
                               backgroundColor: "#00254c",
                             }}
                           >
-                            Invoice
+                            Payment Status
                           </th>
                           <th
                             scope="col"
@@ -806,6 +876,16 @@ export class Orders extends Component {
                             }}
                           >
                             Courier
+                          </th>
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                            }}
+                          >
+                            Invoice
                           </th>
 
                           <th
@@ -896,6 +976,7 @@ export class Orders extends Component {
                                   cursor: "pointer",
                                   display: "inline-block",
                                   alignItems: "center",
+                                  fontSize: 13,
                                 }}
                               >
                                 View
@@ -947,27 +1028,46 @@ export class Orders extends Component {
                                   textAlign: "center",
                                   cursor: "pointer",
                                   display: "inline-block",
+                                  fontSize: 11,
                                 }}
                               >
                                 {order.orderStatus}
                               </div>
                             </td>
                             <td>
-                              <a
+                              <span
                                 style={{
+                                  padding: "1px 6px",
+                                  fontWeight: "bold",
                                   color: "white",
-                                  padding: "3px 10px",
                                   borderRadius: 5,
-                                  backgroundColor: "black",
+                                  background: order
+                                    ? order.paymentStatus == "Partially Paid"
+                                      ? "darkorange"
+                                      : order.paymentStatus == "Not Paid"
+                                      ? "red"
+                                      : order.paymentStatus == "Paid"
+                                      ? "green"
+                                      : order.paymentStatus == "purchaseLater"
+                                      ? "gray"
+                                      : order.paymentStatus == "pending"
+                                      ? "darkorange"
+                                      : "red"
+                                    : "red",
                                   textAlign: "center",
+                                  fontSize: 11,
                                   cursor: "pointer",
-                                  display: "inline-block",
                                 }}
-                                href={`/invoice/${order.id}`}
-                                target="_blank"
+                                data-toggle="modal"
+                                data-target="#paymentModal"
+                                onClick={() => {
+                                  this.setState({
+                                    orderObj: order,
+                                  });
+                                }}
                               >
-                                invoice
-                              </a>
+                                {(order && order.paymentStatus) || "Not Paid"}
+                              </span>
                             </td>
                             <td>
                               {order.courier &&
@@ -981,7 +1081,7 @@ export class Orders extends Component {
                                     color: "white",
                                     background: "green",
                                     cursor: "pointer",
-                                    fontSize: 13,
+                                    fontSize: 11,
                                   }}
                                   data-toggle="modal"
                                   data-target="#courierModal"
@@ -1140,6 +1240,25 @@ export class Orders extends Component {
                                 }}
                               /> */}
                             </td>
+                            <td>
+                              <a
+                                style={{
+                                  color: "white",
+                                  padding: "3px 10px",
+                                  borderRadius: 5,
+                                  backgroundColor: "black",
+                                  textAlign: "center",
+                                  cursor: "pointer",
+                                  display: "inline-block",
+                                  fontSize: 12,
+                                }}
+                                href={`/invoice/${order.id}`}
+                                target="_blank"
+                              >
+                                invoice
+                              </a>
+                            </td>
+
                             <td>
                               <div
                                 className="row"
@@ -1624,12 +1743,7 @@ export class Orders extends Component {
                       <div style={{ marginTop: 5 }}>
                         COD Amount:{" "}
                         <span style={{ fontWeight: "bold" }}>
-                          {orderObj.subTotal +
-                            orderObj.deliveryCharge -
-                            orderObj.discountApplied -
-                            (orderObj.couponApplied
-                              ? orderObj.couponApplied.discount
-                              : 0)}
+                          {amountPayable - totalPaid}
                           Tk
                         </span>
                       </div>
@@ -1707,13 +1821,465 @@ export class Orders extends Component {
                       fontWeight: "lighter",
                     }}
                     onClick={() => {
-                      this.handleCourier();
+                      this.handleCourier(amountPayable - totalPaid);
                     }}
                   >
                     Yes
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+        <div
+          className="modal fade"
+          id="paymentModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            role="document"
+            style={{ margin: "auto" }}
+          >
+            <div
+              className="modal-content"
+              style={{ top: 10, width: "100%", margin: "auto" }}
+            >
+              <div
+                className="modal-header"
+                style={{
+                  backgroundColor: "rgb(0, 37, 76)",
+                  paddingTop: 20,
+                  paddingBottom: 20,
+                }}
+              >
+                <div
+                  className="modal-title"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 17,
+                    color: "white",
+                  }}
+                  id="exampleModalLabel"
+                >
+                  Receive Payment
+                </div>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  id="personal-info-close"
+                >
+                  <span aria-hidden="true" style={{ color: "white" }}>
+                    &times;
+                  </span>
+                </button>
+              </div>
+              {orderObj && (
+                <div className="modal-body">
+                  <div
+                    className="row"
+                    style={{
+                      marginBottom: 10,
+                      borderBottom: "1px solid gainsboro",
+                    }}
+                  >
+                    <div className="col">
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                          color: "black",
+                        }}
+                      >
+                        Order Information
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Order Id:{" "}
+                        <span style={{ fontWeight: "lighter" }}>
+                          {" "}
+                          #{orderObj && orderObj.id}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Ordered at:{" "}
+                        <span style={{ fontWeight: "lighter" }}>
+                          {" "}
+                          {orderObj &&
+                            new Date(
+                              Number(orderObj.date)
+                            ).toLocaleDateString()}
+                          {"  "}
+                          {orderObj &&
+                            new Date(
+                              Number(orderObj.date)
+                            ).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Order Status:{" "}
+                        <span
+                          style={{
+                            padding: 10,
+                            fontWeight: "bold",
+                            paddingTop: 0,
+                            color: "white",
+                            padding: "3px 7px",
+                            borderRadius: 5,
+                            backgroundColor: orderObj
+                              ? orderObj.orderStatus == "Processing"
+                                ? "#0f0fd9"
+                                : orderObj.orderStatus == "Confirmed"
+                                ? "orange"
+                                : orderObj.orderStatus == "Packing"
+                                ? "darkorange"
+                                : orderObj.orderStatus == "Delivered"
+                                ? "green"
+                                : orderObj.orderStatus == "Cancelled"
+                                ? "red"
+                                : "white"
+                              : "white",
+                            textAlign: "center",
+                            fontSize: 12,
+                          }}
+                        >
+                          {orderObj && orderObj.orderStatus}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Subtotal:{" "}
+                        <span style={{ fontWeight: "lighter" }}>
+                          {" "}
+                          ৳{orderObj && orderObj.subTotal}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Delivery Charge:{" "}
+                        <span style={{ fontWeight: "lighter" }}>
+                          {" "}
+                          ৳ {(orderObj && orderObj.deliveryCharge) || "0"}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Discount Applied:{" "}
+                        <span style={{ fontWeight: "lighter" }}>
+                          {" "}
+                          ৳ {(orderObj && orderObj.discountApplied) || "0"}
+                        </span>
+                      </div>
+                      {orderObj && orderObj.couponApplied && (
+                        <div
+                          style={{
+                            padding: 10,
+                            fontWeight: "bold",
+                            paddingTop: 0,
+                          }}
+                        >
+                          Coupon Applied{" "}
+                          <span
+                            style={{
+                              color: "#ff8084",
+                              fontWeight: "bold",
+                              fontSize: 12,
+                            }}
+                          >
+                            {" "}
+                            ({orderObj.couponApplied.name})
+                          </span>
+                          :{" "}
+                          <span style={{ fontWeight: "lighter" }}>
+                            {" "}
+                            ৳{" "}
+                            {(orderObj && orderObj.couponApplied.discount) || 0}
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Amount Payable:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          ৳{" "}
+                          {orderObj &&
+                            orderObj.subTotal +
+                              orderObj.deliveryCharge -
+                              orderObj.discountApplied -
+                              (orderObj.couponApplied
+                                ? orderObj.couponApplied.discount
+                                : 0)}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                        }}
+                      >
+                        Total Paid:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          ৳ {totalPaid}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          padding: 10,
+                          fontWeight: "bold",
+                          paddingTop: 0,
+                          color: "red",
+                        }}
+                      >
+                        Total Due:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          ৳ {amountPayable - totalPaid}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col">
+                      <form
+                        onSubmit={(e) => {
+                          this.handleSubmit2(
+                            e,
+                            parseInt(amountPayable) - parseInt(totalPaid)
+                          );
+                        }}
+                        className="rounded-field mt-2"
+                      >
+                        <div className="form-row mb-2">
+                          <div className="col">
+                            <label
+                              style={{
+                                marginBottom: 0,
+                                fontSize: 13,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              Payment Method
+                            </label>
+
+                            <select
+                              title=""
+                              name="method"
+                              className="custom-select"
+                              aria-required="true"
+                              aria-invalid="false"
+                              onChange={this.handleChange}
+                              style={{ fontSize: ".8rem" }}
+                              value={this.state.method}
+                              required
+                            >
+                              <option value="">Select Method</option>
+                              <option value="Cash">Cash</option>
+                              <option value="Bkash">Bkash</option>
+                              <option value="Nagad">Nagad</option>
+                              <option value="Rocket">Rocket</option>
+                              <option value="City">City Bank</option>
+                            </select>
+                          </div>
+                          <div className="col">
+                            <label
+                              style={{
+                                marginBottom: 0,
+                                fontSize: 13,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              Paid amount
+                            </label>
+
+                            <input
+                              type="number"
+                              name="amount"
+                              className="form-control"
+                              placeholder="Enter amount"
+                              style={{ fontSize: "1rem" }}
+                              onChange={this.handleChange}
+                              value={this.state.amount}
+                              required
+                            />
+                          </div>
+                          <div className="col">
+                            <label
+                              style={{
+                                marginBottom: 0,
+                                fontSize: 13,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              Payment Status
+                            </label>
+
+                            <select
+                              title=""
+                              name="paymentStatus"
+                              className="custom-select"
+                              aria-required="true"
+                              aria-invalid="false"
+                              onChange={this.handleChange}
+                              style={{ fontSize: ".8rem" }}
+                              value={this.state.paymentStatus}
+                              required
+                            >
+                              <option value="">Select Payment Status</option>
+                              <option value="Partially Paid">
+                                Partially Paid
+                              </option>
+                              <option value="Paid">Full Paid</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="form-row">
+                          <div
+                            className="col pt-3"
+                            style={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <button
+                              type="submit"
+                              className="btn"
+                              style={{
+                                background: "rgb(0, 37, 76)",
+                                color: "white",
+                              }}
+                            >
+                              Update
+                              <i className="icofont-rounded-right"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  <div className="row">
+                    {orderObj &&
+                      orderObj.payments &&
+                      orderObj.payments.length > 0 && (
+                        <div className="col">
+                          <div
+                            className="row"
+                            style={{
+                              height: 1,
+                              width: "100%",
+                              background: "gainsboro",
+                              marginTop: 20,
+                              marginBottom: 20,
+                              marginRight: 0,
+                              marginLeft: 0,
+                            }}
+                          ></div>
+                          <div
+                            style={{
+                              paddingLeft: 0,
+                              color: "#18768f",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Previous Payments
+                          </div>
+                          <table className="table table-bordered table-striped table-hover">
+                            <thead
+                              style={{ background: "#18768f", color: "white" }}
+                            >
+                              <tr>
+                                <td style={{ fontWeight: "bold" }}>Date</td>
+                                <td style={{ fontWeight: "bold" }}>Method</td>
+                                <td style={{ fontWeight: "bold" }}>Amount</td>
+
+                                <td style={{ fontWeight: "bold" }}>
+                                  Approved by
+                                </td>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {orderObj.payments.map((payment) => (
+                                <tr>
+                                  <td>{payment.date}</td>
+                                  <td>{payment.method}</td>
+                                  <td>{payment.amount}Tk</td>
+                                  <td>{payment.receivedBy}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn "
+                  data-dismiss="modal"
+                  id="close-button-for-payment-modal"
+                  style={{
+                    backgroundColor: "darkgreen",
+                    color: "white",
+                    padding: 8,
+                    borderRadius: 5,
+                    fontWeight: "lighter",
+                  }}
+                  onClick={() => {
+                    this.setState({
+                      orderObj: null,
+                    });
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1847,6 +2413,7 @@ export class Orders extends Component {
                               : "white"
                             : "white",
                           textAlign: "center",
+                          fontSize: 12,
                         }}
                       >
                         {orderObj && orderObj.orderStatus}
@@ -1862,7 +2429,7 @@ export class Orders extends Component {
                       Subtotal:{" "}
                       <span style={{ fontWeight: "lighter" }}>
                         {" "}
-                        {orderObj && orderObj.subTotal}
+                        ৳{orderObj && orderObj.subTotal}
                       </span>
                     </div>
                     <div
@@ -1899,7 +2466,18 @@ export class Orders extends Component {
                           paddingTop: 0,
                         }}
                       >
-                        Coupon Applied {orderObj.couponApplied.name}:{" "}
+                        Coupon Applied{" "}
+                        <span
+                          style={{
+                            color: "#ff8084",
+                            fontWeight: "bold",
+                            fontSize: 12,
+                          }}
+                        >
+                          {" "}
+                          ({orderObj.couponApplied.name})
+                        </span>
+                        :{" "}
                         <span style={{ fontWeight: "lighter" }}>
                           {" "}
                           ৳ {(orderObj && orderObj.couponApplied.discount) || 0}
@@ -1915,14 +2493,7 @@ export class Orders extends Component {
                     >
                       Amount Payable:{" "}
                       <span style={{ fontWeight: "bold" }}>
-                        ৳{" "}
-                        {orderObj &&
-                          orderObj.subTotal +
-                            orderObj.deliveryCharge -
-                            orderObj.discountApplied -
-                            (orderObj.couponApplied
-                              ? orderObj.couponApplied.discount
-                              : 0)}
+                        ৳ {amountPayable}
                       </span>
                     </div>
                   </div>
