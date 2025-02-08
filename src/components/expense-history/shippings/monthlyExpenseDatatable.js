@@ -175,7 +175,7 @@ export class Datatable extends Component {
               style={{ cursor: "pointer" }}
               onClick={() => {
                 this.props.history.push(
-                  `/expense/buy-products/${row.original.month}`
+                  `/expense/shipping/${row.original.month}`
                 );
               }}
             >

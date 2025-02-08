@@ -171,7 +171,7 @@ export class DailyExpense extends Component {
                         <option value="SALARY">SALARY</option>
 
                         <option value="CNF">CNF</option>
-                        <option value="INVEST">INVEST</option>
+
                         <option value="FUND">FUND</option>
                         <option value="LOAN">LOAN</option>
                         <option value="REFUND">REFUND</option>
@@ -200,7 +200,7 @@ export class DailyExpense extends Component {
                         <option value="Product Request">Product Request</option>
                         <option value="Ship For Me">Ship For Me</option>
                         <option value="LOAN">LOAN</option>
-                        <option value="INVEST">INVEST</option>
+
                         <option value="OTHERS">OTHERS</option>
                         <option value="FUND">FUND</option>
                       </select>

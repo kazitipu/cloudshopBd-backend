@@ -52,8 +52,8 @@ export const MENUITEMSFORADMIN = [
         type: "link",
       },
       {
-        path: "/expense/agent-commision",
-        title: "Agent commision",
+        path: "/expense/buy-products",
+        title: "Buy Products",
         type: "link",
       },
       {
@@ -106,11 +106,7 @@ export const MENUITEMSFORADMIN = [
         title: "Monthly",
         type: "link",
       },
-      {
-        path: "/expense/cnf",
-        title: "CNF",
-        type: "link",
-      },
+
       {
         path: "/expense/office",
         title: "Office",
@@ -126,16 +122,6 @@ export const MENUITEMSFORADMIN = [
         title: "Refund",
         type: "link",
       },
-      {
-        path: "/expense/agent-commision",
-        title: "Agent commision",
-        type: "link",
-      },
-      {
-        path: "/expense/invest",
-        title: "Invest",
-        type: "link",
-      },
 
       {
         path: "/expense/daily-cost",
@@ -145,6 +131,21 @@ export const MENUITEMSFORADMIN = [
       {
         path: "/expense/lot-transport",
         title: "Lot Transport",
+        type: "link",
+      },
+      {
+        path: "/expense/shipping",
+        title: "Shipping",
+        type: "link",
+      },
+      {
+        path: "/expense/boosting",
+        title: "Boosting/Promotion",
+        type: "link",
+      },
+      {
+        path: "/expense/buy-products",
+        title: "Buy Products",
         type: "link",
       },
       {
@@ -165,19 +166,8 @@ export const MENUITEMSFORADMIN = [
         ],
       },
       {
-        path: "/expense/monthly-installment",
-        title: "Monthly Installment",
-        type: "link",
-      },
-
-      {
         path: "/expense/employee",
         title: "Employee",
-        type: "link",
-      },
-      {
-        path: "/expense/fund",
-        title: "Fund",
         type: "link",
       },
     ],
@@ -474,8 +464,8 @@ export const MENUITEMSFORAGENT = [
         type: "link",
       },
       {
-        path: "/expense/agent-commision",
-        title: "Agent commision",
+        path: "/expense/buy-products",
+        title: "Buy Products",
         type: "link",
       },
       {
@@ -528,11 +518,7 @@ export const MENUITEMSFORAGENT = [
         title: "Monthly",
         type: "link",
       },
-      {
-        path: "/expense/cnf",
-        title: "CNF",
-        type: "link",
-      },
+
       {
         path: "/expense/office",
         title: "Office",
@@ -548,16 +534,6 @@ export const MENUITEMSFORAGENT = [
         title: "Refund",
         type: "link",
       },
-      {
-        path: "/expense/agent-commision",
-        title: "Agent commision",
-        type: "link",
-      },
-      {
-        path: "/expense/invest",
-        title: "Invest",
-        type: "link",
-      },
 
       {
         path: "/expense/daily-cost",
@@ -567,6 +543,21 @@ export const MENUITEMSFORAGENT = [
       {
         path: "/expense/lot-transport",
         title: "Lot Transport",
+        type: "link",
+      },
+      {
+        path: "/expense/shipping",
+        title: "Shipping",
+        type: "link",
+      },
+      {
+        path: "/expense/boosting",
+        title: "Boosting/Promotion",
+        type: "link",
+      },
+      {
+        path: "/expense/buy-products",
+        title: "Buy Products",
         type: "link",
       },
       {
@@ -587,19 +578,8 @@ export const MENUITEMSFORAGENT = [
         ],
       },
       {
-        path: "/expense/monthly-installment",
-        title: "Monthly Installment",
-        type: "link",
-      },
-
-      {
         path: "/expense/employee",
         title: "Employee",
-        type: "link",
-      },
-      {
-        path: "/expense/fund",
-        title: "Fund",
         type: "link",
       },
     ],

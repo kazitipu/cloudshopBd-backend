@@ -2,14 +2,15 @@ import React, { Component, Fragment } from "react";
 import Breadcrumb from "../../common/breadcrumb";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
-import Datatable from "./monthlyExpenseDatatable";
-
-import { getAllMonthlyRedux } from "../../../actions/index";
+import Datatable from "./monthlyExpenseByMonthDatatable";
+import {
+  getSingleMonthlyRedux,
+  clearSingleMonthRedux,
+} from "../../../actions/index";
 import { Link } from "react-router-dom";
-
 import { connect } from "react-redux";
 
-export class MonthlyExpense extends Component {
+export class MonthlyExpenseByMonth extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -20,7 +21,10 @@ export class MonthlyExpense extends Component {
   }
 
   componentDidMount = async () => {
-    this.props.getAllMonthlyRedux("INVEST", "OFFICE INVESTMENT");
+    this.props.getSingleMonthlyRedux(this.props.match.params.month, "Boosting");
+  };
+  componentWillUnmount = () => {
+    this.props.clearSingleMonthRedux();
   };
 
   startToggleModal = async (employeeObj) => {
@@ -40,7 +44,7 @@ export class MonthlyExpense extends Component {
     console.log(this.props);
     return (
       <Fragment>
-        <Breadcrumb title="Monthly Investment" parent="expense-history" />
+        <Breadcrumb title="Boosting/Promotions" parent="Monthly expense" />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
           <div className="row">
@@ -56,14 +60,14 @@ export class MonthlyExpense extends Component {
                 >
                   <h5>
                     <i
-                      className="icofont-dollar"
+                      className="icofont-calendar"
                       style={{
                         fontSize: "130%",
                         marginRight: "5px",
                         color: "darkblue",
                       }}
                     ></i>
-                    INVESTMENT
+                    {this.props.match.params.month}
                   </h5>
                 </div>
                 <div className="card-body">
@@ -73,7 +77,7 @@ export class MonthlyExpense extends Component {
                       startToggleModal={this.startToggleModal}
                       history={this.props.history}
                       multiSelectOption={false}
-                      myData={this.props.allMonths}
+                      myData={this.props.allExpenses}
                       pageSize={50}
                       pagination={true}
                       class="-striped -highlight"
@@ -93,10 +97,11 @@ export class MonthlyExpense extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    allMonths: state.expenses.monthly,
+    allExpenses: state.expenses.singleMonth,
   };
 };
 
 export default connect(mapStateToProps, {
-  getAllMonthlyRedux,
-})(MonthlyExpense);
+  getSingleMonthlyRedux,
+  clearSingleMonthRedux,
+})(MonthlyExpenseByMonth);

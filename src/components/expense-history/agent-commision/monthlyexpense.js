@@ -20,7 +20,7 @@ export class MonthlyExpense extends Component {
   }
 
   componentDidMount = async () => {
-    this.props.getAllMonthlyRedux("AGENT COMMISION", "COMMISION PURPOSE");
+    this.props.getAllMonthlyRedux("BUY PRODUCTS");
   };
 
   startToggleModal = async (employeeObj) => {

@@ -114,7 +114,7 @@ export class Customers extends Component {
                         }}
                       >
                         {" "}
-                        Total Paicart Debt
+                        Total CloudshopBD Debt
                       </span>
                       <h3 className="mb-0">
                         <CountUp className="counter" end={totalAlgDue} />
@@ -150,7 +150,7 @@ export class Customers extends Component {
                 onClick={(e) => this.clickActive(e)}
                 style={{ fontSize: 25 }}
               >
-                Paicart Debt
+                CloudshopBD Debt
               </Tab>
             </TabList>
             <TabPanel>
@@ -217,7 +217,7 @@ export class Customers extends Component {
                             color: "darkblue",
                           }}
                         ></i>
-                        Paicart Debt
+                        CloudShopBD Debt
                       </h5>
                     </div>
                     <div className="card-body">

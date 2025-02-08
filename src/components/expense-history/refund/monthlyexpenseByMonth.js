@@ -103,9 +103,10 @@ export class MonthlyExpenseByMonth extends Component {
                       value={this.state.filter}
                     >
                       <option value="">Filter by category </option>
-                      <option value="">All</option>
-                      <option value="1688 Orders">1688 Orders</option>
-                      <option value="Product Request">Product Request</option>
+                      <option value="">All </option>
+                      <option value="LOAN">LOAN</option>
+                      <option value="OTHERS">OTHERS</option>
+                      <option value="ORDERS">ORDERS</option>
                     </select>
                   </div>
                 </div>

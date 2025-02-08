@@ -3,7 +3,6 @@ import Breadcrumb from "../../common/breadcrumb";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import Datatable from "./monthlyExpenseByMonthDatatable";
-
 import {
   getSingleMonthlyRedux,
   clearSingleMonthRedux,
@@ -25,8 +24,7 @@ export class MonthlyExpenseByMonth extends Component {
   componentDidMount = async () => {
     this.props.getSingleMonthlyRedux(
       this.props.match.params.month,
-      "AGENT COMMISION",
-      "COMMISION PURPOSE"
+      "BUY PRODUCTS"
     );
   };
   componentWillUnmount = () => {
@@ -50,7 +48,7 @@ export class MonthlyExpenseByMonth extends Component {
     console.log(this.props);
     return (
       <Fragment>
-        <Breadcrumb title="Daily Office Cost" parent="Monthly expense" />
+        <Breadcrumb title="Buy Products" parent="Monthly expense" />
         {/* <!-- Container-fluid starts--> */}
         <div className="container-fluid">
           <div className="row">

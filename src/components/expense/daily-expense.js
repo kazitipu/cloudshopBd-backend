@@ -203,7 +203,6 @@ export class DailyExpense extends Component {
     if (
       category === "DAILY COST" ||
       category === "REFUND" ||
-      category === "AGENT COMMISION" ||
       category === "LOT TRANSPORT"
     ) {
       return (
@@ -269,82 +268,7 @@ export class DailyExpense extends Component {
           </select>
         </div>
       );
-    } else if (category === "PARTNER PAYMENT") {
-      return (
-        <div className="col">
-          <label style={{ marginBottom: 5 }}>PARTNER PAYMENT</label>
-          <select
-            title="Please choose a package"
-            required
-            name="subCategory"
-            className="custom-select"
-            aria-required="true"
-            aria-invalid="false"
-            onChange={this.handleChange}
-            value={this.state.subCategory}
-          >
-            <option value="">SELECT PARTNER</option>
-            <option value="ISMAIL HOSSAIN NIBIR">ISMAIL HOSSAIN NIBIR</option>
-            <option value="AHMADULLAH TIPU">AHMADULLAH TIPU</option>
-          </select>
-        </div>
-      );
-    } else if (category === "CNF") {
-      return (
-        <div className="col">
-          <label style={{ marginBottom: 5 }}>CNF</label>
-          <select
-            title="Please choose a package"
-            required
-            name="subCategory"
-            className="custom-select"
-            aria-required="true"
-            aria-invalid="false"
-            onChange={this.handleChange}
-            value={this.state.subCategory}
-          >
-            <option value="">SELECT CNF</option>
-            {allCnfs.map((cnf) => (
-              <option value={cnf.name}>
-                {cnf.name}-{cnf.address}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    } else if (category === "INVEST") {
-      return (
-        <div className="col">
-          <label style={{ marginBottom: 5 }}>INVEST</label>
-          <select
-            title="Please choose a package"
-            name="subCategory"
-            required
-            className="custom-select"
-            aria-required="true"
-            aria-invalid="false"
-          >
-            <option value="OFFICE INVESTMENT">OFFICE INVESTMENT</option>
-          </select>
-        </div>
-      );
-    } else if (category === "FUND") {
-      return (
-        <div className="col">
-          <label style={{ marginBottom: 5 }}>FUND</label>
-          <select
-            title="Please choose a package"
-            name="subCategory"
-            required
-            className="custom-select"
-            aria-required="true"
-            aria-invalid="false"
-          >
-            <option value="OFFICE FUND">OFFICE FUND</option>
-          </select>
-        </div>
-      );
-    } else if (category === "LOAN" || category === "MONTHLY INSTALLMENT") {
+    } else if (category === "LOAN") {
       return (
         <div className="col">
           <label style={{ marginBottom: 5 }}>{category}</label>
@@ -392,6 +316,75 @@ export class DailyExpense extends Component {
             name="subCategory"
             className="form-control"
             placeholder="ENTER SUB CATEGORY"
+            onChange={this.handleChange}
+            value={this.state.subCategory}
+            required
+          />
+        </div>
+      );
+    } else if (category === "Boosting") {
+      return (
+        <div className="col">
+          <label
+            style={{
+              marginBottom: 5,
+            }}
+          >
+            SUB CATEGORY
+          </label>
+
+          <input
+            style={{ padding: 18 }}
+            type="text"
+            name="subCategory"
+            className="form-control"
+            placeholder="ENTER SUB CATEGORY"
+            onChange={this.handleChange}
+            value={this.state.subCategory}
+            required
+          />
+        </div>
+      );
+    } else if (category === "BUY PRODUCTS") {
+      return (
+        <div className="col">
+          <label
+            style={{
+              marginBottom: 5,
+            }}
+          >
+            SUB CATEGORY
+          </label>
+
+          <input
+            style={{ padding: 18 }}
+            type="text"
+            name="subCategory"
+            className="form-control"
+            placeholder="ENTER PRODUCT NAME"
+            onChange={this.handleChange}
+            value={this.state.subCategory}
+            required
+          />
+        </div>
+      );
+    } else if (category === "SHIPPING") {
+      return (
+        <div className="col">
+          <label
+            style={{
+              marginBottom: 5,
+            }}
+          >
+            SUB CATEGORY
+          </label>
+
+          <input
+            style={{ padding: 18 }}
+            type="text"
+            name="subCategory"
+            className="form-control"
+            placeholder="ENTER LOT NUMBER"
             onChange={this.handleChange}
             value={this.state.subCategory}
             required
@@ -453,8 +446,6 @@ export class DailyExpense extends Component {
     }
     if (this.state.category === "DAILY COST") {
       subCategory = "DAILY OFFICE COST";
-    } else if (this.state.category === "INVEST") {
-      subCategory = "OFFICE INVESTMENT";
     } else if (this.state.category === "FUND") {
       subCategory = "OFFICE FUND";
     } else if (this.state.category === "REFUND") {
@@ -510,9 +501,7 @@ export class DailyExpense extends Component {
     if (this.state.category === "FUND") {
       subCategory = "OFFICE FUND";
     }
-    if (this.state.category === "INVEST") {
-      subCategory = "OFFICE INVESTMENT";
-    }
+
     if (!subCategory) {
       alert("please choose a subcategory.");
       return;
@@ -874,27 +863,20 @@ export class DailyExpense extends Component {
                                   value={this.state.category}
                                 >
                                   <option value="">SELECT CATEGORY </option>
-                                  <option value="DAILY COST">
-                                    DAILY COST (BD)
-                                  </option>
-                                  <option value="OFFICE">
-                                    OFFICE (BD,CN,IN)
-                                  </option>
+                                  <option value="DAILY COST">DAILY COST</option>
+                                  <option value="OFFICE">OFFICE</option>
                                   <option value="SALARY">SALARY</option>
-
-                                  <option value="CNF">CNF</option>
-                                  <option value="INVEST">INVEST</option>
-                                  <option value="FUND">FUND</option>
                                   <option value="LOAN">LOAN</option>
-
-                                  <option value="AGENT COMMISION">
-                                    AGENT COMMISION
+                                  <option value="SHIPPING">SHIPPING</option>
+                                  <option value="Boosting">
+                                    BOOSTING/PROMOTION
                                   </option>
-                                  <option value="MONTHLY INSTALLMENT">
-                                    MONTHLY INSTALLMENT
-                                  </option>
+                                  <option value="REFUND">REFUND</option>
                                   <option value="LOT TRANSPORT">
-                                    LOT TRANSPORT
+                                    TRANSPORT
+                                  </option>
+                                  <option value="BUY PRODUCTS">
+                                    BUY PRODUCTS
                                   </option>
                                 </select>
                               </div>
@@ -1049,21 +1031,15 @@ export class DailyExpense extends Component {
                         >
                           <option value="">Filter by category </option>
                           <option value="">All</option>
-                          <option value="DAILY COST">DAILY COST (BD)</option>
-                          <option value="OFFICE">OFFICE (BD,CN,IN)</option>
+                          <option value="DAILY COST">DAILY COST</option>
+                          <option value="OFFICE">OFFICE</option>
                           <option value="SALARY">SALARY</option>
-                          <option value="CNF">CNF</option>
-                          <option value="INVEST">INVEST</option>
-                          <option value="FUND">FUND</option>
                           <option value="LOAN">LOAN</option>
+                          <option value="SHIPPING">SHIPPING</option>
+                          <option value="Boosting">BOOSTING/PROMOTION</option>
                           <option value="REFUND">REFUND</option>
-                          <option value="AGENT COMMISION">
-                            AGENT COMMISION
-                          </option>
-                          <option value="MONTHLY INSTALLMENT">
-                            MONTHLY INSTALLMENT
-                          </option>
-                          <option value="LOT TRANSPORT">LOT TRANSPORT</option>
+                          <option value="LOT TRANSPORT">TRANSPORT</option>
+                          <option value="BUY PRODUCTS">BUY PRODUCTS</option>
                         </select>
                       </div>
                     </div>
@@ -1261,9 +1237,8 @@ export class DailyExpense extends Component {
                                 >
                                   <option value="">SELECT CATEGORY </option>
                                   <option value="LOAN">LOAN</option>
-                                  <option value="INVEST">INVEST</option>
+
                                   <option value="OTHERS">OTHERS</option>
-                                  <option value="FUND">FUND</option>
                                 </select>
                               </div>
 
@@ -1401,15 +1376,9 @@ export class DailyExpense extends Component {
                         >
                           <option value="">Filter by category </option>
                           <option value="">All </option>
-                          <option value="1688 Order">1688 Order</option>
-                          <option value="Product Request">
-                            Product Request{" "}
-                          </option>
-                          <option value="Ship For Me">Ship For Me</option>
                           <option value="LOAN">LOAN</option>
-                          <option value="INVEST">INVEST</option>
                           <option value="OTHERS">OTHERS</option>
-                          <option value="FUND">FUND</option>
+                          <option value="ORDERS">ORDERS</option>
                         </select>
                       </div>
                     </div>

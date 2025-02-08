@@ -65,7 +65,7 @@ export class Fund extends Component {
                         color: "#ff8084",
                       }}
                     ></i>
-                    Paicart Fund
+                    CloudshopBD Fund
                   </h5>
                 </div>
                 <div className="card-body">

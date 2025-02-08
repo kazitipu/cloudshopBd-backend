@@ -44,9 +44,11 @@ export class Datatable extends Component {
 
     if (myData.length > 0) {
       const newData = [];
-      myData.forEach((expense) => {
+      myData.forEach((expense, index) => {
         newData.push({
-          month: expense.month,
+          "SL No": index + 1,
+          date: expense.date,
+          note: expense.note,
           Total: `${expense.amount}Tk`,
         });
       });
@@ -90,9 +92,11 @@ export class Datatable extends Component {
     console.log(myData);
     const newData = [];
     if (myData.length > 0) {
-      myData.forEach((expense) => {
+      myData.forEach((expense, index) => {
         newData.push({
-          month: expense.month,
+          "SL No": index + 1,
+          date: expense.date,
+          note: expense.note,
           Total: `${expense.amount}Tk`,
         });
       });
@@ -165,37 +169,6 @@ export class Datatable extends Component {
         },
       });
     } else {
-      columns.push({
-        Header: <b>Inspect</b>,
-        id: "delete",
-        accessor: (str) => "delete",
-        Cell: (row) => (
-          <div>
-            <span
-              style={{ cursor: "pointer" }}
-              onClick={() => {
-                this.props.history.push(
-                  `/expense/buy-products/${row.original.month}`
-                );
-              }}
-            >
-              <i
-                className="fa fa-eye"
-                style={{
-                  width: 35,
-                  fontSize: 20,
-                  padding: 11,
-                  color: "black",
-                }}
-              ></i>
-            </span>
-          </div>
-        ),
-        style: {
-          textAlign: "center",
-        },
-        sortable: false,
-      });
     }
 
     return (

@@ -166,20 +166,15 @@ export class DailyExpense extends Component {
                       >
                         <option value="">Filter by category </option>
                         <option value="">All</option>
-                        <option value="DAILY COST">DAILY COST (BD)</option>
-                        <option value="OFFICE">OFFICE (BD,CN,IN)</option>
+                        <option value="DAILY COST">DAILY COST</option>
+                        <option value="OFFICE">OFFICE</option>
                         <option value="SALARY">SALARY</option>
-
-                        <option value="CNF">CNF</option>
-                        <option value="INVEST">INVEST</option>
-                        <option value="FUND">FUND</option>
                         <option value="LOAN">LOAN</option>
+                        <option value="SHIPPING">SHIPPING</option>
+                        <option value="Boosting">BOOSTING/PROMOTION</option>
                         <option value="REFUND">REFUND</option>
-                        <option value="AGENT COMMISION">AGENT COMMISION</option>
-                        <option value="MONTHLY INSTALLMENT">
-                          MONTHLY INSTALLMENT
-                        </option>
-                        <option value="LOT TRANSPORT">LOT TRANSPORT</option>
+                        <option value="LOT TRANSPORT">TRANSPORT</option>
+                        <option value="BUY PRODUCTS">BUY PRODUCTS</option>
                       </select>
                     </div>
                   ) : (
@@ -196,13 +191,9 @@ export class DailyExpense extends Component {
                       >
                         <option value="">Filter by category </option>
                         <option value="">All </option>
-                        <option value="1688 Order">1688 Order</option>
-                        <option value="Product Request">Product Request</option>
-                        <option value="Ship For Me">Ship For Me</option>
                         <option value="LOAN">LOAN</option>
-                        <option value="INVEST">INVEST</option>
                         <option value="OTHERS">OTHERS</option>
-                        <option value="FUND">FUND</option>
+                        <option value="ORDERS">ORDERS</option>
                       </select>
                     </div>
                   )}

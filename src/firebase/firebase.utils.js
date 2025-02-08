@@ -2552,36 +2552,31 @@ export const getSingleBrandProducts = async (brandId, startAfter) => {
 };
 
 export const getAllMonthly = async (category, subCategory) => {
-  if (category == "REFUND") {
-    const expensesCollectionRef = firestore
+  let expensesCollectionRef = null;
+  if (
+    category == "BUY PRODUCTS" ||
+    category == "Boosting" ||
+    category == "SHIPPING"
+  ) {
+    expensesCollectionRef = firestore
       .collection(`categoryMonthlyExpense`)
       .where("category", "==", category);
-
-    try {
-      const expenses = await expensesCollectionRef.get();
-      const expensesArray = [];
-      expenses.forEach((doc) => {
-        expensesArray.push(doc.data());
-      });
-      return expensesArray;
-    } catch (error) {
-      alert(error);
-    }
   } else {
-    const expensesCollectionRef = firestore
+    expensesCollectionRef = firestore
       .collection(`categoryMonthlyExpense`)
       .where("category", "==", category)
       .where("subCategory", "==", subCategory);
-    try {
-      const expenses = await expensesCollectionRef.get();
-      const expensesArray = [];
-      expenses.forEach((doc) => {
-        expensesArray.push(doc.data());
-      });
-      return expensesArray;
-    } catch (error) {
-      alert(error);
-    }
+  }
+
+  try {
+    const expenses = await expensesCollectionRef.get();
+    const expensesArray = [];
+    expenses.forEach((doc) => {
+      expensesArray.push(doc.data());
+    });
+    return expensesArray;
+  } catch (error) {
+    alert(error);
   }
 };
 
@@ -2644,7 +2639,12 @@ export const getSingleMonthly = async (month, category, subCategory) => {
     } catch (error) {
       alert(error);
     }
-  } else if (category == "REFUND") {
+  } else if (
+    category == "REFUND" ||
+    category == "BUY PRODUCTS" ||
+    category == "Boosting" ||
+    category == "SHIPPING"
+  ) {
     const expensesCollectionRef = firestore
       .collection("dailyExpenses")
       .where("month", "==", month)

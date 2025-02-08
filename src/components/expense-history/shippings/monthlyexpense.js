@@ -3,7 +3,7 @@ import Breadcrumb from "../../common/breadcrumb";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import Datatable from "./monthlyExpenseDatatable";
-import { Tabs, TabList, TabPanel, Tab } from "react-tabs";
+
 import { getAllMonthlyRedux } from "../../../actions/index";
 import { Link } from "react-router-dom";
 
@@ -16,12 +16,11 @@ export class MonthlyExpense extends Component {
       open: false,
       toggleModal: true,
       employee: null,
-      category: "1688-orders",
     };
   }
 
   componentDidMount = async () => {
-    this.props.getAllMonthlyRedux("REFUND", "REFUND PURPOSE");
+    this.props.getAllMonthlyRedux("SHIPPING");
   };
 
   startToggleModal = async (employeeObj) => {
@@ -35,20 +34,8 @@ export class MonthlyExpense extends Component {
     }
   };
 
-  clickActive = (event, category) => {
-    document.querySelector(".nav-link").classList.remove("show");
-    event.target.classList.add("show");
-    this.setState({
-      category: category,
-      subCategory: "",
-      note: "",
-      amount: "",
-    });
-  };
-
   render() {
     const { open } = this.state;
-    let months = this.props.allMonths;
 
     console.log(this.props);
     return (
@@ -76,7 +63,7 @@ export class MonthlyExpense extends Component {
                         color: "darkblue",
                       }}
                     ></i>
-                    Refunds
+                    Shipping cost
                   </h5>
                 </div>
                 <div className="card-body">
@@ -86,7 +73,7 @@ export class MonthlyExpense extends Component {
                       startToggleModal={this.startToggleModal}
                       history={this.props.history}
                       multiSelectOption={false}
-                      myData={months}
+                      myData={this.props.allMonths}
                       pageSize={50}
                       pagination={true}
                       class="-striped -highlight"

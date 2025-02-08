@@ -85,6 +85,10 @@ import Refunds from "./components/expense-history/refund/monthlyexpenseByMonth";
 import RefundsMonth from "./components/expense-history/refund/monthlyexpense";
 import CommisionMonth from "./components/expense-history/agent-commision/monthlyexpense";
 import Commisions from "./components/expense-history/agent-commision/monthlyexpenseByMonth";
+import BoostingMonth from "./components/expense-history/boostings/monthlyexpense";
+import Boostings from "./components/expense-history/boostings/monthlyexpenseByMonth";
+import ShippingMonth from "./components/expense-history/shippings/monthlyexpense";
+import Shippings from "./components/expense-history/shippings/monthlyexpenseByMonth";
 import LotTransportMonth from "./components/expense-history/lot-transport/monthlyexpense";
 import OfficeCostsLotTransport from "./components/expense-history/lot-transport/monthlyexpenseByMonth";
 import Loans from "./components/expense-history/loan/monthlyexpense";
@@ -102,8 +106,7 @@ import ExpenseByDay from "./components/expense-history/approve-expense/daily-exp
 import Cnf from "./components/expense-history/cnf/cnf";
 import CnfExpenses from "./components/expense-history/cnf/monthlyexpenseByMonth";
 import CnfMonth from "./components/expense-history/cnf/monthlyexpense";
-import InvestMonth from "./components/expense-history/invest/monthlyexpense";
-import Invests from "./components/expense-history/invest/monthlyexpenseByMonth";
+
 import OfficeCostMonth from "./components/expense-history/daily-cost/monthlyexpense";
 import OfficeCosts from "./components/expense-history/daily-cost/monthlyexpenseByMonth";
 import Employee from "./components/expense-history/employee/employee";
@@ -498,14 +501,36 @@ class Root extends Component {
                 />
                 <Route
                   exact
-                  path={`${process.env.PUBLIC_URL}/expense/agent-commision`}
+                  path={`${process.env.PUBLIC_URL}/expense/buy-products`}
                   component={CommisionMonth}
                 />
 
                 <Route
                   exact
-                  path={`${process.env.PUBLIC_URL}/expense/agent-commision/:month`}
+                  path={`${process.env.PUBLIC_URL}/expense/buy-products/:month`}
                   component={Commisions}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/boosting`}
+                  component={BoostingMonth}
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/boosting/:month`}
+                  component={Boostings}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/shipping`}
+                  component={ShippingMonth}
+                />
+
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/expense/shipping/:month`}
+                  component={Shippings}
                 />
                 <Route
                   exact
@@ -598,16 +623,7 @@ class Root extends Component {
                   path={`${process.env.PUBLIC_URL}/expenses/cnf/:month`}
                   component={CnfMonth}
                 />
-                <Route
-                  exact
-                  path={`${process.env.PUBLIC_URL}/expense/invest`}
-                  component={InvestMonth}
-                />
-                <Route
-                  exact
-                  path={`${process.env.PUBLIC_URL}/expense/invest/:month`}
-                  component={Invests}
-                />
+
                 <Route
                   exact
                   path={`${process.env.PUBLIC_URL}/expense/daily-cost`}
