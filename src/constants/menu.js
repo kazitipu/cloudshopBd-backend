@@ -41,6 +41,13 @@ export const MENUITEMSFORADMIN = [
         title: "History",
         type: "link",
       },
+
+      {
+        path: "/expense/office",
+        title: "Office",
+        type: "link",
+      },
+
       {
         path: "/expense/salary",
         title: "Salary",
@@ -52,8 +59,8 @@ export const MENUITEMSFORADMIN = [
         type: "link",
       },
       {
-        path: "/expense/buy-products",
-        title: "Buy Products",
+        path: "/expense/daily-cost",
+        title: "Daily Cost",
         type: "link",
       },
       {
@@ -61,6 +68,22 @@ export const MENUITEMSFORADMIN = [
         title: "Lot Transport",
         type: "link",
       },
+      {
+        path: "/expense/shipping",
+        title: "Shipping",
+        type: "link",
+      },
+      {
+        path: "/expense/boosting",
+        title: "Boosting/Promotion",
+        type: "link",
+      },
+      {
+        path: "/expense/buy-products",
+        title: "Buy Products",
+        type: "link",
+      },
+
       {
         title: "Loans",
         type: "sub",
@@ -79,13 +102,13 @@ export const MENUITEMSFORADMIN = [
         ],
       },
       {
-        path: "/expense/office",
-        title: "Office",
+        path: "/expense/order",
+        title: "All Sells",
         type: "link",
       },
       {
-        path: "/expense/monthly-installment",
-        title: "Monthly Installment",
+        path: "/expense/employee",
+        title: "Employee",
         type: "link",
       },
     ],
@@ -164,6 +187,11 @@ export const MENUITEMSFORADMIN = [
             path: "/expense/loans-by-customers",
           },
         ],
+      },
+      {
+        path: "/expense/order",
+        title: "All Sells",
+        type: "link",
       },
       {
         path: "/expense/employee",
@@ -453,6 +481,13 @@ export const MENUITEMSFORAGENT = [
         title: "History",
         type: "link",
       },
+
+      {
+        path: "/expense/office",
+        title: "Office",
+        type: "link",
+      },
+
       {
         path: "/expense/salary",
         title: "Salary",
@@ -464,8 +499,8 @@ export const MENUITEMSFORAGENT = [
         type: "link",
       },
       {
-        path: "/expense/buy-products",
-        title: "Buy Products",
+        path: "/expense/daily-cost",
+        title: "Daily Cost",
         type: "link",
       },
       {
@@ -473,6 +508,22 @@ export const MENUITEMSFORAGENT = [
         title: "Lot Transport",
         type: "link",
       },
+      {
+        path: "/expense/shipping",
+        title: "Shipping",
+        type: "link",
+      },
+      {
+        path: "/expense/boosting",
+        title: "Boosting/Promotion",
+        type: "link",
+      },
+      {
+        path: "/expense/buy-products",
+        title: "Buy Products",
+        type: "link",
+      },
+
       {
         title: "Loans",
         type: "sub",
@@ -491,13 +542,13 @@ export const MENUITEMSFORAGENT = [
         ],
       },
       {
-        path: "/expense/office",
-        title: "Office",
+        path: "/expense/order",
+        title: "All Sells",
         type: "link",
       },
       {
-        path: "/expense/monthly-installment",
-        title: "Monthly Installment",
+        path: "/expense/employee",
+        title: "Employee",
         type: "link",
       },
     ],
@@ -576,6 +627,11 @@ export const MENUITEMSFORAGENT = [
             path: "/expense/loans-by-customers",
           },
         ],
+      },
+      {
+        path: "/expense/order",
+        title: "All Sells",
+        type: "link",
       },
       {
         path: "/expense/employee",

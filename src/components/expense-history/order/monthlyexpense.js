@@ -3,10 +3,8 @@ import Breadcrumb from "../../common/breadcrumb";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import Datatable from "./monthlyExpenseDatatable";
-
 import { getAllMonthlyRedux } from "../../../actions/index";
 import { Link } from "react-router-dom";
-
 import { connect } from "react-redux";
 
 export class MonthlyExpense extends Component {
@@ -20,7 +18,7 @@ export class MonthlyExpense extends Component {
   }
 
   componentDidMount = async () => {
-    this.props.getAllMonthlyRedux("BUY PRODUCTS");
+    this.props.getAllMonthlyRedux("ORDERS");
   };
 
   startToggleModal = async (employeeObj) => {
@@ -63,7 +61,7 @@ export class MonthlyExpense extends Component {
                         color: "darkblue",
                       }}
                     ></i>
-                    Buy Products
+                    All Sell
                   </h5>
                 </div>
                 <div className="card-body">

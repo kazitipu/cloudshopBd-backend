@@ -2556,7 +2556,8 @@ export const getAllMonthly = async (category, subCategory) => {
   if (
     category == "BUY PRODUCTS" ||
     category == "Boosting" ||
-    category == "SHIPPING"
+    category == "SHIPPING" ||
+    "ORDERS"
   ) {
     expensesCollectionRef = firestore
       .collection(`categoryMonthlyExpense`)
@@ -2647,6 +2648,22 @@ export const getSingleMonthly = async (month, category, subCategory) => {
   ) {
     const expensesCollectionRef = firestore
       .collection("dailyExpenses")
+      .where("month", "==", month)
+      .where("category", "==", category);
+
+    try {
+      const expenses = await expensesCollectionRef.get();
+      const expensesArray = [];
+      expenses.forEach((doc) => {
+        expensesArray.push(doc.data());
+      });
+      return expensesArray;
+    } catch (error) {
+      alert(error);
+    }
+  } else if (category == "ORDERS") {
+    const expensesCollectionRef = firestore
+      .collection("dailyCashIn")
       .where("month", "==", month)
       .where("category", "==", category);
 
@@ -3262,18 +3279,18 @@ export const approveCashIn = async (expense) => {
         uid: expenseSnapShot.data().uid,
       });
     }
-  } else if (expenseSnapShot.data().category === "INVEST") {
+  } else if (expenseSnapShot.data().category === "ORDERS") {
     const categoryMonthlyExpenseRef = firestore.doc(
       `categoryMonthlyExpense/${expenseSnapShot.data().month}-${
         expenseSnapShot.data().category
-      }-${expenseSnapShot.data().subCategory.replaceAll("/", "_")}`
+      }`
     );
     const categoryMonthlyExpenseSnapShot =
       await categoryMonthlyExpenseRef.get();
     if (categoryMonthlyExpenseSnapShot.exists) {
       batch.update(categoryMonthlyExpenseRef, {
         amount:
-          parseInt(categoryMonthlyExpenseSnapShot.data().amount) -
+          parseInt(categoryMonthlyExpenseSnapShot.data().amount) +
           parseInt(expenseSnapShot.data().amount),
       });
     } else {
@@ -3281,7 +3298,7 @@ export const approveCashIn = async (expense) => {
         id: `${expenseSnapShot.data().month}-${
           expenseSnapShot.data().category
         }-${expenseSnapShot.data().subCategory}`,
-        amount: -parseInt(expenseSnapShot.data().amount),
+        amount: parseInt(expenseSnapShot.data().amount),
         category: expenseSnapShot.data().category,
         subCategory: expenseSnapShot.data().subCategory,
         month: expenseSnapShot.data().month,

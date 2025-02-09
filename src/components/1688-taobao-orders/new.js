@@ -6,7 +6,11 @@ import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import { Tabs, TabList, TabPanel, Tab } from "react-tabs";
 import { uploadImageRechargeRequest } from "../../firebase/firebase.utils";
-import { getAllOrdersRedux, updateOrderRedux } from "../../actions/index";
+import {
+  getAllOrdersRedux,
+  updateOrderRedux,
+  uploadCashInRedux,
+} from "../../actions/index";
 import { Search } from "react-feather";
 import { sendNotifications } from "../../firebase/fcmRestApi";
 import SteadFast from "./steadFast.png";
@@ -449,6 +453,27 @@ export class Orders extends Component {
       }
     }
   };
+
+  getMonthName = () => {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const d = new Date();
+    return `${monthNames[d.getMonth()]},${d.getFullYear()}`;
+  };
+
   handleSubmit2 = async (event, totalDue) => {
     event.preventDefault();
 
@@ -461,7 +486,12 @@ export class Orders extends Component {
       return;
     }
     console.log(this.state);
-
+    if (this.state.loader) {
+      return;
+    }
+    this.setState({
+      loader: true,
+    });
     await this.props.updateOrderRedux({
       ...this.state.orderObj,
       paymentStatus:
@@ -496,12 +526,32 @@ export class Orders extends Component {
               },
             ],
     });
+
+    let date = new Date();
+    let cashInObj = {
+      id: date.getTime().toString(),
+      category: "ORDERS",
+      subCategory: this.state.method,
+      month: this.getMonthName(),
+      date: date.toLocaleDateString("en-GB"),
+      note: `Order Id:${this.state.orderObj.id}`,
+      amount: this.state.amount,
+      receiveBy:
+        this.props.currentAdmin && this.props.currentAdmin.name
+          ? this.props.currentAdmin.name
+          : "",
+      status: "pending",
+      unEditable: true,
+    };
+
+    await this.props.uploadCashInRedux(cashInObj);
     toast.success("successfully updated the payment");
 
     this.setState({
       method: "",
       amount: "",
       paymentStatus: "",
+      loader: false,
     });
     document.getElementById("close-button-for-payment-modal").click();
   };
@@ -635,7 +685,9 @@ export class Orders extends Component {
                       textAlign: "center",
                     }}
                     onClick={async () => {
+                      console.log(this.state.balance);
                       if (!this.state.balance) {
+                        console.log(this.state.balance);
                         let response = await axios.get(
                           `${base_url}/get_balance`,
                           {
@@ -646,16 +698,17 @@ export class Orders extends Component {
                             },
                           }
                         );
-                        if (response.data && response.data.current_balance) {
+                        console.log(response.data);
+                        if (response.data) {
                           this.setState({
-                            balance: response.data.current_balance,
+                            balance: `Tk ${response.data.current_balance}`,
                           });
                         }
                       }
                     }}
                   >
                     {this.state.balance
-                      ? `Tk ${this.state.balance} `
+                      ? `${this.state.balance} `
                       : "👆🏻 Steadfast Balance"}
                   </div>
                   <li
@@ -775,7 +828,12 @@ export class Orders extends Component {
                     ) : (
                       "Update all Orders"
                     )}
-                  </div>
+                  </div>{" "}
+                  <br />
+                  <span style={{ fontSize: 12, fontWeight: "bold" }}>
+                    Note: click the button to get updated shipping status from
+                    steadfast
+                  </span>
                   <div className="clearfix"></div>
                   <div
                     id="basicScenario"
@@ -835,7 +893,6 @@ export class Orders extends Component {
                           >
                             Products
                           </th>
-
                           <th
                             scope="col"
                             style={{
@@ -846,7 +903,6 @@ export class Orders extends Component {
                           >
                             Order Total
                           </th>
-
                           <th
                             scope="col"
                             style={{
@@ -1251,6 +1307,7 @@ export class Orders extends Component {
                                   cursor: "pointer",
                                   display: "inline-block",
                                   fontSize: 12,
+                                  fontWeight: "bold",
                                 }}
                                 href={`/invoice/${order.id}`}
                                 target="_blank"
@@ -2121,7 +2178,7 @@ export class Orders extends Component {
                               <option value="Bkash">Bkash</option>
                               <option value="Nagad">Nagad</option>
                               <option value="Rocket">Rocket</option>
-                              <option value="City">City Bank</option>
+                              <option value="Eastern Bank">Easter Bank</option>
                             </select>
                           </div>
                           <div className="col">
@@ -2185,17 +2242,35 @@ export class Orders extends Component {
                               justifyContent: "flex-end",
                             }}
                           >
-                            <button
-                              type="submit"
-                              className="btn"
-                              style={{
-                                background: "rgb(0, 37, 76)",
-                                color: "white",
-                              }}
-                            >
-                              Update
-                              <i className="icofont-rounded-right"></i>
-                            </button>
+                            {this.state.loader ? (
+                              <div
+                                style={{
+                                  background: "rgb(0, 37, 76)",
+                                  color: "white",
+                                  minWidth: 150,
+                                  padding: 10,
+                                  borderRadius: 10,
+                                }}
+                              >
+                                <ClipLoader
+                                  size={18}
+                                  color={"white"}
+                                  loading={this.state.loader}
+                                />
+                              </div>
+                            ) : (
+                              <button
+                                type="submit"
+                                className="btn"
+                                style={{
+                                  background: "rgb(0, 37, 76)",
+                                  color: "white",
+                                }}
+                              >
+                                Update
+                                <i className="icofont-rounded-right"></i>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </form>
@@ -2867,4 +2942,5 @@ const mapStateToProps = (state) => {
 export default connect(mapStateToProps, {
   getAllOrdersRedux,
   updateOrderRedux,
+  uploadCashInRedux,
 })(Orders);
