@@ -458,6 +458,15 @@ export const getSingleOrder = async (id) => {
     alert(error);
   }
 };
+export const getSingleCampaign = async (id) => {
+  const orderRef = firestore.doc(`campaigns/${id}`);
+  try {
+    const order = await orderRef.get();
+    return order.data();
+  } catch (error) {
+    alert(error);
+  }
+};
 
 export const getSingleAttribute = async (id) => {
   const orderRef = firestore.doc(`attributes/${id}`);
@@ -2536,6 +2545,33 @@ export const getSingleBrandProducts = async (brandId, startAfter) => {
       .collection("products")
       .where("checkedValues2", "array-contains", brandId)
       .orderBy("id", "desc");
+  }
+  const products = await productsCollectionRef.get();
+  const lastProduct = products.docs[products.docs.length - 1];
+  try {
+    const productsArray = [];
+    products.forEach((doc) => {
+      productsArray.push(doc.data());
+    });
+    return { productsArray, lastProduct };
+  } catch (error) {
+    alert(error);
+    console.log(error);
+  }
+};
+export const getSingleCampaignProducts = async (campaignId, startAfter) => {
+  let productsCollectionRef;
+  console.log(startAfter);
+  if (startAfter) {
+    productsCollectionRef = firestore
+      .collection("products")
+      .where("selectedCampaign", "==", campaignId)
+
+      .startAfter(startAfter);
+  } else {
+    productsCollectionRef = firestore
+      .collection("products")
+      .where("selectedCampaign", "==", campaignId);
   }
   const products = await productsCollectionRef.get();
   const lastProduct = products.docs[products.docs.length - 1];

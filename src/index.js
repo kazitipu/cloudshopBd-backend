@@ -14,6 +14,7 @@ import Dashboard from "./components/dashboard";
 import AllProducts from "./components/products/physical/allProducts";
 import AllProductsByCategory from "./components/products/physical/allProductsByCategory";
 import AllProductsByBrand from "./components/products/physical/allProductsByBrand";
+import AllProductsByCampaign from "./components/products/physical/allProductsByCampaign.js";
 import AllCoupons from "./components/products/physical/allCoupons";
 import Sub_category from "./components/products/physical/sub-category";
 import Product_list from "./components/products/physical/product-list";
@@ -121,6 +122,7 @@ import CashSummaryByDate from "./components/expense-history/cash-summary/daily-e
 import MonthlyExpenseByMonth from "./components/expense-history/monthly-expense/monthlyexpenseByMonth";
 import LoanMonthly from "./components/expense-history/loan/monthlyexpenseByMonth";
 import Screenshots from "./components/products/physical/screenshots.js";
+import allProducts from "./components/products/physical/allProducts";
 
 class Root extends Component {
   constructor(props) {
@@ -205,6 +207,11 @@ class Root extends Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/products/physical/campaigns`}
                   component={Campaigns}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/products/physical/campaigns/:id`}
+                  component={AllProductsByCampaign}
                 />
                 <Route
                   exact

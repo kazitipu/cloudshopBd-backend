@@ -8,9 +8,7 @@ import {
   clearSingleMonthRedux,
 } from "../../../actions/index";
 import { Link } from "react-router-dom";
-
 import { connect } from "react-redux";
-
 export class MonthlyExpenseByMonth extends Component {
   constructor(props) {
     super(props);

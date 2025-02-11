@@ -3,6 +3,7 @@ const INITIAL_STATE = {
   productObj: null,
   categoryProducts: [],
   brandProducts: [],
+  campaignProducts: [],
 };
 
 const setProductsReducer = (state = INITIAL_STATE, action) => {
@@ -19,6 +20,12 @@ const setProductsReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         brandProducts: [...action.payload.productsArray],
+        lastProductBrand: action.payload.lastProduct,
+      };
+    case "GET_ALL_SINGLE_CAMPAIGN_PRODUCTS":
+      return {
+        ...state,
+        campaignProducts: [...action.payload.productsArray],
         lastProductBrand: action.payload.lastProduct,
       };
     case "GET_SINGLE_PRODUCT":

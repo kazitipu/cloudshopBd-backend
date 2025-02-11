@@ -19,6 +19,7 @@ import {
   uploadAttributeTermRedux,
   uploadCategoryRedux,
   uploadBrandRedux,
+  getAllCampaignsRedux,
 } from "../../../actions";
 export class Add_product extends Component {
   constructor(props) {
@@ -36,6 +37,7 @@ export class Add_product extends Component {
       description: "",
       stock: "",
       new: true,
+      campaign: false,
       sale: true,
       category: "Bags",
       colors: [],
@@ -258,6 +260,7 @@ export class Add_product extends Component {
       description: "",
       stock: "",
       new: true,
+      campaign: false,
       sale: true,
       category: "Bags",
       colors: [],
@@ -3673,7 +3676,7 @@ export class Add_product extends Component {
                             aria-expanded="true"
                             aria-controls="collapseTen"
                           >
-                            <span>Assign product is New </span>
+                            <span>Assign product to New,Campaigns </span>
 
                             <span>
                               <i className="icofont-rounded-up"></i>
@@ -3708,6 +3711,66 @@ export class Add_product extends Component {
                                 Is New Product.
                               </span>
                             </div>
+                            <div style={{ padding: 10 }}>
+                              <input
+                                type="checkbox"
+                                name="campaign"
+                                checked={this.state.campaign}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    this.setState({
+                                      campaign: true,
+                                    });
+                                  } else {
+                                    this.setState({
+                                      campaign: false,
+                                    });
+                                  }
+                                }}
+                              />{" "}
+                              <span style={{ color: "gray" }}>
+                                Is Campaign Product.
+                              </span>
+                            </div>
+                            {this.state.campaign && (
+                              <div style={{ padding: 10 }}>
+                                <div
+                                  style={{
+                                    fontWeight: "bold",
+                                    marginBottom: 6,
+                                  }}
+                                >
+                                  Select Campaign
+                                </div>
+                                <select
+                                  title="Please choose a package"
+                                  required
+                                  name="selectedCampaign"
+                                  className="custom-select"
+                                  aria-required="true"
+                                  aria-invalid="false"
+                                  onChange={(e) => {
+                                    this.setState({
+                                      selectedCampaign: e.target.value,
+                                    });
+                                    console.log(e.target.value);
+                                  }}
+                                  value={this.state.selectedCampaign}
+                                  style={{
+                                    color: "#495057",
+                                    fontWeight: "lighter",
+                                  }}
+                                >
+                                  {this.props.campaigns.map((campaign) => {
+                                    return (
+                                      <option value={campaign.id}>
+                                        {campaign.name}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -4763,6 +4826,7 @@ const mapStateToProps = (state) => {
     categories: state.categories.categories,
     brands: state.brands.brands,
     tags: state.tags.tags,
+    campaigns: state.campaigns.campaigns,
   };
 };
 export default connect(mapStateToProps, {
@@ -4776,4 +4840,5 @@ export default connect(mapStateToProps, {
   uploadAttributeTermRedux,
   uploadCategoryRedux,
   uploadBrandRedux,
+  getAllCampaignsRedux,
 })(Add_product);

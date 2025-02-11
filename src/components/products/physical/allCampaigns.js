@@ -378,6 +378,18 @@ export class Campaigns extends Component {
                           >
                             Expiry Date
                           </th>
+                          <th
+                            scope="col"
+                            style={{
+                              padding: "30px 15px",
+                              color: "white",
+                              backgroundColor: "#00254c",
+                              maxWidth: "150px",
+                              minWidth: "150px",
+                            }}
+                          >
+                            Products
+                          </th>
 
                           <th
                             scope="col"
@@ -429,6 +441,29 @@ export class Campaigns extends Component {
                             <td>{campaign.name}</td>
                             <td>{campaign.categoryId}</td>
                             <td>{campaign.expiryDate}</td>
+                            <td
+
+                            // onClick={()}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: "bold",
+                                  display: "inline",
+                                  padding: "2px 5px",
+                                  cursor: "pointer",
+                                  background: "#ec345b",
+                                  borderRadius: 5,
+                                  color: "white",
+                                }}
+                                onClick={() => {
+                                  this.props.history.push(
+                                    `/products/physical/campaigns/${campaign.id}`
+                                  );
+                                }}
+                              >
+                                see
+                              </div>
+                            </td>
                             <td>
                               <div
                                 className="row"

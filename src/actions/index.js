@@ -122,6 +122,7 @@ import {
   createMonth,
   getSingleCategoryProducts,
   getSingleBrandProducts,
+  getSingleCampaignProducts,
 } from "../firebase/firebase.utils";
 
 export const setAllOrders = (ordersArray) => ({
@@ -965,6 +966,14 @@ export const getSingleBrandProductsRedux =
     const allProducts = await getSingleBrandProducts(brand, startAfter);
     dispatch({
       type: "GET_ALL_SINGLE_BRAND_PRODUCTS",
+      payload: allProducts,
+    });
+  };
+export const getSingleCampaignProductsRedux =
+  (campaignId, startAfter) => async (dispatch) => {
+    const allProducts = await getSingleCampaignProducts(campaignId, startAfter);
+    dispatch({
+      type: "GET_ALL_SINGLE_CAMPAIGN_PRODUCTS",
       payload: allProducts,
     });
   };
